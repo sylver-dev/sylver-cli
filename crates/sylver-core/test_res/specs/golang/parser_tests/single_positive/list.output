@@ -1,0 +1,62 @@
+File {
+. ● name: Identifier { main }
+. ● decls: List {
+. . TypeDecl {
+. . . ● name: TypeIdent {
+. . . . ● name: Identifier { List }
+. . . . ● parameters: List {
+. . . . . TypeParameter {
+. . . . . . ● names: List {
+. . . . . . . Identifier { T }
+. . . . . . }
+. . . . . . ● constraint: TypeConstraint {
+. . . . . . . ● constraint: InterfaceTypeConstraint {
+. . . . . . . . ● type: TypeIdent {
+. . . . . . . . . ● name: Identifier { any }
+. . . . . . . . }
+. . . . . . . }
+. . . . . . }
+. . . . . }
+. . . . }
+. . . }
+. . . ● type: StructType {
+. . . . ● fields: List {
+. . . . . FieldSpec {
+. . . . . . ● names: List {
+. . . . . . . Identifier { next }
+. . . . . . }
+. . . . . . ● type: TypeStar {
+. . . . . . . ● inner: TypeIdent {
+. . . . . . . . ● name: Identifier { List }
+. . . . . . . . ● parameters: List {
+. . . . . . . . . TypeParameter {
+. . . . . . . . . . ● names: List {
+. . . . . . . . . . . Identifier { T }
+. . . . . . . . . . }
+. . . . . . . . . }
+. . . . . . . . }
+. . . . . . . }
+. . . . . . }
+. . . . . }
+. . . . . FieldSpec {
+. . . . . . ● names: List {
+. . . . . . . Identifier { val }
+. . . . . . }
+. . . . . . ● type: TypeIdent {
+. . . . . . . ● name: Identifier { T }
+. . . . . . }
+. . . . . }
+. . . . }
+. . . }
+. . }
+. . FuncDecl {
+. . . ● name: Identifier { main }
+. . . ● type: FuncType {
+. . . . ● params: List {  }
+. . . }
+. . . ● body: BlockStmt {
+. . . . ● list: List {  }
+. . . }
+. . }
+. }
+}

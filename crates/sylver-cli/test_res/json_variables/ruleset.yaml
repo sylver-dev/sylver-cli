@@ -1,0 +1,32 @@
+id: 'JSON ruleset'
+language: json.syl
+
+rules: 
+  - id: variable_length
+    message: Variable name is too long
+    severity: warning
+    query: >
+      match String desc when desc.text.length > 37 && desc.parent is {
+        Member m when m.key.text == '"description"'
+      }  
+
+  - id: variable_format 
+    message: Variable name isn't a lowercase word
+    severity: info
+    query: >
+      match String s when !s.text.matches(`"[a-z]+"`) && s.parent is {
+        Member m when m.key.text == '"name"'
+      }    
+
+  - id: types_or_values
+    message: Fields 'type' and 'values' are multually exclusive    
+    severity: error
+    note: The type can be deduced from the values list.
+    query: >
+      match Object n when
+        any n.members.children match {  
+            Member m when m.key.text == '"type"' 
+        }
+        && any n.members.children match { 
+            Member m when m.key.text == '"values"' 
+        }

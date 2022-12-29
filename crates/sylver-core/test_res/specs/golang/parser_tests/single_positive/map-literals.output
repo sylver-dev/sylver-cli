@@ -1,0 +1,110 @@
+File {
+. ● name: Identifier { main }
+. ● decls: List {
+. . ImportDecl {
+. . . ● specs: ImportSpec {
+. . . . ● path: InterpretedStringLit { "fmt" }
+. . . }
+. . }
+. . TypeDecl {
+. . . ● name: TypeIdent {
+. . . . ● name: Identifier { Vertex }
+. . . }
+. . . ● type: StructType {
+. . . . ● fields: List {
+. . . . . FieldSpec {
+. . . . . . ● names: List {
+. . . . . . . Identifier { Lat }
+. . . . . . . Identifier { Long }
+. . . . . . }
+. . . . . . ● type: TypeIdent {
+. . . . . . . ● name: Identifier { float64 }
+. . . . . . }
+. . . . . }
+. . . . }
+. . . }
+. . }
+. . VarDecl {
+. . . ● names: List {
+. . . . Identifier { m }
+. . . }
+. . . ● values: List {
+. . . . CompositeLit {
+. . . . . ● type: MapType {
+. . . . . . ● keys: TypeIdent {
+. . . . . . . ● name: Identifier { string }
+. . . . . . }
+. . . . . . ● values: TypeIdent {
+. . . . . . . ● name: Identifier { Vertex }
+. . . . . . }
+. . . . . }
+. . . . . ● body: LiteralValue {
+. . . . . . ● elements: List {
+. . . . . . . CompositeLitElem {
+. . . . . . . . ● key: InterpretedStringLit { "Bell Labs" }
+. . . . . . . . ● value: CompositeLit {
+. . . . . . . . . ● type: TypeIdent {
+. . . . . . . . . . ● name: Identifier { Vertex }
+. . . . . . . . . }
+. . . . . . . . . ● body: LiteralValue {
+. . . . . . . . . . ● elements: List {
+. . . . . . . . . . . CompositeLitElem {
+. . . . . . . . . . . . ● value: FloatLit { 40.68433 }
+. . . . . . . . . . . }
+. . . . . . . . . . . CompositeLitElem {
+. . . . . . . . . . . . ● value: UnOp {
+. . . . . . . . . . . . . ● op: Minus { - }
+. . . . . . . . . . . . . ● value: FloatLit { 74.39967 }
+. . . . . . . . . . . . }
+. . . . . . . . . . . }
+. . . . . . . . . . }
+. . . . . . . . . }
+. . . . . . . . }
+. . . . . . . }
+. . . . . . . CompositeLitElem {
+. . . . . . . . ● key: InterpretedStringLit { "Google" }
+. . . . . . . . ● value: CompositeLit {
+. . . . . . . . . ● type: TypeIdent {
+. . . . . . . . . . ● name: Identifier { Vertex }
+. . . . . . . . . }
+. . . . . . . . . ● body: LiteralValue {
+. . . . . . . . . . ● elements: List {
+. . . . . . . . . . . CompositeLitElem {
+. . . . . . . . . . . . ● value: FloatLit { 37.42202 }
+. . . . . . . . . . . }
+. . . . . . . . . . . CompositeLitElem {
+. . . . . . . . . . . . ● value: UnOp {
+. . . . . . . . . . . . . ● op: Minus { - }
+. . . . . . . . . . . . . ● value: FloatLit { 122.08408 }
+. . . . . . . . . . . . }
+. . . . . . . . . . . }
+. . . . . . . . . . }
+. . . . . . . . . }
+. . . . . . . . }
+. . . . . . . }
+. . . . . . }
+. . . . . }
+. . . . }
+. . . }
+. . }
+. . FuncDecl {
+. . . ● name: Identifier { main }
+. . . ● type: FuncType {
+. . . . ● params: List {  }
+. . . }
+. . . ● body: BlockStmt {
+. . . . ● list: List {
+. . . . . CallExpr {
+. . . . . . ● fun: SelectorExpr {
+. . . . . . . ● x: Identifier { fmt }
+. . . . . . . ● sel: Identifier { Println }
+. . . . . . }
+. . . . . . ● args: List {
+. . . . . . . Identifier { m }
+. . . . . . }
+. . . . . }
+. . . . }
+. . . }
+. . }
+. }
+}

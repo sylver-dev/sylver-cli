@@ -1,0 +1,132 @@
+File {
+. ● name: Identifier { main }
+. ● decls: List {
+. . ImportDecl {
+. . . ● specs: ImportSpec {
+. . . . ● path: InterpretedStringLit { "fmt" }
+. . . }
+. . }
+. . FuncDecl {
+. . . ● name: Identifier { main }
+. . . ● type: FuncType {
+. . . . ● params: List {  }
+. . . }
+. . . ● body: BlockStmt {
+. . . . ● list: List {
+. . . . . ShortVarDecl {
+. . . . . . ● names: List {
+. . . . . . . Identifier { m }
+. . . . . . }
+. . . . . . ● values: List {
+. . . . . . . CallExpr {
+. . . . . . . . ● fun: Identifier { make }
+. . . . . . . . ● args: List {
+. . . . . . . . . MapType {
+. . . . . . . . . . ● keys: TypeIdent {
+. . . . . . . . . . . ● name: Identifier { string }
+. . . . . . . . . . }
+. . . . . . . . . . ● values: TypeIdent {
+. . . . . . . . . . . ● name: Identifier { int }
+. . . . . . . . . . }
+. . . . . . . . . }
+. . . . . . . . }
+. . . . . . . }
+. . . . . . }
+. . . . . }
+. . . . . AssignStmt {
+. . . . . . ● lhs: List {
+. . . . . . . IndexExpr {
+. . . . . . . . ● operand: Identifier { m }
+. . . . . . . . ● index: InterpretedStringLit { "Answer" }
+. . . . . . . }
+. . . . . . }
+. . . . . . ● rhs: List {
+. . . . . . . IntLit { 42 }
+. . . . . . }
+. . . . . }
+. . . . . CallExpr {
+. . . . . . ● fun: SelectorExpr {
+. . . . . . . ● x: Identifier { fmt }
+. . . . . . . ● sel: Identifier { Println }
+. . . . . . }
+. . . . . . ● args: List {
+. . . . . . . InterpretedStringLit { "The value:" }
+. . . . . . . IndexExpr {
+. . . . . . . . ● operand: Identifier { m }
+. . . . . . . . ● index: InterpretedStringLit { "Answer" }
+. . . . . . . }
+. . . . . . }
+. . . . . }
+. . . . . AssignStmt {
+. . . . . . ● lhs: List {
+. . . . . . . IndexExpr {
+. . . . . . . . ● operand: Identifier { m }
+. . . . . . . . ● index: InterpretedStringLit { "Answer" }
+. . . . . . . }
+. . . . . . }
+. . . . . . ● rhs: List {
+. . . . . . . IntLit { 48 }
+. . . . . . }
+. . . . . }
+. . . . . CallExpr {
+. . . . . . ● fun: SelectorExpr {
+. . . . . . . ● x: Identifier { fmt }
+. . . . . . . ● sel: Identifier { Println }
+. . . . . . }
+. . . . . . ● args: List {
+. . . . . . . InterpretedStringLit { "The value:" }
+. . . . . . . IndexExpr {
+. . . . . . . . ● operand: Identifier { m }
+. . . . . . . . ● index: InterpretedStringLit { "Answer" }
+. . . . . . . }
+. . . . . . }
+. . . . . }
+. . . . . CallExpr {
+. . . . . . ● fun: Identifier { delete }
+. . . . . . ● args: List {
+. . . . . . . Identifier { m }
+. . . . . . . InterpretedStringLit { "Answer" }
+. . . . . . }
+. . . . . }
+. . . . . CallExpr {
+. . . . . . ● fun: SelectorExpr {
+. . . . . . . ● x: Identifier { fmt }
+. . . . . . . ● sel: Identifier { Println }
+. . . . . . }
+. . . . . . ● args: List {
+. . . . . . . InterpretedStringLit { "The value:" }
+. . . . . . . IndexExpr {
+. . . . . . . . ● operand: Identifier { m }
+. . . . . . . . ● index: InterpretedStringLit { "Answer" }
+. . . . . . . }
+. . . . . . }
+. . . . . }
+. . . . . ShortVarDecl {
+. . . . . . ● names: List {
+. . . . . . . Identifier { v }
+. . . . . . . Identifier { ok }
+. . . . . . }
+. . . . . . ● values: List {
+. . . . . . . IndexExpr {
+. . . . . . . . ● operand: Identifier { m }
+. . . . . . . . ● index: InterpretedStringLit { "Answer" }
+. . . . . . . }
+. . . . . . }
+. . . . . }
+. . . . . CallExpr {
+. . . . . . ● fun: SelectorExpr {
+. . . . . . . ● x: Identifier { fmt }
+. . . . . . . ● sel: Identifier { Println }
+. . . . . . }
+. . . . . . ● args: List {
+. . . . . . . InterpretedStringLit { "The value:" }
+. . . . . . . Identifier { v }
+. . . . . . . InterpretedStringLit { "Present?" }
+. . . . . . . Identifier { ok }
+. . . . . . }
+. . . . . }
+. . . . }
+. . . }
+. . }
+. }
+}

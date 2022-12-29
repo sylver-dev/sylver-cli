@@ -1,0 +1,778 @@
+node GoNode { }
+
+node Identifier: GoNode { }
+
+node File: GoNode {
+    name: Identifier,
+    decls: List<Decl>
+}
+
+node Block: GoNode {
+    statements: List<BlockStmt>
+}
+
+node BlockStmt: GoNode {
+    list: List<GoNode>
+}
+
+node Decl: BlockStmt { }
+
+node LabeledStmt: BlockStmt {
+    label: Identifier,
+    stmt: BlockStmt
+}
+
+node GotoStmt: BlockStmt {
+    label: Identifier
+}
+
+node ReturnStmt: BlockStmt {
+    results: List<Expr>
+}
+
+node IfStmt: BlockStmt {
+    initializer: ShortVarDecl,
+    condition: Expr,
+    body: Block,
+    else: GoNode
+}
+
+node ForStmt: BlockStmt {
+    clause: ForClauseBase,
+    body: Block
+}
+
+node ForClauseBase { }
+
+node ForClause: ForClauseBase {
+    initializer: ShortVarDecl,
+    condition: Expr,
+    update: BlockStmt
+}
+
+node RangeClause: ForClauseBase {
+    left: List<Expr>,
+    right: Expr
+}
+
+node SwitchStmt { }
+
+node TypeSwitchStmt: SwitchStmt {
+    alias: Identifier,
+    value: Expr,
+    clauses: List<TypeCaseClause>
+}
+
+node TypeCaseClause {
+    types: List<GoNode>,
+    body: List<BlockStmt>
+}
+
+node ExprSwitchStmt: SwitchStmt {
+    initializer: ShortVarDecl,
+    value: Expr,
+    clauses: List<ExprCaseClause>
+}
+
+node ExprCaseClause {
+    values: List<Expr>,
+    body: List<BlockStmt>
+}
+
+node DeferStmt {
+    call: CallExpr
+}
+
+node BreakStmt { }
+
+node FallThroughStmt { }
+
+node AssignStmt: BlockStmt {
+    lhs: List<Expr>,
+    rhs: List<Expr>
+}
+
+node GoStmt {
+    call: Expr
+}
+
+node SendStmt {
+    channel: Expr,
+    value: Expr
+}
+
+node SelectStmt {
+    cases: List<SelectCase>
+}
+
+node SelectCase {
+    comm: Expr,
+    body: List<BlockStmt>
+}
+
+node Expr { }
+
+node ParenthesizedExpr: Expr { value: Expr }
+
+node BasicLit: BlockStmt { }
+
+node NilLit: BasicLit { }
+
+node IntLit: BasicLit { }
+
+node FloatLit: BasicLit { }
+
+node ImagLit: BasicLit { }
+
+node BoolLit: BasicLit { }
+
+node RuneLit: BasicLit { }
+
+node StringLit: BasicLit { }
+
+node InterpretedStringLit: StringLit { }
+
+node RawStringLit: StringLit { }
+
+node CompositeLit: BasicLit {
+    type: TypeIdentifier,
+    body: LiteralValue
+}
+
+node LiteralValue: Expr {
+    elements: List<CompositeLitElem>
+}
+
+node TypeConv: Expr {
+    type: Type,
+    operand: Expr
+}
+
+node CompositeLitElem {
+    key: Identifier,
+    value: Expr
+}
+
+node FuncLiteral: Expr {
+    type: FuncType,
+    body: Block
+}
+
+node UnOp: Expr {
+    op: Operator,
+    value: Expr
+}
+
+node BinOp: Expr {
+   left: Expr,
+   op: Operator,
+   right: Expr
+}
+
+node Operator: GoNode { }
+
+node Plus: Operator { }
+
+node Minus: Operator { }
+
+node Receive: Operator { }
+
+node Not: Operator { }
+
+node Increment: Operator { }
+
+node Decrement: Operator { }
+
+node Times: Operator { }
+
+node Div: Operator { }
+
+node Mod: Operator { }
+
+node BitAnd: Operator { }
+
+node BitOr: Operator { }
+
+node BitXor: Operator { }
+
+node ShiftLeft: Operator { }
+
+node ShiftRight: Operator { }
+
+node LowerThan: Operator { }
+
+node HigherThan: Operator { }
+
+node AddAssign: Operator { }
+
+node SubAssign: Operator { }
+
+node MulAssign: Operator { }
+
+node OrAssign: Operator { }
+
+node Ref: Operator { }
+
+node Deref: Operator { }
+
+node EqEq: Operator { }
+
+node NotEq: Operator { }
+
+node And: Operator { }
+
+node Or: Operator { }
+
+node Inf: Operator { }
+
+node InfEq: Operator { }
+
+node Sup: Operator { }
+
+node SupEq: Operator { }
+
+node CallExpr {
+    fun: GoNode,
+    args: List<GoNode>
+}
+
+node VariadicArgument: GoNode {
+    value: Expr
+}
+
+node SelectorExpr {
+    x: Expr,
+    sel: Identifier
+}
+
+node IndexExpr {
+    operand: Expr,
+    index: Expr
+}
+
+node SliceExpr: Expr {
+    operand: Expr,
+    start: Expr,
+    end: Expr
+}
+
+node TypeAssertion: Expr {
+    operand: Expr,
+    type: Type
+}
+
+node TypeConversion: Expr {
+    type: Type,
+    value: Expr
+}
+
+node Type: GoNode { }
+
+node ParenthesizedType: Type {
+    type: Type
+}
+
+node QualifiedType: Type {
+    package: Identifier,
+    name: Identifier
+}
+
+node TypeIdent: Type {
+    name: Identifier,
+    parameters: List<TypeParameter>
+}
+
+node TypeStar: Type {
+    inner: TypeIdent
+}
+
+node ArrayTypeBase { }
+
+node ArrayType: ArrayTypeBase {
+    length: IntLiteral,
+    elemsType: TypeIdentifier
+}
+
+node ImplicitLengthArrayType: ArrayTypeBase {
+    elemsType: TypeIdentifier
+}
+
+node SliceType: ArrayTypeBase {
+    elemsType: TypeIdentifier
+}
+
+node ChanType: Type {
+    elemsType: Type
+}
+
+node ReadOnlyChanType: Type {
+    elemsType: Type
+}
+
+node WriteOnlyChanType: Type {
+    elemsType: Type
+}
+
+node Field: GoNode {
+    names: List<Identifier>,
+    type: Type
+}
+
+node FieldList: GoNode {
+    fields: List<Field>
+}
+
+node ConstDeclBase { }
+
+node ConstDecl: ConstDeclBase {
+    names: List<Identifier>,
+    type: Type,
+    exprs: List<Expr>
+}
+
+node ConstDeclBlock: ConstDeclBase {
+    specs: List<ConstSpec>
+}
+
+node ConstSpec {
+    names: List<Identifier>,
+    type: Type,
+    values: List<Expr>
+}
+
+node VarDeclBase { }
+
+node VarDecl: VarDeclBase {
+    names: List<Identifier>,
+    type: Type,
+    values: List<Expr>
+}
+
+node VarDeclBlock: VarDeclBase {
+    specs: List<VarSpec>
+}
+
+node VarSpec {
+    names: List<Identifier>,
+    type: Type,
+    values: List<Expr>
+}
+
+node ShortVarDecl: VarDeclBase {
+    names: List<Expr>,
+    values: List<Expr>
+}
+
+node ImportDecl: Decl {
+    specs: List<ImportSpec>
+}
+
+node ImportSpec {
+    name: ImportName,
+    path: StringLit
+}
+
+node ImportName {}
+
+node ImportPackage: ImportName {
+    identifier: Identifier
+}
+
+node ImportDot: ImportName { }
+
+node TypeDecl {
+    name: TypeIdentifier,
+    type: Type
+}
+
+node TypeAlias {
+    name: Identifier,
+    type: Type
+}
+
+node TypeDeclBlock {
+    decls: List<TypeDecl>
+}
+
+node TypeDef { }
+
+node InterfaceType: TypeDef {
+    elems: List<InterfaceElem>
+}
+
+node InterfaceElem { }
+
+node InterfaceConstraint: InterfaceElem { }
+
+node InterfaceTypeConstraint: InterfaceConstraint {
+    type: Type
+}
+
+node UnderlyingTypeConstraint: InterfaceConstraint {
+    type: Type
+}
+
+node UnionConstraint: InterfaceConstraint {
+    first: InterfaceConstraint,
+    rest: List<InterfaceConstraint>
+}
+
+node MethodSpec: InterfaceElem {
+    name: Identifier,
+    params: List<FuncTypeParam>,
+    return: Type
+}
+
+node StructType: TypeDef {
+    fields: List<FieldSpec>
+}
+
+node MapType {
+    keys: TypeIdent,
+    values: TypeIdent
+}
+
+node FieldSpec {
+    names: List<Identifier>,
+    type: Type,
+    tag: RawStringLiteral
+}
+
+node FuncDecl: Decl {
+    receiver: FuncReceiver,
+    name: Identifier,
+    type: FuncType,
+    body: Block
+}
+
+node FuncReceiver {
+   name: Identifier,
+   type: Type
+}
+
+node FuncType {
+    typeParams: List<TypeParameter>,
+    params: List<FuncTypeParam>,
+    return: Type
+}
+
+node FuncTypeParam {
+    names: List<Identifier>,
+    type: Type
+}
+
+node VariadicFuncParam {
+    name: String,
+    type: Type
+}
+
+node TypeParameter: GoNode {
+    names: List<Identifier>,
+    constraint: TypeConstraint
+}
+
+node TypeConstraint {
+    constraint: InterfaceConstraint
+}
+
+
+term INT_LIT = `[0-9][0-9_]*(e[0-9]+)?`
+term FLOAT_LIT = `[0-9]+\.[0-9]*`
+term IMAG_LIT = `[0-9]+i`
+term RUNE_CONTENT = `'((\\[abfnrtv\\'"])|(\\u[[:xdigit:]]{4})|(\\U[[:xdigit:]]{8})|(\\x[[:xdigit:]]{2})|(\\[0-7]{3})|.)'`
+term INTERPRETED_STRING_LIT = `"([^"\\]|(\\[\\/abnfrtv"])|(\\u[a-fA-F0-9]{4})|(\\[0-7]{3})|(\\U[[:xdigit:]]{8})|(\\x[a-fA-F0-9]+))*"`
+term RAW_STRING_LIT = `\`[^\`]*\``
+term COLON = ':'
+
+ignore term WHITESPACE = `[\s--\n]`
+ignore term LINE_RETURN = `\n`
+
+comment term LINE_COMMENT = `//.*`
+comment term BLOCK_COMMENT = nested(start = '/*', end = '*/')
+
+rule main = File { 'package' name@identifier decls@decl* }
+
+rule type_rule =
+      type_ident
+    | TypeStar { '*' inner@type_rule }
+
+rule struct_type = StructType { 'struct' '{' fields@sepBy([LINE_RETURN, ';'], field_spec) '}' }
+rule interface_type = InterfaceType { 'interface' '{' elems@sepBy([LINE_RETURN, ';'], interface_elem) '}' }
+rule interface_elem =
+    method_spec
+  | interface_constraint
+rule method_spec =
+    MethodSpec { name@identifier '(' params@sepByTr(',', named_func_type_param) ')' return@func_return_type? }
+  | MethodSpec { name@identifier '(' params@sepByTr(',', anonymous_func_type_param) ')' return@func_return_type? }
+rule interface_constraint =
+    interface_type_constraint
+  | underlying_type_constraint
+  | UnionConstraint { first@union_inner_constraint '|' rest@sepBy1('|', union_inner_constraint) }
+rule interface_type_constraint = InterfaceTypeConstraint { type@type_rule }
+rule underlying_type_constraint = UnderlyingTypeConstraint { '~' type@type_rule }
+rule union_inner_constraint = interface_type_constraint | underlying_type_constraint
+
+rule array_type =
+    ArrayType { '[' length@int_lit ']' elemsType@type_rule }
+  | ImplicitLengthArrayType { '[' '...' ']' elemsType@type_rule }
+  | SliceType { '[' ']' elemsType@type_rule }
+
+rule type_ident =
+    TypeIdent { name@identifier }
+  | TypeIdent { name@identifier '[' parameters@sepByTr1(',', type_parameter) ']' }
+  | QualifiedType { package@identifier '.' name@identifier }
+  | prefixed_func_type
+  | interface_type
+  | struct_type
+  | makeable_type_ident
+rule prefixed_func_type =
+    FuncType  { 'func' '(' params@sepByTr(',', named_func_type_param) ')' return@func_return_type? }
+  | FuncType  { 'func' '(' params@sepByTr(',', anonymous_func_type_param) ')' return@func_return_type? }
+rule makeable_type_ident = array_type | map_type | chan_type | interface_type | ParenthesizedType { '(' type@makeable_type_ident ')' }
+rule map_type = MapType { 'map' '[' keys@type_rule ']' values@type_rule }
+rule chan_type =
+    ChanType { 'chan' elemsType@type_rule }
+  | ReadOnlyChanType { '<-' 'chan' elemsType@type_rule }
+  | WriteOnlyChanType { 'chan' '<-' elemsType@type_rule }
+
+rule field_spec =
+    FieldSpec { names@sepBy(',', identifier) type@type_rule tag@raw_string_literal? }
+
+rule decl =
+    ImportDecl { 'import' specs@import_spec }
+  | ImportDecl { 'import' '(' specs@import_spec+ ')' }
+  | ConstDecl { 'const' names@sepBy1(',', identifier) type@type_rule? '=' exprs@sepBy1(',', expr) }
+  | ConstDeclBlock { 'const' '(' specs@sepBy1([LINE_RETURN, ';'], const_spec) ')' }
+  | VarDecl { 'var' names@sepBy1(',', identifier) type@type_rule}
+  | VarDecl { 'var' names@sepBy1(',', identifier) type@type_rule? '=' values@sepBy1(',', expr) }
+  | VarDeclBlock { 'var' '(' specs@sepBy([LINE_RETURN, ';'], var_spec) ')' }
+  | short_var_decl
+  | func_decl
+  | type_decl
+
+rule import_spec = ImportSpec { name@import_name? path@string_literal }
+rule import_name =
+    ImportPackage { identifier@identifier }
+  | ImportDot { '.' }
+
+rule short_var_decl = ShortVarDecl { names@sepBy1(',', expr) ':=' values@sepBy1(',', expr) }
+
+rule const_spec =
+    ConstSpec { names@sepBy1(',', identifier) type@type_rule? '=' values@sepBy(',', expr) }
+  | ConstSpec { names@sepBy1(',', identifier) }
+
+rule var_spec =
+    VarSpec { names@sepBy1(',', identifier) type@type_rule? '=' values@sepBy(',', expr) }
+  | VarSpec { names@sepBy1(',', identifier) type@type_rule? }
+
+rule type_decl = single_type_decl | TypeDeclBlock { 'type' '(' decls@type_decl_block_decl+ ')' }
+rule type_decl_block_decl =
+    TypeDecl { name@type_ident type@type_rule }
+  | TypeAlias { name@identifier '=' type@type_rule }
+rule single_type_decl =
+    TypeDecl { 'type' name@type_ident type@type_rule }
+  | TypeAlias { 'type' name@identifier '=' type@type_rule }
+
+rule primary_expr =
+    IntLit { INT_LIT }
+  | FloatLit { FLOAT_LIT }
+  | ImagLit { IMAG_LIT }
+  | BoolLit { 'true' }
+  | BoolLit { 'false' }
+  | RuneLit { RUNE_CONTENT }
+  | ParenthesizedExpr { '(' value@expr ')' }
+  | nil_lit
+  | CompositeLit { type@composite_type_ident body@literal_value }
+  | SliceExpr { operand@expr '[' start@expr? COLON end@expr? ']' }
+  | FuncLiteral { type@prefixed_func_type body@block_stmt }
+  | TypeAssertion { operand@expr '.' '(' type@type_rule ')' }
+  | TypeConversion { '(' type@type_rule ')' '(' value@expr ')' }
+  | literal_value
+  | index_expr
+  | string_literal
+  | call_expr
+  | selector_expr
+  | identifier
+
+rule expr =
+    primary_expr
+  | unop
+  | binop
+
+rule nil_lit = NilLit { 'nil' }
+
+rule literal_value = LiteralValue { '{' elements@sepByTr(',', composite_lit_elem) '}' }
+
+rule index_expr = IndexExpr { operand@expr '[' index@expr ']' }
+
+rule int_lit = IntLit { INT_LIT }
+
+rule composite_type_ident = type_ident | array_type | struct_type | map_type
+
+rule composite_lit_elem =
+    CompositeLitElem { value@expr }
+  | CompositeLitElem { key@expr COLON value@expr }
+
+rule unop =
+    [8] UnOp { op@minus value@expr }
+  | [8] UnOp { op@not value@expr }
+  | [8] UnOp { value@expr op@increment }
+  | [8] UnOp { value@expr op@decrement }
+  | [9] UnOp { op@deref_op value@expr }
+  | [9] UnOp { op@ref_op value@expr }
+  | [9] UnOp { op@receive value@expr }
+
+rule binop =
+    [7, left] BinOp { left@expr op@shift right@expr }
+  | [7, left] BinOp { left@expr op@bit_and right@expr }
+  | [6, left] BinOp { left@expr op@bit_xor right@expr }
+  | [3, left] BinOp { left@expr op@bool_ops right@expr }
+  | [3, left] BinOp { left@expr op@assign_op right@expr }
+  | [6, left] BinOp { left@expr op@times right@expr }
+  | [6, left] BinOp { left@expr op@div right @expr }
+  | [6, left] BinOp { left@expr op@mod right @expr }
+  | [5, left] BinOp { left@expr op@plus right@expr }
+  | [5, left] BinOp { left@expr op@minus right@expr }
+  | [5, left] BinOp { left@expr op@bit_or right@expr }
+
+rule plus = Plus { '+' }
+rule minus = Minus { '-' }
+rule times = Times { '*' }
+rule div = Div { '/' }
+rule mod = Mod { '%' }
+rule bit_and = BitAnd { '&' }
+rule bit_xor = BitXor { '^' }
+rule bit_or = BitOr { '|' }
+rule increment = Increment { '++' }
+rule decrement = Decrement { '--' }
+rule receive = Receive { '<-' }
+rule not = Not { '!' }
+rule assign_op = AddAssign { '+=' } | MulAssign { '*=' } | SubAssign { '-=' } | OrAssign { '|=' }
+rule shift = ShiftRight { '>>' } | ShiftLeft { '<<' }
+rule ref_op = Ref { '&' }
+rule deref_op = Deref { '*' }
+rule bool_ops =
+    EqEq { '==' }
+  | NotEq { '!=' }
+  | And { '&&' }
+  | Or { '||' }
+  | Inf { '<' }
+  | InfEq { '<=' }
+  | Sup { '>' }
+  | SupEq { '>=' }
+
+rule call_expr = CallExpr { fun@call_expr_target '(' args@sepByTr(',', call_expr_arg) ')' }
+
+rule call_expr_target = primary_expr | makeable_type_ident
+
+rule call_expr_arg =
+    expr
+  | makeable_type_ident
+  | interface_type
+  | VariadicArgument { value@expr '...' }
+
+rule selector_expr = [9] SelectorExpr { x@expr '.' sel@identifier }
+
+
+rule string_literal =
+    InterpretedStringLit { INTERPRETED_STRING_LIT }
+  | raw_string_literal
+rule raw_string_literal = RawStringLit { RAW_STRING_LIT }
+
+rule func_decl = FuncDecl { 'func' receiver@func_receiver? name@identifier type@func_type body@block_stmt }
+rule func_receiver = FuncReceiver {  '(' name@identifier? type@type_rule')'}
+rule func_type =
+    FuncType  { '(' params@sepByTr(',', named_func_type_param) ')' return@func_return_type? }
+  | FuncType  { '(' params@sepByTr(',', anonymous_func_type_param) ')' return@func_return_type? }
+  | FuncType  { '[' typeParams@sepByTr1(',', type_parameter) ']' '(' params@sepByTr(',', named_func_type_param) ')' return@func_return_type? }
+  | FuncType  { '[' typeParams@sepByTr1(',', type_parameter) ']' '(' params@sepByTr(',', anonymous_func_type_param) ')' return@func_return_type? }
+rule named_func_type_param =
+    FuncTypeParam { names@sepBy1(',', identifier) type@type_rule}
+  | VariadicFuncParam { name@identifier '...' type@type_rule }
+rule anonymous_func_type_param =
+    FuncTypeParam { type@type_rule }
+  | VariadicFuncParam { '...' type@type_rule }
+rule func_return_type = type_rule | field_list
+
+rule type_parameter = TypeParameter { names@sepByTr1(',', identifier) constraint@type_constraint? }
+rule type_constraint =
+    TypeConstraint { 'interface' '{' constraint@interface_constraint '}' }
+  | TypeConstraint { constraint@interface_constraint }
+
+rule field_list =
+    FieldList { '(' fields@sepBy1(',', named_field) ')' }
+  | FieldList { '(' fields@sepBy1(',', typed_field) ')' }
+
+rule named_field = Field { names@sepBy1(',', identifier) type@type_rule}
+rule typed_field = Field { type@type_rule}
+
+rule statement =
+      ReturnStmt { 'return' results@sepBy(',', expr) }
+    | LabeledStmt { label@identifier COLON stmt@statement }
+    | GotoStmt { 'goto' label@identifier }
+    | DeferStmt { 'defer' call@call_expr }
+    | BreakStmt { 'break' }
+    | FallThroughStmt { 'fallthrough' }
+    | GoStmt { 'go' call@expr }
+    | send_stmt
+    | select_stmt
+    | if_stmt
+    | for_stmt
+    | switch_stmt
+    | expr
+    | decl
+    | assign_stmt
+    | block_stmt
+
+rule assign_stmt = AssignStmt { lhs@sepBy1(',', assign_expr) '=' rhs@sepBy1(',', expr) }
+
+rule send_stmt = SendStmt { channel@expr '<-' value@expr }
+
+rule assign_expr = identifier | call_expr | selector_expr | unop | index_expr
+
+rule for_stmt =
+      ForStmt { 'for' clause@for_clause? body@block_stmt }
+    | ForStmt { 'for' clause@range_clause body@block_stmt }
+rule for_clause =
+      ForClause { initializer@short_var_decl? ';' condition@expr ';' update@statement? }
+    | ForClause { condition@expr }
+rule range_clause =
+    RangeClause { left@sepByTr1(',', expr) ':=' 'range' right@expr }
+  | RangeClause { 'range' right@expr }
+
+rule switch_stmt = expr_switch | type_switch
+rule type_switch =
+    TypeSwitchStmt { 'switch' alias@identifier ':=' value@expr '.' '(' 'type' ')' '{' clauses@type_case_clause* '}' }
+  | TypeSwitchStmt { 'switch' value@expr '.' '(' 'type' ')' '{' clauses@type_case_clause* '}' }
+rule type_case_clause =
+    TypeCaseClause { 'case' types@sepByTr1(',', type_rule) COLON body@sepBy([LINE_RETURN, ';'], statement) }
+  | TypeCaseClause { 'default' COLON body@sepBy([LINE_RETURN, ';'], statement) }
+rule type_case_clause_type =
+    type_rule
+  | nil_lit
+rule expr_switch =
+      ExprSwitchStmt { 'switch' '{' clauses@expr_case_clause* '}' }
+    | ExprSwitchStmt { 'switch' initializer@short_var_decl ';' value@expr '{' clauses@expr_case_clause* '}' }
+    | ExprSwitchStmt { 'switch' value@expr '{' clauses@expr_case_clause* '}' }
+rule expr_case_clause =
+      ExprCaseClause { 'case' values@sepByTr1(',', expr) COLON body@sepBy([LINE_RETURN, ';'], statement) }
+    | ExprCaseClause { 'default' COLON body@sepBy([LINE_RETURN, ';'], statement) }
+
+rule select_stmt = SelectStmt { 'select' '{' cases@select_case* '}' }
+rule select_case =
+    SelectCase { 'case' comm@statement COLON body@sepBy([LINE_RETURN, ';'], statement) }
+  | SelectCase { 'default' COLON body@sepBy([LINE_RETURN, ';'], statement) }
+
+rule if_stmt =
+      IfStmt { 'if' condition@expr body@block_stmt }
+    | IfStmt { 'if' initializer@if_initializer ';' condition@expr body@block_stmt }
+    | IfStmt { 'if' condition@expr body@block_stmt 'else' else@else_stmt }
+    | IfStmt { 'if' initializer@if_initializer ';' condition@expr body@block_stmt 'else' else@else_stmt }
+
+rule if_initializer = short_var_decl | assign_stmt | expr
+
+rule else_stmt = if_stmt | block_stmt
+
+rule block_stmt = BlockStmt { '{' list@sepBy([LINE_RETURN, ';'], statement) '}' }
+
+rule identifier = Identifier { `[\p{Letter}_][\p{Letter}[0-9]_]*` }

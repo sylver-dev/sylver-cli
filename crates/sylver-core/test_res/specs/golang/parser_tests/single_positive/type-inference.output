@@ -1,0 +1,38 @@
+File {
+. ● name: Identifier { main }
+. ● decls: List {
+. . ImportDecl {
+. . . ● specs: ImportSpec {
+. . . . ● path: InterpretedStringLit { "fmt" }
+. . . }
+. . }
+. . FuncDecl {
+. . . ● name: Identifier { main }
+. . . ● type: FuncType {
+. . . . ● params: List {  }
+. . . }
+. . . ● body: BlockStmt {
+. . . . ● list: List {
+. . . . . ShortVarDecl {
+. . . . . . ● names: List {
+. . . . . . . Identifier { v }
+. . . . . . }
+. . . . . . ● values: List {
+. . . . . . . IntLit { 42 }
+. . . . . . }
+. . . . . }
+. . . . . CallExpr {
+. . . . . . ● fun: SelectorExpr {
+. . . . . . . ● x: Identifier { fmt }
+. . . . . . . ● sel: Identifier { Printf }
+. . . . . . }
+. . . . . . ● args: List {
+. . . . . . . InterpretedStringLit { "v is of type %T\n" }
+. . . . . . . Identifier { v }
+. . . . . . }
+. . . . . }
+. . . . }
+. . . }
+. . }
+. }
+}

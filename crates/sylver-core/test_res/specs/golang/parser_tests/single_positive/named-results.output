@@ -1,0 +1,97 @@
+File {
+. ● name: Identifier { main }
+. ● decls: List {
+. . ImportDecl {
+. . . ● specs: ImportSpec {
+. . . . ● path: InterpretedStringLit { "fmt" }
+. . . }
+. . }
+. . FuncDecl {
+. . . ● name: Identifier { split }
+. . . ● type: FuncType {
+. . . . ● params: List {
+. . . . . FuncTypeParam {
+. . . . . . ● names: List {
+. . . . . . . Identifier { sum }
+. . . . . . }
+. . . . . . ● type: TypeIdent {
+. . . . . . . ● name: Identifier { int }
+. . . . . . }
+. . . . . }
+. . . . }
+. . . . ● return: FieldList {
+. . . . . ● fields: List {
+. . . . . . Field {
+. . . . . . . ● names: List {
+. . . . . . . . Identifier { x }
+. . . . . . . . Identifier { y }
+. . . . . . . }
+. . . . . . . ● type: TypeIdent {
+. . . . . . . . ● name: Identifier { int }
+. . . . . . . }
+. . . . . . }
+. . . . . }
+. . . . }
+. . . }
+. . . ● body: BlockStmt {
+. . . . ● list: List {
+. . . . . AssignStmt {
+. . . . . . ● lhs: List {
+. . . . . . . Identifier { x }
+. . . . . . }
+. . . . . . ● rhs: List {
+. . . . . . . BinOp {
+. . . . . . . . ● left: BinOp {
+. . . . . . . . . ● left: Identifier { sum }
+. . . . . . . . . ● op: Times { * }
+. . . . . . . . . ● right: IntLit { 4 }
+. . . . . . . . }
+. . . . . . . . ● op: Div { / }
+. . . . . . . . ● right: IntLit { 9 }
+. . . . . . . }
+. . . . . . }
+. . . . . }
+. . . . . AssignStmt {
+. . . . . . ● lhs: List {
+. . . . . . . Identifier { y }
+. . . . . . }
+. . . . . . ● rhs: List {
+. . . . . . . BinOp {
+. . . . . . . . ● left: Identifier { sum }
+. . . . . . . . ● op: Minus { - }
+. . . . . . . . ● right: Identifier { x }
+. . . . . . . }
+. . . . . . }
+. . . . . }
+. . . . . ReturnStmt {
+. . . . . . ● results: List {  }
+. . . . . }
+. . . . }
+. . . }
+. . }
+. . FuncDecl {
+. . . ● name: Identifier { main }
+. . . ● type: FuncType {
+. . . . ● params: List {  }
+. . . }
+. . . ● body: BlockStmt {
+. . . . ● list: List {
+. . . . . CallExpr {
+. . . . . . ● fun: SelectorExpr {
+. . . . . . . ● x: Identifier { fmt }
+. . . . . . . ● sel: Identifier { Println }
+. . . . . . }
+. . . . . . ● args: List {
+. . . . . . . CallExpr {
+. . . . . . . . ● fun: Identifier { split }
+. . . . . . . . ● args: List {
+. . . . . . . . . IntLit { 17 }
+. . . . . . . . }
+. . . . . . . }
+. . . . . . }
+. . . . . }
+. . . . }
+. . . }
+. . }
+. }
+}

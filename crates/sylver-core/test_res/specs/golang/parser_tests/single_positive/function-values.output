@@ -1,0 +1,172 @@
+File {
+. ● name: Identifier { main }
+. ● decls: List {
+. . ImportDecl {
+. . . ● specs: List {
+. . . . ImportSpec {
+. . . . . ● path: InterpretedStringLit { "fmt" }
+. . . . }
+. . . . ImportSpec {
+. . . . . ● path: InterpretedStringLit { "math" }
+. . . . }
+. . . }
+. . }
+. . FuncDecl {
+. . . ● name: Identifier { compute }
+. . . ● type: FuncType {
+. . . . ● params: List {
+. . . . . FuncTypeParam {
+. . . . . . ● names: List {
+. . . . . . . Identifier { fn }
+. . . . . . }
+. . . . . . ● type: FuncType {
+. . . . . . . ● params: List {
+. . . . . . . . FuncTypeParam {
+. . . . . . . . . ● type: TypeIdent {
+. . . . . . . . . . ● name: Identifier { float64 }
+. . . . . . . . . }
+. . . . . . . . }
+. . . . . . . . FuncTypeParam {
+. . . . . . . . . ● type: TypeIdent {
+. . . . . . . . . . ● name: Identifier { float64 }
+. . . . . . . . . }
+. . . . . . . . }
+. . . . . . . }
+. . . . . . . ● return: TypeIdent {
+. . . . . . . . ● name: Identifier { float64 }
+. . . . . . . }
+. . . . . . }
+. . . . . }
+. . . . }
+. . . . ● return: TypeIdent {
+. . . . . ● name: Identifier { float64 }
+. . . . }
+. . . }
+. . . ● body: BlockStmt {
+. . . . ● list: List {
+. . . . . ReturnStmt {
+. . . . . . ● results: List {
+. . . . . . . CallExpr {
+. . . . . . . . ● fun: Identifier { fn }
+. . . . . . . . ● args: List {
+. . . . . . . . . IntLit { 3 }
+. . . . . . . . . IntLit { 4 }
+. . . . . . . . }
+. . . . . . . }
+. . . . . . }
+. . . . . }
+. . . . }
+. . . }
+. . }
+. . FuncDecl {
+. . . ● name: Identifier { main }
+. . . ● type: FuncType {
+. . . . ● params: List {  }
+. . . }
+. . . ● body: BlockStmt {
+. . . . ● list: List {
+. . . . . ShortVarDecl {
+. . . . . . ● names: List {
+. . . . . . . Identifier { hypot }
+. . . . . . }
+. . . . . . ● values: List {
+. . . . . . . FuncLiteral {
+. . . . . . . . ● type: FuncType {
+. . . . . . . . . ● params: List {
+. . . . . . . . . . FuncTypeParam {
+. . . . . . . . . . . ● names: List {
+. . . . . . . . . . . . Identifier { x }
+. . . . . . . . . . . . Identifier { y }
+. . . . . . . . . . . }
+. . . . . . . . . . . ● type: TypeIdent {
+. . . . . . . . . . . . ● name: Identifier { float64 }
+. . . . . . . . . . . }
+. . . . . . . . . . }
+. . . . . . . . . }
+. . . . . . . . . ● return: TypeIdent {
+. . . . . . . . . . ● name: Identifier { float64 }
+. . . . . . . . . }
+. . . . . . . . }
+. . . . . . . . ● body: BlockStmt {
+. . . . . . . . . ● list: List {
+. . . . . . . . . . ReturnStmt {
+. . . . . . . . . . . ● results: List {
+. . . . . . . . . . . . CallExpr {
+. . . . . . . . . . . . . ● fun: SelectorExpr {
+. . . . . . . . . . . . . . ● x: Identifier { math }
+. . . . . . . . . . . . . . ● sel: Identifier { Sqrt }
+. . . . . . . . . . . . . }
+. . . . . . . . . . . . . ● args: List {
+. . . . . . . . . . . . . . BinOp {
+. . . . . . . . . . . . . . . ● left: BinOp {
+. . . . . . . . . . . . . . . . ● left: Identifier { x }
+. . . . . . . . . . . . . . . . ● op: Times { * }
+. . . . . . . . . . . . . . . . ● right: Identifier { x }
+. . . . . . . . . . . . . . . }
+. . . . . . . . . . . . . . . ● op: Plus { + }
+. . . . . . . . . . . . . . . ● right: BinOp {
+. . . . . . . . . . . . . . . . ● left: Identifier { y }
+. . . . . . . . . . . . . . . . ● op: Times { * }
+. . . . . . . . . . . . . . . . ● right: Identifier { y }
+. . . . . . . . . . . . . . . }
+. . . . . . . . . . . . . . }
+. . . . . . . . . . . . . }
+. . . . . . . . . . . . }
+. . . . . . . . . . . }
+. . . . . . . . . . }
+. . . . . . . . . }
+. . . . . . . . }
+. . . . . . . }
+. . . . . . }
+. . . . . }
+. . . . . CallExpr {
+. . . . . . ● fun: SelectorExpr {
+. . . . . . . ● x: Identifier { fmt }
+. . . . . . . ● sel: Identifier { Println }
+. . . . . . }
+. . . . . . ● args: List {
+. . . . . . . CallExpr {
+. . . . . . . . ● fun: Identifier { hypot }
+. . . . . . . . ● args: List {
+. . . . . . . . . IntLit { 5 }
+. . . . . . . . . IntLit { 12 }
+. . . . . . . . }
+. . . . . . . }
+. . . . . . }
+. . . . . }
+. . . . . CallExpr {
+. . . . . . ● fun: SelectorExpr {
+. . . . . . . ● x: Identifier { fmt }
+. . . . . . . ● sel: Identifier { Println }
+. . . . . . }
+. . . . . . ● args: List {
+. . . . . . . CallExpr {
+. . . . . . . . ● fun: Identifier { compute }
+. . . . . . . . ● args: List {
+. . . . . . . . . Identifier { hypot }
+. . . . . . . . }
+. . . . . . . }
+. . . . . . }
+. . . . . }
+. . . . . CallExpr {
+. . . . . . ● fun: SelectorExpr {
+. . . . . . . ● x: Identifier { fmt }
+. . . . . . . ● sel: Identifier { Println }
+. . . . . . }
+. . . . . . ● args: List {
+. . . . . . . CallExpr {
+. . . . . . . . ● fun: Identifier { compute }
+. . . . . . . . ● args: List {
+. . . . . . . . . SelectorExpr {
+. . . . . . . . . . ● x: Identifier { math }
+. . . . . . . . . . ● sel: Identifier { Pow }
+. . . . . . . . . }
+. . . . . . . . }
+. . . . . . . }
+. . . . . . }
+. . . . . }
+. . . . }
+. . . }
+. . }
+. }
+}

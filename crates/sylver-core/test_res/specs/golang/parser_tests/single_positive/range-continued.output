@@ -1,0 +1,93 @@
+File {
+. ● name: Identifier { main }
+. ● decls: List {
+. . ImportDecl {
+. . . ● specs: ImportSpec {
+. . . . ● path: InterpretedStringLit { "fmt" }
+. . . }
+. . }
+. . FuncDecl {
+. . . ● name: Identifier { main }
+. . . ● type: FuncType {
+. . . . ● params: List {  }
+. . . }
+. . . ● body: BlockStmt {
+. . . . ● list: List {
+. . . . . ShortVarDecl {
+. . . . . . ● names: List {
+. . . . . . . Identifier { pow }
+. . . . . . }
+. . . . . . ● values: List {
+. . . . . . . CallExpr {
+. . . . . . . . ● fun: Identifier { make }
+. . . . . . . . ● args: List {
+. . . . . . . . . SliceType {
+. . . . . . . . . . ● elemsType: TypeIdent {
+. . . . . . . . . . . ● name: Identifier { int }
+. . . . . . . . . . }
+. . . . . . . . . }
+. . . . . . . . . IntLit { 10 }
+. . . . . . . . }
+. . . . . . . }
+. . . . . . }
+. . . . . }
+. . . . . ForStmt {
+. . . . . . ● clause: RangeClause {
+. . . . . . . ● left: List {
+. . . . . . . . Identifier { i }
+. . . . . . . }
+. . . . . . . ● right: Identifier { pow }
+. . . . . . }
+. . . . . . ● body: BlockStmt {
+. . . . . . . ● list: List {
+. . . . . . . . AssignStmt {
+. . . . . . . . . ● lhs: List {
+. . . . . . . . . . IndexExpr {
+. . . . . . . . . . . ● operand: Identifier { pow }
+. . . . . . . . . . . ● index: Identifier { i }
+. . . . . . . . . . }
+. . . . . . . . . }
+. . . . . . . . . ● rhs: List {
+. . . . . . . . . . BinOp {
+. . . . . . . . . . . ● left: IntLit { 1 }
+. . . . . . . . . . . ● op: ShiftLeft { << }
+. . . . . . . . . . . ● right: CallExpr {
+. . . . . . . . . . . . ● fun: Identifier { uint }
+. . . . . . . . . . . . ● args: List {
+. . . . . . . . . . . . . Identifier { i }
+. . . . . . . . . . . . }
+. . . . . . . . . . . }
+. . . . . . . . . . }
+. . . . . . . . . }
+. . . . . . . . }
+. . . . . . . }
+. . . . . . }
+. . . . . }
+. . . . . ForStmt {
+. . . . . . ● clause: RangeClause {
+. . . . . . . ● left: List {
+. . . . . . . . Identifier { _ }
+. . . . . . . . Identifier { value }
+. . . . . . . }
+. . . . . . . ● right: Identifier { pow }
+. . . . . . }
+. . . . . . ● body: BlockStmt {
+. . . . . . . ● list: List {
+. . . . . . . . CallExpr {
+. . . . . . . . . ● fun: SelectorExpr {
+. . . . . . . . . . ● x: Identifier { fmt }
+. . . . . . . . . . ● sel: Identifier { Printf }
+. . . . . . . . . }
+. . . . . . . . . ● args: List {
+. . . . . . . . . . InterpretedStringLit { "%d\n" }
+. . . . . . . . . . Identifier { value }
+. . . . . . . . . }
+. . . . . . . . }
+. . . . . . . }
+. . . . . . }
+. . . . . }
+. . . . }
+. . . }
+. . }
+. }
+}

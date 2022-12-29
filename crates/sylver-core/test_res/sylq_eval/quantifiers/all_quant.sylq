@@ -1,0 +1,1 @@
+match g@Group when all g.values match A

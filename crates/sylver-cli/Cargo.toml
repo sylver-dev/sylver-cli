@@ -1,0 +1,24 @@
+[package]
+name = "sylver"
+version = "0.2.1"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+anyhow = "1.0.*"
+clap = { version = "4.0.26", features = ["derive", "wrap_help"] }
+glob = "0.3.0"
+rustyline = "10.0.0"
+rustyline-derive = "0.7.0"
+itertools = "0.10.3"
+log = { path = '../log' }
+assert_cmd = "2.0.4"
+reqwest = { version = "0.11.13", default-features = false, features = ["blocking", "rustls-tls"] }
+serde_json = "1.0.89"
+
+sylver-core = { path = '../sylver-core' }
+sylver-dsl = { path = '../sylver-dsl' }
+
+[dev-dependencies]
+temp-dir = "0.1.11"

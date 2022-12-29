@@ -1,0 +1,153 @@
+File {
+. ● name: Identifier { main }
+. ● decls: List {
+. . ImportDecl {
+. . . ● specs: ImportSpec {
+. . . . ● path: InterpretedStringLit { "fmt" }
+. . . }
+. . }
+. . FuncDecl {
+. . . ● name: Identifier { adder }
+. . . ● type: FuncType {
+. . . . ● params: List {  }
+. . . . ● return: FuncType {
+. . . . . ● params: List {
+. . . . . . FuncTypeParam {
+. . . . . . . ● type: TypeIdent {
+. . . . . . . . ● name: Identifier { int }
+. . . . . . . }
+. . . . . . }
+. . . . . }
+. . . . . ● return: TypeIdent {
+. . . . . . ● name: Identifier { int }
+. . . . . }
+. . . . }
+. . . }
+. . . ● body: BlockStmt {
+. . . . ● list: List {
+. . . . . ShortVarDecl {
+. . . . . . ● names: List {
+. . . . . . . Identifier { sum }
+. . . . . . }
+. . . . . . ● values: List {
+. . . . . . . IntLit { 0 }
+. . . . . . }
+. . . . . }
+. . . . . ReturnStmt {
+. . . . . . ● results: List {
+. . . . . . . FuncLiteral {
+. . . . . . . . ● type: FuncType {
+. . . . . . . . . ● params: List {
+. . . . . . . . . . FuncTypeParam {
+. . . . . . . . . . . ● names: List {
+. . . . . . . . . . . . Identifier { x }
+. . . . . . . . . . . }
+. . . . . . . . . . . ● type: TypeIdent {
+. . . . . . . . . . . . ● name: Identifier { int }
+. . . . . . . . . . . }
+. . . . . . . . . . }
+. . . . . . . . . }
+. . . . . . . . . ● return: TypeIdent {
+. . . . . . . . . . ● name: Identifier { int }
+. . . . . . . . . }
+. . . . . . . . }
+. . . . . . . . ● body: BlockStmt {
+. . . . . . . . . ● list: List {
+. . . . . . . . . . BinOp {
+. . . . . . . . . . . ● left: Identifier { sum }
+. . . . . . . . . . . ● op: AddAssign { += }
+. . . . . . . . . . . ● right: Identifier { x }
+. . . . . . . . . . }
+. . . . . . . . . . ReturnStmt {
+. . . . . . . . . . . ● results: List {
+. . . . . . . . . . . . Identifier { sum }
+. . . . . . . . . . . }
+. . . . . . . . . . }
+. . . . . . . . . }
+. . . . . . . . }
+. . . . . . . }
+. . . . . . }
+. . . . . }
+. . . . }
+. . . }
+. . }
+. . FuncDecl {
+. . . ● name: Identifier { main }
+. . . ● type: FuncType {
+. . . . ● params: List {  }
+. . . }
+. . . ● body: BlockStmt {
+. . . . ● list: List {
+. . . . . ShortVarDecl {
+. . . . . . ● names: List {
+. . . . . . . Identifier { pos }
+. . . . . . . Identifier { neg }
+. . . . . . }
+. . . . . . ● values: List {
+. . . . . . . CallExpr {
+. . . . . . . . ● fun: Identifier { adder }
+. . . . . . . . ● args: List {  }
+. . . . . . . }
+. . . . . . . CallExpr {
+. . . . . . . . ● fun: Identifier { adder }
+. . . . . . . . ● args: List {  }
+. . . . . . . }
+. . . . . . }
+. . . . . }
+. . . . . ForStmt {
+. . . . . . ● clause: ForClause {
+. . . . . . . ● initializer: ShortVarDecl {
+. . . . . . . . ● names: List {
+. . . . . . . . . Identifier { i }
+. . . . . . . . }
+. . . . . . . . ● values: List {
+. . . . . . . . . IntLit { 0 }
+. . . . . . . . }
+. . . . . . . }
+. . . . . . . ● condition: BinOp {
+. . . . . . . . ● left: Identifier { i }
+. . . . . . . . ● op: Inf { < }
+. . . . . . . . ● right: IntLit { 10 }
+. . . . . . . }
+. . . . . . . ● update: UnOp {
+. . . . . . . . ● value: Identifier { i }
+. . . . . . . . ● op: Increment { ++ }
+. . . . . . . }
+. . . . . . }
+. . . . . . ● body: BlockStmt {
+. . . . . . . ● list: List {
+. . . . . . . . CallExpr {
+. . . . . . . . . ● fun: SelectorExpr {
+. . . . . . . . . . ● x: Identifier { fmt }
+. . . . . . . . . . ● sel: Identifier { Println }
+. . . . . . . . . }
+. . . . . . . . . ● args: List {
+. . . . . . . . . . CallExpr {
+. . . . . . . . . . . ● fun: Identifier { pos }
+. . . . . . . . . . . ● args: List {
+. . . . . . . . . . . . Identifier { i }
+. . . . . . . . . . . }
+. . . . . . . . . . }
+. . . . . . . . . . CallExpr {
+. . . . . . . . . . . ● fun: Identifier { neg }
+. . . . . . . . . . . ● args: List {
+. . . . . . . . . . . . BinOp {
+. . . . . . . . . . . . . ● left: UnOp {
+. . . . . . . . . . . . . . ● op: Minus { - }
+. . . . . . . . . . . . . . ● value: IntLit { 2 }
+. . . . . . . . . . . . . }
+. . . . . . . . . . . . . ● op: Times { * }
+. . . . . . . . . . . . . ● right: Identifier { i }
+. . . . . . . . . . . . }
+. . . . . . . . . . . }
+. . . . . . . . . . }
+. . . . . . . . . }
+. . . . . . . . }
+. . . . . . . }
+. . . . . . }
+. . . . . }
+. . . . }
+. . . }
+. . }
+. }
+}

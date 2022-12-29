@@ -1,0 +1,55 @@
+File {
+. ● name: Identifier { main }
+. ● decls: List {
+. . ImportDecl {
+. . . ● specs: ImportSpec {
+. . . . ● path: InterpretedStringLit { "fmt" }
+. . . }
+. . }
+. . FuncDecl {
+. . . ● name: Identifier { main }
+. . . ● type: FuncType {
+. . . . ● params: List {  }
+. . . }
+. . . ● body: BlockStmt {
+. . . . ● list: List {
+. . . . . ShortVarDecl {
+. . . . . . ● names: List {
+. . . . . . . Identifier { sum }
+. . . . . . }
+. . . . . . ● values: List {
+. . . . . . . IntLit { 1 }
+. . . . . . }
+. . . . . }
+. . . . . ForStmt {
+. . . . . . ● clause: ForClause {
+. . . . . . . ● condition: BinOp {
+. . . . . . . . ● left: Identifier { sum }
+. . . . . . . . ● op: Inf { < }
+. . . . . . . . ● right: IntLit { 1000 }
+. . . . . . . }
+. . . . . . }
+. . . . . . ● body: BlockStmt {
+. . . . . . . ● list: List {
+. . . . . . . . BinOp {
+. . . . . . . . . ● left: Identifier { sum }
+. . . . . . . . . ● op: AddAssign { += }
+. . . . . . . . . ● right: Identifier { sum }
+. . . . . . . . }
+. . . . . . . }
+. . . . . . }
+. . . . . }
+. . . . . CallExpr {
+. . . . . . ● fun: SelectorExpr {
+. . . . . . . ● x: Identifier { fmt }
+. . . . . . . ● sel: Identifier { Println }
+. . . . . . }
+. . . . . . ● args: List {
+. . . . . . . Identifier { sum }
+. . . . . . }
+. . . . . }
+. . . . }
+. . . }
+. . }
+. }
+}

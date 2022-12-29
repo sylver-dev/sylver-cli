@@ -1,0 +1,20 @@
+{
+    "variables": [
+        {
+            "name": "date of birth",
+            "description": "Customer's date of birth",
+            "type": "datetime"
+        },
+        {
+            "name": "activity",
+            "description": "A short text describing the customer's professional occupation",
+            "type": "string"
+        },
+        {
+            "name": "country",
+            "description": "Customer's country of residence",
+            "type": "string",
+            "values": ["us", "fr", "it"]
+        }
+    ]
+}

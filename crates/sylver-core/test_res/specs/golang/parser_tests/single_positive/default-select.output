@@ -1,0 +1,147 @@
+File {
+. ● name: Identifier { main }
+. ● decls: List {
+. . ImportDecl {
+. . . ● specs: List {
+. . . . ImportSpec {
+. . . . . ● path: InterpretedStringLit { "fmt" }
+. . . . }
+. . . . ImportSpec {
+. . . . . ● path: InterpretedStringLit { "time" }
+. . . . }
+. . . }
+. . }
+. . FuncDecl {
+. . . ● name: Identifier { main }
+. . . ● type: FuncType {
+. . . . ● params: List {  }
+. . . }
+. . . ● body: BlockStmt {
+. . . . ● list: List {
+. . . . . ShortVarDecl {
+. . . . . . ● names: List {
+. . . . . . . Identifier { tick }
+. . . . . . }
+. . . . . . ● values: List {
+. . . . . . . CallExpr {
+. . . . . . . . ● fun: SelectorExpr {
+. . . . . . . . . ● x: Identifier { time }
+. . . . . . . . . ● sel: Identifier { Tick }
+. . . . . . . . }
+. . . . . . . . ● args: List {
+. . . . . . . . . BinOp {
+. . . . . . . . . . ● left: IntLit { 100 }
+. . . . . . . . . . ● op: Times { * }
+. . . . . . . . . . ● right: SelectorExpr {
+. . . . . . . . . . . ● x: Identifier { time }
+. . . . . . . . . . . ● sel: Identifier { Millisecond }
+. . . . . . . . . . }
+. . . . . . . . . }
+. . . . . . . . }
+. . . . . . . }
+. . . . . . }
+. . . . . }
+. . . . . ShortVarDecl {
+. . . . . . ● names: List {
+. . . . . . . Identifier { boom }
+. . . . . . }
+. . . . . . ● values: List {
+. . . . . . . CallExpr {
+. . . . . . . . ● fun: SelectorExpr {
+. . . . . . . . . ● x: Identifier { time }
+. . . . . . . . . ● sel: Identifier { After }
+. . . . . . . . }
+. . . . . . . . ● args: List {
+. . . . . . . . . BinOp {
+. . . . . . . . . . ● left: IntLit { 500 }
+. . . . . . . . . . ● op: Times { * }
+. . . . . . . . . . ● right: SelectorExpr {
+. . . . . . . . . . . ● x: Identifier { time }
+. . . . . . . . . . . ● sel: Identifier { Millisecond }
+. . . . . . . . . . }
+. . . . . . . . . }
+. . . . . . . . }
+. . . . . . . }
+. . . . . . }
+. . . . . }
+. . . . . ForStmt {
+. . . . . . ● body: BlockStmt {
+. . . . . . . ● list: List {
+. . . . . . . . SelectStmt {
+. . . . . . . . . ● cases: List {
+. . . . . . . . . . SelectCase {
+. . . . . . . . . . . ● comm: UnOp {
+. . . . . . . . . . . . ● op: Receive { <- }
+. . . . . . . . . . . . ● value: Identifier { tick }
+. . . . . . . . . . . }
+. . . . . . . . . . . ● body: List {
+. . . . . . . . . . . . CallExpr {
+. . . . . . . . . . . . . ● fun: SelectorExpr {
+. . . . . . . . . . . . . . ● x: Identifier { fmt }
+. . . . . . . . . . . . . . ● sel: Identifier { Println }
+. . . . . . . . . . . . . }
+. . . . . . . . . . . . . ● args: List {
+. . . . . . . . . . . . . . InterpretedStringLit { "tick." }
+. . . . . . . . . . . . . }
+. . . . . . . . . . . . }
+. . . . . . . . . . . }
+. . . . . . . . . . }
+. . . . . . . . . . SelectCase {
+. . . . . . . . . . . ● comm: UnOp {
+. . . . . . . . . . . . ● op: Receive { <- }
+. . . . . . . . . . . . ● value: Identifier { boom }
+. . . . . . . . . . . }
+. . . . . . . . . . . ● body: List {
+. . . . . . . . . . . . CallExpr {
+. . . . . . . . . . . . . ● fun: SelectorExpr {
+. . . . . . . . . . . . . . ● x: Identifier { fmt }
+. . . . . . . . . . . . . . ● sel: Identifier { Println }
+. . . . . . . . . . . . . }
+. . . . . . . . . . . . . ● args: List {
+. . . . . . . . . . . . . . InterpretedStringLit { "BOOM!" }
+. . . . . . . . . . . . . }
+. . . . . . . . . . . . }
+. . . . . . . . . . . . ReturnStmt {
+. . . . . . . . . . . . . ● results: List {  }
+. . . . . . . . . . . . }
+. . . . . . . . . . . }
+. . . . . . . . . . }
+. . . . . . . . . . SelectCase {
+. . . . . . . . . . . ● body: List {
+. . . . . . . . . . . . CallExpr {
+. . . . . . . . . . . . . ● fun: SelectorExpr {
+. . . . . . . . . . . . . . ● x: Identifier { fmt }
+. . . . . . . . . . . . . . ● sel: Identifier { Println }
+. . . . . . . . . . . . . }
+. . . . . . . . . . . . . ● args: List {
+. . . . . . . . . . . . . . InterpretedStringLit { "    ." }
+. . . . . . . . . . . . . }
+. . . . . . . . . . . . }
+. . . . . . . . . . . . CallExpr {
+. . . . . . . . . . . . . ● fun: SelectorExpr {
+. . . . . . . . . . . . . . ● x: Identifier { time }
+. . . . . . . . . . . . . . ● sel: Identifier { Sleep }
+. . . . . . . . . . . . . }
+. . . . . . . . . . . . . ● args: List {
+. . . . . . . . . . . . . . BinOp {
+. . . . . . . . . . . . . . . ● left: IntLit { 50 }
+. . . . . . . . . . . . . . . ● op: Times { * }
+. . . . . . . . . . . . . . . ● right: SelectorExpr {
+. . . . . . . . . . . . . . . . ● x: Identifier { time }
+. . . . . . . . . . . . . . . . ● sel: Identifier { Millisecond }
+. . . . . . . . . . . . . . . }
+. . . . . . . . . . . . . . }
+. . . . . . . . . . . . . }
+. . . . . . . . . . . . }
+. . . . . . . . . . . }
+. . . . . . . . . . }
+. . . . . . . . . }
+. . . . . . . . }
+. . . . . . . }
+. . . . . . }
+. . . . . }
+. . . . }
+. . . }
+. . }
+. }
+}

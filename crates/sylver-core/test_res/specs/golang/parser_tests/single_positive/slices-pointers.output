@@ -1,0 +1,124 @@
+File {
+. ● name: Identifier { main }
+. ● decls: List {
+. . ImportDecl {
+. . . ● specs: ImportSpec {
+. . . . ● path: InterpretedStringLit { "fmt" }
+. . . }
+. . }
+. . FuncDecl {
+. . . ● name: Identifier { main }
+. . . ● type: FuncType {
+. . . . ● params: List {  }
+. . . }
+. . . ● body: BlockStmt {
+. . . . ● list: List {
+. . . . . ShortVarDecl {
+. . . . . . ● names: List {
+. . . . . . . Identifier { names }
+. . . . . . }
+. . . . . . ● values: List {
+. . . . . . . CompositeLit {
+. . . . . . . . ● type: ArrayType {
+. . . . . . . . . ● length: IntLit { 4 }
+. . . . . . . . . ● elemsType: TypeIdent {
+. . . . . . . . . . ● name: Identifier { string }
+. . . . . . . . . }
+. . . . . . . . }
+. . . . . . . . ● body: LiteralValue {
+. . . . . . . . . ● elements: List {
+. . . . . . . . . . CompositeLitElem {
+. . . . . . . . . . . ● value: InterpretedStringLit { "John" }
+. . . . . . . . . . }
+. . . . . . . . . . CompositeLitElem {
+. . . . . . . . . . . ● value: InterpretedStringLit { "Paul" }
+. . . . . . . . . . }
+. . . . . . . . . . CompositeLitElem {
+. . . . . . . . . . . ● value: InterpretedStringLit { "George" }
+. . . . . . . . . . }
+. . . . . . . . . . CompositeLitElem {
+. . . . . . . . . . . ● value: InterpretedStringLit { "Ringo" }
+. . . . . . . . . . }
+. . . . . . . . . }
+. . . . . . . . }
+. . . . . . . }
+. . . . . . }
+. . . . . }
+. . . . . CallExpr {
+. . . . . . ● fun: SelectorExpr {
+. . . . . . . ● x: Identifier { fmt }
+. . . . . . . ● sel: Identifier { Println }
+. . . . . . }
+. . . . . . ● args: List {
+. . . . . . . Identifier { names }
+. . . . . . }
+. . . . . }
+. . . . . ShortVarDecl {
+. . . . . . ● names: List {
+. . . . . . . Identifier { a }
+. . . . . . }
+. . . . . . ● values: List {
+. . . . . . . SliceExpr {
+. . . . . . . . ● operand: Identifier { names }
+. . . . . . . . ● start: IntLit { 0 }
+. . . . . . . . ● end: IntLit { 2 }
+. . . . . . . }
+. . . . . . }
+. . . . . }
+. . . . . ShortVarDecl {
+. . . . . . ● names: List {
+. . . . . . . Identifier { b }
+. . . . . . }
+. . . . . . ● values: List {
+. . . . . . . SliceExpr {
+. . . . . . . . ● operand: Identifier { names }
+. . . . . . . . ● start: IntLit { 1 }
+. . . . . . . . ● end: IntLit { 3 }
+. . . . . . . }
+. . . . . . }
+. . . . . }
+. . . . . CallExpr {
+. . . . . . ● fun: SelectorExpr {
+. . . . . . . ● x: Identifier { fmt }
+. . . . . . . ● sel: Identifier { Println }
+. . . . . . }
+. . . . . . ● args: List {
+. . . . . . . Identifier { a }
+. . . . . . . Identifier { b }
+. . . . . . }
+. . . . . }
+. . . . . AssignStmt {
+. . . . . . ● lhs: List {
+. . . . . . . IndexExpr {
+. . . . . . . . ● operand: Identifier { b }
+. . . . . . . . ● index: IntLit { 0 }
+. . . . . . . }
+. . . . . . }
+. . . . . . ● rhs: List {
+. . . . . . . InterpretedStringLit { "XXX" }
+. . . . . . }
+. . . . . }
+. . . . . CallExpr {
+. . . . . . ● fun: SelectorExpr {
+. . . . . . . ● x: Identifier { fmt }
+. . . . . . . ● sel: Identifier { Println }
+. . . . . . }
+. . . . . . ● args: List {
+. . . . . . . Identifier { a }
+. . . . . . . Identifier { b }
+. . . . . . }
+. . . . . }
+. . . . . CallExpr {
+. . . . . . ● fun: SelectorExpr {
+. . . . . . . ● x: Identifier { fmt }
+. . . . . . . ● sel: Identifier { Println }
+. . . . . . }
+. . . . . . ● args: List {
+. . . . . . . Identifier { names }
+. . . . . . }
+. . . . . }
+. . . . }
+. . . }
+. . }
+. }
+}

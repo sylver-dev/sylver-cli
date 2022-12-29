@@ -1,0 +1,37 @@
+node JsonNode { }
+
+node Null: JsonNode { }
+
+node Array: JsonNode { elems: List<JsonNode> }
+
+node Bool: JsonNode { }
+
+node Number: JsonNode { }
+
+node String: JsonNode { }
+
+node Object: JsonNode {
+    members: List<Member>
+}
+
+node Member: JsonNode {
+    key: String,
+    value: JsonNode
+}
+
+ignore term WHITESPACE = `\s`
+term NUMBER_LIT = `\-?(0|([1-9][0-9]*))(.[0-9]+)?((e|E)(\+|-)?[0-9]+)?`
+term BOOL_LIT = `true|false`
+term STRING_LIT = `"([^"\\]|(\\[\\/bnfrt"])|(\\u[a-fA-F0-9]{4}))*"`
+
+rule main =
+      Null { 'null' }
+    | Number { NUMBER_LIT }
+    | Bool { BOOL_LIT }
+    | Array { '[' elems@sepBy(',', main) ']' }
+    | Object { '{' members@sepBy(',', member) '}' }
+    | string
+
+rule member = Member { key@string ':' value@main }
+
+rule string = String { STRING_LIT }

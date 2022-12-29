@@ -1,0 +1,77 @@
+File {
+. ● name: Identifier { funcs }
+. ● decls: List {
+. . FuncDecl {
+. . . ● receiver: FuncReceiver {
+. . . . ● name: Identifier { s }
+. . . . ● type: TypeStar {
+. . . . . ● inner: TypeIdent {
+. . . . . . ● name: Identifier { String }
+. . . . . }
+. . . . }
+. . . }
+. . . ● name: Identifier { helloWorld }
+. . . ● type: FuncType {
+. . . . ● params: List {
+. . . . . FuncTypeParam {
+. . . . . . ● names: List {
+. . . . . . . Identifier { valueOne }
+. . . . . . }
+. . . . . . ● type: TypeIdent {
+. . . . . . . ● name: Identifier { int }
+. . . . . . }
+. . . . . }
+. . . . . FuncTypeParam {
+. . . . . . ● names: List {
+. . . . . . . Identifier { str1 }
+. . . . . . . Identifier { str2 }
+. . . . . . }
+. . . . . . ● type: TypeIdent {
+. . . . . . . ● name: Identifier { string }
+. . . . . . }
+. . . . . }
+. . . . }
+. . . . ● return: TypeIdent {
+. . . . . ● name: Identifier { int }
+. . . . }
+. . . }
+. . . ● body: BlockStmt {
+. . . . ● list: List {
+. . . . . IfStmt {
+. . . . . . ● condition: BoolLit { true }
+. . . . . . ● body: BlockStmt {
+. . . . . . . ● list: List {
+. . . . . . . . ReturnStmt {
+. . . . . . . . . ● results: List {
+. . . . . . . . . . IntLit { 42 }
+. . . . . . . . . }
+. . . . . . . . }
+. . . . . . . }
+. . . . . . }
+. . . . . . ● else: IfStmt {
+. . . . . . . ● condition: IntLit { 1 }
+. . . . . . . ● body: BlockStmt {
+. . . . . . . . ● list: List {
+. . . . . . . . . ReturnStmt {
+. . . . . . . . . . ● results: List {
+. . . . . . . . . . . IntLit { 41 }
+. . . . . . . . . . }
+. . . . . . . . . }
+. . . . . . . . }
+. . . . . . . }
+. . . . . . . ● else: BlockStmt {
+. . . . . . . . ● list: List {
+. . . . . . . . . ReturnStmt {
+. . . . . . . . . . ● results: List {
+. . . . . . . . . . . InterpretedStringLit { "hello" }
+. . . . . . . . . . }
+. . . . . . . . . }
+. . . . . . . . }
+. . . . . . . }
+. . . . . . }
+. . . . . }
+. . . . }
+. . . }
+. . }
+. }
+}

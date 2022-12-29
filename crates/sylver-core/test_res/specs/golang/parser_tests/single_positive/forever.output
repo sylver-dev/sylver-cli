@@ -1,0 +1,20 @@
+File {
+. ● name: Identifier { main }
+. ● decls: List {
+. . FuncDecl {
+. . . ● name: Identifier { main }
+. . . ● type: FuncType {
+. . . . ● params: List {  }
+. . . }
+. . . ● body: BlockStmt {
+. . . . ● list: List {
+. . . . . ForStmt {
+. . . . . . ● body: BlockStmt {
+. . . . . . . ● list: List {  }
+. . . . . . }
+. . . . . }
+. . . . }
+. . . }
+. . }
+. }
+}

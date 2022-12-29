@@ -1,0 +1,98 @@
+File {
+. ● name: Identifier { main }
+. ● decls: List {
+. . ImportDecl {
+. . . ● specs: ImportSpec {
+. . . . ● path: InterpretedStringLit { "fmt" }
+. . . }
+. . }
+. . TypeDecl {
+. . . ● name: TypeIdent {
+. . . . ● name: Identifier { Vertex }
+. . . }
+. . . ● type: StructType {
+. . . . ● fields: List {
+. . . . . FieldSpec {
+. . . . . . ● names: List {
+. . . . . . . Identifier { X }
+. . . . . . }
+. . . . . . ● type: TypeIdent {
+. . . . . . . ● name: Identifier { int }
+. . . . . . }
+. . . . . }
+. . . . . FieldSpec {
+. . . . . . ● names: List {
+. . . . . . . Identifier { Y }
+. . . . . . }
+. . . . . . ● type: TypeIdent {
+. . . . . . . ● name: Identifier { int }
+. . . . . . }
+. . . . . }
+. . . . }
+. . . }
+. . }
+. . FuncDecl {
+. . . ● name: Identifier { main }
+. . . ● type: FuncType {
+. . . . ● params: List {  }
+. . . }
+. . . ● body: BlockStmt {
+. . . . ● list: List {
+. . . . . ShortVarDecl {
+. . . . . . ● names: List {
+. . . . . . . Identifier { v }
+. . . . . . }
+. . . . . . ● values: List {
+. . . . . . . CompositeLit {
+. . . . . . . . ● type: TypeIdent {
+. . . . . . . . . ● name: Identifier { Vertex }
+. . . . . . . . }
+. . . . . . . . ● body: LiteralValue {
+. . . . . . . . . ● elements: List {
+. . . . . . . . . . CompositeLitElem {
+. . . . . . . . . . . ● value: IntLit { 1 }
+. . . . . . . . . . }
+. . . . . . . . . . CompositeLitElem {
+. . . . . . . . . . . ● value: IntLit { 2 }
+. . . . . . . . . . }
+. . . . . . . . . }
+. . . . . . . . }
+. . . . . . . }
+. . . . . . }
+. . . . . }
+. . . . . ShortVarDecl {
+. . . . . . ● names: List {
+. . . . . . . Identifier { p }
+. . . . . . }
+. . . . . . ● values: List {
+. . . . . . . UnOp {
+. . . . . . . . ● op: Ref { & }
+. . . . . . . . ● value: Identifier { v }
+. . . . . . . }
+. . . . . . }
+. . . . . }
+. . . . . AssignStmt {
+. . . . . . ● lhs: List {
+. . . . . . . SelectorExpr {
+. . . . . . . . ● x: Identifier { p }
+. . . . . . . . ● sel: Identifier { X }
+. . . . . . . }
+. . . . . . }
+. . . . . . ● rhs: List {
+. . . . . . . IntLit { 1e9 }
+. . . . . . }
+. . . . . }
+. . . . . CallExpr {
+. . . . . . ● fun: SelectorExpr {
+. . . . . . . ● x: Identifier { fmt }
+. . . . . . . ● sel: Identifier { Println }
+. . . . . . }
+. . . . . . ● args: List {
+. . . . . . . Identifier { v }
+. . . . . . }
+. . . . . }
+. . . . }
+. . . }
+. . }
+. }
+}

@@ -1,0 +1,136 @@
+File {
+. ● name: Identifier { main }
+. ● decls: List {
+. . ImportDecl {
+. . . ● specs: List {
+. . . . ImportSpec {
+. . . . . ● path: InterpretedStringLit { "fmt" }
+. . . . }
+. . . . ImportSpec {
+. . . . . ● path: InterpretedStringLit { "math" }
+. . . . }
+. . . }
+. . }
+. . TypeDecl {
+. . . ● name: TypeIdent {
+. . . . ● name: Identifier { Vertex }
+. . . }
+. . . ● type: StructType {
+. . . . ● fields: List {
+. . . . . FieldSpec {
+. . . . . . ● names: List {
+. . . . . . . Identifier { X }
+. . . . . . . Identifier { Y }
+. . . . . . }
+. . . . . . ● type: TypeIdent {
+. . . . . . . ● name: Identifier { float64 }
+. . . . . . }
+. . . . . }
+. . . . }
+. . . }
+. . }
+. . FuncDecl {
+. . . ● receiver: FuncReceiver {
+. . . . ● name: Identifier { v }
+. . . . ● type: TypeIdent {
+. . . . . ● name: Identifier { Vertex }
+. . . . }
+. . . }
+. . . ● name: Identifier { Abs }
+. . . ● type: FuncType {
+. . . . ● params: List {  }
+. . . . ● return: TypeIdent {
+. . . . . ● name: Identifier { float64 }
+. . . . }
+. . . }
+. . . ● body: BlockStmt {
+. . . . ● list: List {
+. . . . . ReturnStmt {
+. . . . . . ● results: List {
+. . . . . . . CallExpr {
+. . . . . . . . ● fun: SelectorExpr {
+. . . . . . . . . ● x: Identifier { math }
+. . . . . . . . . ● sel: Identifier { Sqrt }
+. . . . . . . . }
+. . . . . . . . ● args: List {
+. . . . . . . . . BinOp {
+. . . . . . . . . . ● left: BinOp {
+. . . . . . . . . . . ● left: SelectorExpr {
+. . . . . . . . . . . . ● x: Identifier { v }
+. . . . . . . . . . . . ● sel: Identifier { X }
+. . . . . . . . . . . }
+. . . . . . . . . . . ● op: Times { * }
+. . . . . . . . . . . ● right: SelectorExpr {
+. . . . . . . . . . . . ● x: Identifier { v }
+. . . . . . . . . . . . ● sel: Identifier { X }
+. . . . . . . . . . . }
+. . . . . . . . . . }
+. . . . . . . . . . ● op: Plus { + }
+. . . . . . . . . . ● right: BinOp {
+. . . . . . . . . . . ● left: SelectorExpr {
+. . . . . . . . . . . . ● x: Identifier { v }
+. . . . . . . . . . . . ● sel: Identifier { Y }
+. . . . . . . . . . . }
+. . . . . . . . . . . ● op: Times { * }
+. . . . . . . . . . . ● right: SelectorExpr {
+. . . . . . . . . . . . ● x: Identifier { v }
+. . . . . . . . . . . . ● sel: Identifier { Y }
+. . . . . . . . . . . }
+. . . . . . . . . . }
+. . . . . . . . . }
+. . . . . . . . }
+. . . . . . . }
+. . . . . . }
+. . . . . }
+. . . . }
+. . . }
+. . }
+. . FuncDecl {
+. . . ● name: Identifier { main }
+. . . ● type: FuncType {
+. . . . ● params: List {  }
+. . . }
+. . . ● body: BlockStmt {
+. . . . ● list: List {
+. . . . . ShortVarDecl {
+. . . . . . ● names: List {
+. . . . . . . Identifier { v }
+. . . . . . }
+. . . . . . ● values: List {
+. . . . . . . CompositeLit {
+. . . . . . . . ● type: TypeIdent {
+. . . . . . . . . ● name: Identifier { Vertex }
+. . . . . . . . }
+. . . . . . . . ● body: LiteralValue {
+. . . . . . . . . ● elements: List {
+. . . . . . . . . . CompositeLitElem {
+. . . . . . . . . . . ● value: IntLit { 3 }
+. . . . . . . . . . }
+. . . . . . . . . . CompositeLitElem {
+. . . . . . . . . . . ● value: IntLit { 4 }
+. . . . . . . . . . }
+. . . . . . . . . }
+. . . . . . . . }
+. . . . . . . }
+. . . . . . }
+. . . . . }
+. . . . . CallExpr {
+. . . . . . ● fun: SelectorExpr {
+. . . . . . . ● x: Identifier { fmt }
+. . . . . . . ● sel: Identifier { Println }
+. . . . . . }
+. . . . . . ● args: List {
+. . . . . . . CallExpr {
+. . . . . . . . ● fun: SelectorExpr {
+. . . . . . . . . ● x: Identifier { v }
+. . . . . . . . . ● sel: Identifier { Abs }
+. . . . . . . . }
+. . . . . . . . ● args: List {  }
+. . . . . . . }
+. . . . . . }
+. . . . . }
+. . . . }
+. . . }
+. . }
+. }
+}

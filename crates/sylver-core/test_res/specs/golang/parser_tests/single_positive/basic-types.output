@@ -1,0 +1,118 @@
+File {
+. ● name: Identifier { main }
+. ● decls: List {
+. . ImportDecl {
+. . . ● specs: List {
+. . . . ImportSpec {
+. . . . . ● path: InterpretedStringLit { "fmt" }
+. . . . }
+. . . . ImportSpec {
+. . . . . ● path: InterpretedStringLit { "math/cmplx" }
+. . . . }
+. . . }
+. . }
+. . VarDeclBlock {
+. . . ● specs: List {
+. . . . VarSpec {
+. . . . . ● names: List {
+. . . . . . Identifier { ToBe }
+. . . . . }
+. . . . . ● type: TypeIdent {
+. . . . . . ● name: Identifier { bool }
+. . . . . }
+. . . . . ● values: List {
+. . . . . . BoolLit { false }
+. . . . . }
+. . . . }
+. . . . VarSpec {
+. . . . . ● names: List {
+. . . . . . Identifier { MaxInt }
+. . . . . }
+. . . . . ● type: TypeIdent {
+. . . . . . ● name: Identifier { uint64 }
+. . . . . }
+. . . . . ● values: List {
+. . . . . . BinOp {
+. . . . . . . ● left: BinOp {
+. . . . . . . . ● left: IntLit { 1 }
+. . . . . . . . ● op: ShiftLeft { << }
+. . . . . . . . ● right: IntLit { 64 }
+. . . . . . . }
+. . . . . . . ● op: Minus { - }
+. . . . . . . ● right: IntLit { 1 }
+. . . . . . }
+. . . . . }
+. . . . }
+. . . . VarSpec {
+. . . . . ● names: List {
+. . . . . . Identifier { z }
+. . . . . }
+. . . . . ● type: TypeIdent {
+. . . . . . ● name: Identifier { complex128 }
+. . . . . }
+. . . . . ● values: List {
+. . . . . . CallExpr {
+. . . . . . . ● fun: SelectorExpr {
+. . . . . . . . ● x: Identifier { cmplx }
+. . . . . . . . ● sel: Identifier { Sqrt }
+. . . . . . . }
+. . . . . . . ● args: List {
+. . . . . . . . BinOp {
+. . . . . . . . . ● left: UnOp {
+. . . . . . . . . . ● op: Minus { - }
+. . . . . . . . . . ● value: IntLit { 5 }
+. . . . . . . . . }
+. . . . . . . . . ● op: Plus { + }
+. . . . . . . . . ● right: ImagLit { 12i }
+. . . . . . . . }
+. . . . . . . }
+. . . . . . }
+. . . . . }
+. . . . }
+. . . }
+. . }
+. . FuncDecl {
+. . . ● name: Identifier { main }
+. . . ● type: FuncType {
+. . . . ● params: List {  }
+. . . }
+. . . ● body: BlockStmt {
+. . . . ● list: List {
+. . . . . CallExpr {
+. . . . . . ● fun: SelectorExpr {
+. . . . . . . ● x: Identifier { fmt }
+. . . . . . . ● sel: Identifier { Printf }
+. . . . . . }
+. . . . . . ● args: List {
+. . . . . . . InterpretedStringLit { "Type: %T Value: %v\n" }
+. . . . . . . Identifier { ToBe }
+. . . . . . . Identifier { ToBe }
+. . . . . . }
+. . . . . }
+. . . . . CallExpr {
+. . . . . . ● fun: SelectorExpr {
+. . . . . . . ● x: Identifier { fmt }
+. . . . . . . ● sel: Identifier { Printf }
+. . . . . . }
+. . . . . . ● args: List {
+. . . . . . . InterpretedStringLit { "Type: %T Value: %v\n" }
+. . . . . . . Identifier { MaxInt }
+. . . . . . . Identifier { MaxInt }
+. . . . . . }
+. . . . . }
+. . . . . CallExpr {
+. . . . . . ● fun: SelectorExpr {
+. . . . . . . ● x: Identifier { fmt }
+. . . . . . . ● sel: Identifier { Printf }
+. . . . . . }
+. . . . . . ● args: List {
+. . . . . . . InterpretedStringLit { "Type: %T Value: %v\n" }
+. . . . . . . Identifier { z }
+. . . . . . . Identifier { z }
+. . . . . . }
+. . . . . }
+. . . . }
+. . . }
+. . }
+. }
+}

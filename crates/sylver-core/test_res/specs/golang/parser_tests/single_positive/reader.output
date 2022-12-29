@@ -1,0 +1,125 @@
+File {
+. ● name: Identifier { main }
+. ● decls: List {
+. . ImportDecl {
+. . . ● specs: List {
+. . . . ImportSpec {
+. . . . . ● path: InterpretedStringLit { "fmt" }
+. . . . }
+. . . . ImportSpec {
+. . . . . ● path: InterpretedStringLit { "io" }
+. . . . }
+. . . . ImportSpec {
+. . . . . ● path: InterpretedStringLit { "strings" }
+. . . . }
+. . . }
+. . }
+. . FuncDecl {
+. . . ● name: Identifier { main }
+. . . ● type: FuncType {
+. . . . ● params: List {  }
+. . . }
+. . . ● body: BlockStmt {
+. . . . ● list: List {
+. . . . . ShortVarDecl {
+. . . . . . ● names: List {
+. . . . . . . Identifier { r }
+. . . . . . }
+. . . . . . ● values: List {
+. . . . . . . CallExpr {
+. . . . . . . . ● fun: SelectorExpr {
+. . . . . . . . . ● x: Identifier { strings }
+. . . . . . . . . ● sel: Identifier { NewReader }
+. . . . . . . . }
+. . . . . . . . ● args: List {
+. . . . . . . . . InterpretedStringLit { "Hello, Reader!" }
+. . . . . . . . }
+. . . . . . . }
+. . . . . . }
+. . . . . }
+. . . . . ShortVarDecl {
+. . . . . . ● names: List {
+. . . . . . . Identifier { b }
+. . . . . . }
+. . . . . . ● values: List {
+. . . . . . . CallExpr {
+. . . . . . . . ● fun: Identifier { make }
+. . . . . . . . ● args: List {
+. . . . . . . . . SliceType {
+. . . . . . . . . . ● elemsType: TypeIdent {
+. . . . . . . . . . . ● name: Identifier { byte }
+. . . . . . . . . . }
+. . . . . . . . . }
+. . . . . . . . . IntLit { 8 }
+. . . . . . . . }
+. . . . . . . }
+. . . . . . }
+. . . . . }
+. . . . . ForStmt {
+. . . . . . ● body: BlockStmt {
+. . . . . . . ● list: List {
+. . . . . . . . ShortVarDecl {
+. . . . . . . . . ● names: List {
+. . . . . . . . . . Identifier { n }
+. . . . . . . . . . Identifier { err }
+. . . . . . . . . }
+. . . . . . . . . ● values: List {
+. . . . . . . . . . CallExpr {
+. . . . . . . . . . . ● fun: SelectorExpr {
+. . . . . . . . . . . . ● x: Identifier { r }
+. . . . . . . . . . . . ● sel: Identifier { Read }
+. . . . . . . . . . . }
+. . . . . . . . . . . ● args: List {
+. . . . . . . . . . . . Identifier { b }
+. . . . . . . . . . . }
+. . . . . . . . . . }
+. . . . . . . . . }
+. . . . . . . . }
+. . . . . . . . CallExpr {
+. . . . . . . . . ● fun: SelectorExpr {
+. . . . . . . . . . ● x: Identifier { fmt }
+. . . . . . . . . . ● sel: Identifier { Printf }
+. . . . . . . . . }
+. . . . . . . . . ● args: List {
+. . . . . . . . . . InterpretedStringLit { "n = %v err = %v b = %v\n" }
+. . . . . . . . . . Identifier { n }
+. . . . . . . . . . Identifier { err }
+. . . . . . . . . . Identifier { b }
+. . . . . . . . . }
+. . . . . . . . }
+. . . . . . . . CallExpr {
+. . . . . . . . . ● fun: SelectorExpr {
+. . . . . . . . . . ● x: Identifier { fmt }
+. . . . . . . . . . ● sel: Identifier { Printf }
+. . . . . . . . . }
+. . . . . . . . . ● args: List {
+. . . . . . . . . . InterpretedStringLit { "b[:n] = %q\n" }
+. . . . . . . . . . SliceExpr {
+. . . . . . . . . . . ● operand: Identifier { b }
+. . . . . . . . . . . ● end: Identifier { n }
+. . . . . . . . . . }
+. . . . . . . . . }
+. . . . . . . . }
+. . . . . . . . IfStmt {
+. . . . . . . . . ● condition: BinOp {
+. . . . . . . . . . ● left: Identifier { err }
+. . . . . . . . . . ● op: EqEq { == }
+. . . . . . . . . . ● right: SelectorExpr {
+. . . . . . . . . . . ● x: Identifier { io }
+. . . . . . . . . . . ● sel: Identifier { EOF }
+. . . . . . . . . . }
+. . . . . . . . . }
+. . . . . . . . . ● body: BlockStmt {
+. . . . . . . . . . ● list: List {
+. . . . . . . . . . . BreakStmt { break }
+. . . . . . . . . . }
+. . . . . . . . . }
+. . . . . . . . }
+. . . . . . . }
+. . . . . . }
+. . . . . }
+. . . . }
+. . . }
+. . }
+. }
+}

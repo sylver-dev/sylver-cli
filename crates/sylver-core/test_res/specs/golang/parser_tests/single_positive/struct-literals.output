@@ -1,0 +1,136 @@
+File {
+. ● name: Identifier { main }
+. ● decls: List {
+. . ImportDecl {
+. . . ● specs: ImportSpec {
+. . . . ● path: InterpretedStringLit { "fmt" }
+. . . }
+. . }
+. . TypeDecl {
+. . . ● name: TypeIdent {
+. . . . ● name: Identifier { Vertex }
+. . . }
+. . . ● type: StructType {
+. . . . ● fields: List {
+. . . . . FieldSpec {
+. . . . . . ● names: List {
+. . . . . . . Identifier { X }
+. . . . . . . Identifier { Y }
+. . . . . . }
+. . . . . . ● type: TypeIdent {
+. . . . . . . ● name: Identifier { int }
+. . . . . . }
+. . . . . }
+. . . . }
+. . . }
+. . }
+. . VarDeclBlock {
+. . . ● specs: List {
+. . . . VarSpec {
+. . . . . ● names: List {
+. . . . . . Identifier { v1 }
+. . . . . }
+. . . . . ● values: List {
+. . . . . . CompositeLit {
+. . . . . . . ● type: TypeIdent {
+. . . . . . . . ● name: Identifier { Vertex }
+. . . . . . . }
+. . . . . . . ● body: LiteralValue {
+. . . . . . . . ● elements: List {
+. . . . . . . . . CompositeLitElem {
+. . . . . . . . . . ● value: IntLit { 1 }
+. . . . . . . . . }
+. . . . . . . . . CompositeLitElem {
+. . . . . . . . . . ● value: IntLit { 2 }
+. . . . . . . . . }
+. . . . . . . . }
+. . . . . . . }
+. . . . . . }
+. . . . . }
+. . . . }
+. . . . VarSpec {
+. . . . . ● names: List {
+. . . . . . Identifier { v2 }
+. . . . . }
+. . . . . ● values: List {
+. . . . . . CompositeLit {
+. . . . . . . ● type: TypeIdent {
+. . . . . . . . ● name: Identifier { Vertex }
+. . . . . . . }
+. . . . . . . ● body: LiteralValue {
+. . . . . . . . ● elements: List {
+. . . . . . . . . CompositeLitElem {
+. . . . . . . . . . ● key: Identifier { X }
+. . . . . . . . . . ● value: IntLit { 1 }
+. . . . . . . . . }
+. . . . . . . . }
+. . . . . . . }
+. . . . . . }
+. . . . . }
+. . . . }
+. . . . VarSpec {
+. . . . . ● names: List {
+. . . . . . Identifier { v3 }
+. . . . . }
+. . . . . ● values: List {
+. . . . . . CompositeLit {
+. . . . . . . ● type: TypeIdent {
+. . . . . . . . ● name: Identifier { Vertex }
+. . . . . . . }
+. . . . . . . ● body: LiteralValue {
+. . . . . . . . ● elements: List {  }
+. . . . . . . }
+. . . . . . }
+. . . . . }
+. . . . }
+. . . . VarSpec {
+. . . . . ● names: List {
+. . . . . . Identifier { p }
+. . . . . }
+. . . . . ● values: List {
+. . . . . . UnOp {
+. . . . . . . ● op: Ref { & }
+. . . . . . . ● value: CompositeLit {
+. . . . . . . . ● type: TypeIdent {
+. . . . . . . . . ● name: Identifier { Vertex }
+. . . . . . . . }
+. . . . . . . . ● body: LiteralValue {
+. . . . . . . . . ● elements: List {
+. . . . . . . . . . CompositeLitElem {
+. . . . . . . . . . . ● value: IntLit { 1 }
+. . . . . . . . . . }
+. . . . . . . . . . CompositeLitElem {
+. . . . . . . . . . . ● value: IntLit { 2 }
+. . . . . . . . . . }
+. . . . . . . . . }
+. . . . . . . . }
+. . . . . . . }
+. . . . . . }
+. . . . . }
+. . . . }
+. . . }
+. . }
+. . FuncDecl {
+. . . ● name: Identifier { main }
+. . . ● type: FuncType {
+. . . . ● params: List {  }
+. . . }
+. . . ● body: BlockStmt {
+. . . . ● list: List {
+. . . . . CallExpr {
+. . . . . . ● fun: SelectorExpr {
+. . . . . . . ● x: Identifier { fmt }
+. . . . . . . ● sel: Identifier { Println }
+. . . . . . }
+. . . . . . ● args: List {
+. . . . . . . Identifier { v1 }
+. . . . . . . Identifier { p }
+. . . . . . . Identifier { v2 }
+. . . . . . . Identifier { v3 }
+. . . . . . }
+. . . . . }
+. . . . }
+. . . }
+. . }
+. }
+}

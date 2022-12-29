@@ -1,0 +1,123 @@
+File {
+. ● name: Identifier { main }
+. ● decls: List {
+. . ImportDecl {
+. . . ● specs: ImportSpec {
+. . . . ● path: InterpretedStringLit { "fmt" }
+. . . }
+. . }
+. . FuncDecl {
+. . . ● name: Identifier { main }
+. . . ● type: FuncType {
+. . . . ● params: List {  }
+. . . }
+. . . ● body: BlockStmt {
+. . . . ● list: List {
+. . . . . VarDecl {
+. . . . . . ● names: List {
+. . . . . . . Identifier { i }
+. . . . . . }
+. . . . . . ● type: InterfaceType {
+. . . . . . . ● elems: List {  }
+. . . . . . }
+. . . . . . ● values: List {
+. . . . . . . InterpretedStringLit { "hello" }
+. . . . . . }
+. . . . . }
+. . . . . ShortVarDecl {
+. . . . . . ● names: List {
+. . . . . . . Identifier { s }
+. . . . . . }
+. . . . . . ● values: List {
+. . . . . . . TypeAssertion {
+. . . . . . . . ● operand: Identifier { i }
+. . . . . . . . ● type: TypeIdent {
+. . . . . . . . . ● name: Identifier { string }
+. . . . . . . . }
+. . . . . . . }
+. . . . . . }
+. . . . . }
+. . . . . CallExpr {
+. . . . . . ● fun: SelectorExpr {
+. . . . . . . ● x: Identifier { fmt }
+. . . . . . . ● sel: Identifier { Println }
+. . . . . . }
+. . . . . . ● args: List {
+. . . . . . . Identifier { s }
+. . . . . . }
+. . . . . }
+. . . . . ShortVarDecl {
+. . . . . . ● names: List {
+. . . . . . . Identifier { s }
+. . . . . . . Identifier { ok }
+. . . . . . }
+. . . . . . ● values: List {
+. . . . . . . TypeAssertion {
+. . . . . . . . ● operand: Identifier { i }
+. . . . . . . . ● type: TypeIdent {
+. . . . . . . . . ● name: Identifier { string }
+. . . . . . . . }
+. . . . . . . }
+. . . . . . }
+. . . . . }
+. . . . . CallExpr {
+. . . . . . ● fun: SelectorExpr {
+. . . . . . . ● x: Identifier { fmt }
+. . . . . . . ● sel: Identifier { Println }
+. . . . . . }
+. . . . . . ● args: List {
+. . . . . . . Identifier { s }
+. . . . . . . Identifier { ok }
+. . . . . . }
+. . . . . }
+. . . . . ShortVarDecl {
+. . . . . . ● names: List {
+. . . . . . . Identifier { f }
+. . . . . . . Identifier { ok }
+. . . . . . }
+. . . . . . ● values: List {
+. . . . . . . TypeAssertion {
+. . . . . . . . ● operand: Identifier { i }
+. . . . . . . . ● type: TypeIdent {
+. . . . . . . . . ● name: Identifier { float64 }
+. . . . . . . . }
+. . . . . . . }
+. . . . . . }
+. . . . . }
+. . . . . CallExpr {
+. . . . . . ● fun: SelectorExpr {
+. . . . . . . ● x: Identifier { fmt }
+. . . . . . . ● sel: Identifier { Println }
+. . . . . . }
+. . . . . . ● args: List {
+. . . . . . . Identifier { f }
+. . . . . . . Identifier { ok }
+. . . . . . }
+. . . . . }
+. . . . . AssignStmt {
+. . . . . . ● lhs: List {
+. . . . . . . Identifier { f }
+. . . . . . }
+. . . . . . ● rhs: List {
+. . . . . . . TypeAssertion {
+. . . . . . . . ● operand: Identifier { i }
+. . . . . . . . ● type: TypeIdent {
+. . . . . . . . . ● name: Identifier { float64 }
+. . . . . . . . }
+. . . . . . . }
+. . . . . . }
+. . . . . }
+. . . . . CallExpr {
+. . . . . . ● fun: SelectorExpr {
+. . . . . . . ● x: Identifier { fmt }
+. . . . . . . ● sel: Identifier { Println }
+. . . . . . }
+. . . . . . ● args: List {
+. . . . . . . Identifier { f }
+. . . . . . }
+. . . . . }
+. . . . }
+. . . }
+. . }
+. }
+}

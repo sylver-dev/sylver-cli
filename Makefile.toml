@@ -1,0 +1,5 @@
+[tasks.udeps]
+workspace = false
+install_crate = { crate_name = "cargo-udeps", binary = "cargo", test_arg = ["udeps", "--help"] }
+command = "cargo"
+args = ["+nightly", "udeps", "--all-targets"]

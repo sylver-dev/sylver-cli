@@ -1,0 +1,40 @@
+File {
+. ● name: Identifier { main }
+. ● decls: List {
+. . ImportDecl {
+. . . ● specs: ImportSpec {
+. . . . ● path: InterpretedStringLit { "fmt" }
+. . . }
+. . }
+. . FuncDecl {
+. . . ● name: Identifier { main }
+. . . ● type: FuncType {
+. . . . ● params: List {  }
+. . . }
+. . . ● body: BlockStmt {
+. . . . ● list: List {
+. . . . . DeferStmt {
+. . . . . . ● call: CallExpr {
+. . . . . . . ● fun: SelectorExpr {
+. . . . . . . . ● x: Identifier { fmt }
+. . . . . . . . ● sel: Identifier { Println }
+. . . . . . . }
+. . . . . . . ● args: List {
+. . . . . . . . InterpretedStringLit { "world" }
+. . . . . . . }
+. . . . . . }
+. . . . . }
+. . . . . CallExpr {
+. . . . . . ● fun: SelectorExpr {
+. . . . . . . ● x: Identifier { fmt }
+. . . . . . . ● sel: Identifier { Println }
+. . . . . . }
+. . . . . . ● args: List {
+. . . . . . . InterpretedStringLit { "hello" }
+. . . . . . }
+. . . . . }
+. . . . }
+. . . }
+. . }
+. }
+}

@@ -1,0 +1,120 @@
+File {
+. ● name: Identifier { main }
+. ● decls: List {
+. . ImportDecl {
+. . . ● specs: List {
+. . . . ImportSpec {
+. . . . . ● path: InterpretedStringLit { "fmt" }
+. . . . }
+. . . . ImportSpec {
+. . . . . ● path: InterpretedStringLit { "math" }
+. . . . }
+. . . }
+. . }
+. . TypeDecl {
+. . . ● name: TypeIdent {
+. . . . ● name: Identifier { MyFloat }
+. . . }
+. . . ● type: TypeIdent {
+. . . . ● name: Identifier { float64 }
+. . . }
+. . }
+. . FuncDecl {
+. . . ● receiver: FuncReceiver {
+. . . . ● name: Identifier { f }
+. . . . ● type: TypeIdent {
+. . . . . ● name: Identifier { MyFloat }
+. . . . }
+. . . }
+. . . ● name: Identifier { Abs }
+. . . ● type: FuncType {
+. . . . ● params: List {  }
+. . . . ● return: TypeIdent {
+. . . . . ● name: Identifier { float64 }
+. . . . }
+. . . }
+. . . ● body: BlockStmt {
+. . . . ● list: List {
+. . . . . IfStmt {
+. . . . . . ● condition: BinOp {
+. . . . . . . ● left: Identifier { f }
+. . . . . . . ● op: Inf { < }
+. . . . . . . ● right: IntLit { 0 }
+. . . . . . }
+. . . . . . ● body: BlockStmt {
+. . . . . . . ● list: List {
+. . . . . . . . ReturnStmt {
+. . . . . . . . . ● results: List {
+. . . . . . . . . . CallExpr {
+. . . . . . . . . . . ● fun: Identifier { float64 }
+. . . . . . . . . . . ● args: List {
+. . . . . . . . . . . . UnOp {
+. . . . . . . . . . . . . ● op: Minus { - }
+. . . . . . . . . . . . . ● value: Identifier { f }
+. . . . . . . . . . . . }
+. . . . . . . . . . . }
+. . . . . . . . . . }
+. . . . . . . . . }
+. . . . . . . . }
+. . . . . . . }
+. . . . . . }
+. . . . . }
+. . . . . ReturnStmt {
+. . . . . . ● results: List {
+. . . . . . . CallExpr {
+. . . . . . . . ● fun: Identifier { float64 }
+. . . . . . . . ● args: List {
+. . . . . . . . . Identifier { f }
+. . . . . . . . }
+. . . . . . . }
+. . . . . . }
+. . . . . }
+. . . . }
+. . . }
+. . }
+. . FuncDecl {
+. . . ● name: Identifier { main }
+. . . ● type: FuncType {
+. . . . ● params: List {  }
+. . . }
+. . . ● body: BlockStmt {
+. . . . ● list: List {
+. . . . . ShortVarDecl {
+. . . . . . ● names: List {
+. . . . . . . Identifier { f }
+. . . . . . }
+. . . . . . ● values: List {
+. . . . . . . CallExpr {
+. . . . . . . . ● fun: Identifier { MyFloat }
+. . . . . . . . ● args: List {
+. . . . . . . . . UnOp {
+. . . . . . . . . . ● op: Minus { - }
+. . . . . . . . . . ● value: SelectorExpr {
+. . . . . . . . . . . ● x: Identifier { math }
+. . . . . . . . . . . ● sel: Identifier { Sqrt2 }
+. . . . . . . . . . }
+. . . . . . . . . }
+. . . . . . . . }
+. . . . . . . }
+. . . . . . }
+. . . . . }
+. . . . . CallExpr {
+. . . . . . ● fun: SelectorExpr {
+. . . . . . . ● x: Identifier { fmt }
+. . . . . . . ● sel: Identifier { Println }
+. . . . . . }
+. . . . . . ● args: List {
+. . . . . . . CallExpr {
+. . . . . . . . ● fun: SelectorExpr {
+. . . . . . . . . ● x: Identifier { f }
+. . . . . . . . . ● sel: Identifier { Abs }
+. . . . . . . . }
+. . . . . . . . ● args: List {  }
+. . . . . . . }
+. . . . . . }
+. . . . . }
+. . . . }
+. . . }
+. . }
+. }
+}

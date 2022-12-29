@@ -1,0 +1,70 @@
+File {
+. ● name: Identifier { main }
+. ● decls: List {
+. . ImportDecl {
+. . . ● specs: ImportSpec {
+. . . . ● path: InterpretedStringLit { "fmt" }
+. . . }
+. . }
+. . FuncDecl {
+. . . ● name: Identifier { main }
+. . . ● type: FuncType {
+. . . . ● params: List {  }
+. . . }
+. . . ● body: BlockStmt {
+. . . . ● list: List {
+. . . . . ShortVarDecl {
+. . . . . . ● names: List {
+. . . . . . . Identifier { ch }
+. . . . . . }
+. . . . . . ● values: List {
+. . . . . . . CallExpr {
+. . . . . . . . ● fun: Identifier { make }
+. . . . . . . . ● args: List {
+. . . . . . . . . ChanType {
+. . . . . . . . . . ● elemsType: TypeIdent {
+. . . . . . . . . . . ● name: Identifier { int }
+. . . . . . . . . . }
+. . . . . . . . . }
+. . . . . . . . . IntLit { 2 }
+. . . . . . . . }
+. . . . . . . }
+. . . . . . }
+. . . . . }
+. . . . . SendStmt {
+. . . . . . ● channel: Identifier { ch }
+. . . . . . ● value: IntLit { 1 }
+. . . . . }
+. . . . . SendStmt {
+. . . . . . ● channel: Identifier { ch }
+. . . . . . ● value: IntLit { 2 }
+. . . . . }
+. . . . . CallExpr {
+. . . . . . ● fun: SelectorExpr {
+. . . . . . . ● x: Identifier { fmt }
+. . . . . . . ● sel: Identifier { Println }
+. . . . . . }
+. . . . . . ● args: List {
+. . . . . . . UnOp {
+. . . . . . . . ● op: Receive { <- }
+. . . . . . . . ● value: Identifier { ch }
+. . . . . . . }
+. . . . . . }
+. . . . . }
+. . . . . CallExpr {
+. . . . . . ● fun: SelectorExpr {
+. . . . . . . ● x: Identifier { fmt }
+. . . . . . . ● sel: Identifier { Println }
+. . . . . . }
+. . . . . . ● args: List {
+. . . . . . . UnOp {
+. . . . . . . . ● op: Receive { <- }
+. . . . . . . . ● value: Identifier { ch }
+. . . . . . . }
+. . . . . . }
+. . . . . }
+. . . . }
+. . . }
+. . }
+. }
+}

@@ -1,0 +1,193 @@
+File {
+. ● name: Identifier { main }
+. ● decls: List {
+. . ImportDecl {
+. . . ● specs: ImportSpec {
+. . . . ● path: InterpretedStringLit { "fmt" }
+. . . }
+. . }
+. . FuncDecl {
+. . . ● name: Identifier { Index }
+. . . ● type: FuncType {
+. . . . ● typeParams: List {
+. . . . . TypeParameter {
+. . . . . . ● names: List {
+. . . . . . . Identifier { T }
+. . . . . . }
+. . . . . . ● constraint: TypeConstraint {
+. . . . . . . ● constraint: InterfaceTypeConstraint {
+. . . . . . . . ● type: TypeIdent {
+. . . . . . . . . ● name: Identifier { comparable }
+. . . . . . . . }
+. . . . . . . }
+. . . . . . }
+. . . . . }
+. . . . }
+. . . . ● params: List {
+. . . . . FuncTypeParam {
+. . . . . . ● names: List {
+. . . . . . . Identifier { s }
+. . . . . . }
+. . . . . . ● type: SliceType {
+. . . . . . . ● elemsType: TypeIdent {
+. . . . . . . . ● name: Identifier { T }
+. . . . . . . }
+. . . . . . }
+. . . . . }
+. . . . . FuncTypeParam {
+. . . . . . ● names: List {
+. . . . . . . Identifier { x }
+. . . . . . }
+. . . . . . ● type: TypeIdent {
+. . . . . . . ● name: Identifier { T }
+. . . . . . }
+. . . . . }
+. . . . }
+. . . . ● return: TypeIdent {
+. . . . . ● name: Identifier { int }
+. . . . }
+. . . }
+. . . ● body: BlockStmt {
+. . . . ● list: List {
+. . . . . ForStmt {
+. . . . . . ● clause: RangeClause {
+. . . . . . . ● left: List {
+. . . . . . . . Identifier { i }
+. . . . . . . . Identifier { v }
+. . . . . . . }
+. . . . . . . ● right: Identifier { s }
+. . . . . . }
+. . . . . . ● body: BlockStmt {
+. . . . . . . ● list: List {
+. . . . . . . . IfStmt {
+. . . . . . . . . ● condition: BinOp {
+. . . . . . . . . . ● left: Identifier { v }
+. . . . . . . . . . ● op: EqEq { == }
+. . . . . . . . . . ● right: Identifier { x }
+. . . . . . . . . }
+. . . . . . . . . ● body: BlockStmt {
+. . . . . . . . . . ● list: List {
+. . . . . . . . . . . ReturnStmt {
+. . . . . . . . . . . . ● results: List {
+. . . . . . . . . . . . . Identifier { i }
+. . . . . . . . . . . . }
+. . . . . . . . . . . }
+. . . . . . . . . . }
+. . . . . . . . . }
+. . . . . . . . }
+. . . . . . . }
+. . . . . . }
+. . . . . }
+. . . . . ReturnStmt {
+. . . . . . ● results: List {
+. . . . . . . UnOp {
+. . . . . . . . ● op: Minus { - }
+. . . . . . . . ● value: IntLit { 1 }
+. . . . . . . }
+. . . . . . }
+. . . . . }
+. . . . }
+. . . }
+. . }
+. . FuncDecl {
+. . . ● name: Identifier { main }
+. . . ● type: FuncType {
+. . . . ● params: List {  }
+. . . }
+. . . ● body: BlockStmt {
+. . . . ● list: List {
+. . . . . ShortVarDecl {
+. . . . . . ● names: List {
+. . . . . . . Identifier { si }
+. . . . . . }
+. . . . . . ● values: List {
+. . . . . . . CompositeLit {
+. . . . . . . . ● type: SliceType {
+. . . . . . . . . ● elemsType: TypeIdent {
+. . . . . . . . . . ● name: Identifier { int }
+. . . . . . . . . }
+. . . . . . . . }
+. . . . . . . . ● body: LiteralValue {
+. . . . . . . . . ● elements: List {
+. . . . . . . . . . CompositeLitElem {
+. . . . . . . . . . . ● value: IntLit { 10 }
+. . . . . . . . . . }
+. . . . . . . . . . CompositeLitElem {
+. . . . . . . . . . . ● value: IntLit { 20 }
+. . . . . . . . . . }
+. . . . . . . . . . CompositeLitElem {
+. . . . . . . . . . . ● value: IntLit { 15 }
+. . . . . . . . . . }
+. . . . . . . . . . CompositeLitElem {
+. . . . . . . . . . . ● value: UnOp {
+. . . . . . . . . . . . ● op: Minus { - }
+. . . . . . . . . . . . ● value: IntLit { 10 }
+. . . . . . . . . . . }
+. . . . . . . . . . }
+. . . . . . . . . }
+. . . . . . . . }
+. . . . . . . }
+. . . . . . }
+. . . . . }
+. . . . . CallExpr {
+. . . . . . ● fun: SelectorExpr {
+. . . . . . . ● x: Identifier { fmt }
+. . . . . . . ● sel: Identifier { Println }
+. . . . . . }
+. . . . . . ● args: List {
+. . . . . . . CallExpr {
+. . . . . . . . ● fun: Identifier { Index }
+. . . . . . . . ● args: List {
+. . . . . . . . . Identifier { si }
+. . . . . . . . . IntLit { 15 }
+. . . . . . . . }
+. . . . . . . }
+. . . . . . }
+. . . . . }
+. . . . . ShortVarDecl {
+. . . . . . ● names: List {
+. . . . . . . Identifier { ss }
+. . . . . . }
+. . . . . . ● values: List {
+. . . . . . . CompositeLit {
+. . . . . . . . ● type: SliceType {
+. . . . . . . . . ● elemsType: TypeIdent {
+. . . . . . . . . . ● name: Identifier { string }
+. . . . . . . . . }
+. . . . . . . . }
+. . . . . . . . ● body: LiteralValue {
+. . . . . . . . . ● elements: List {
+. . . . . . . . . . CompositeLitElem {
+. . . . . . . . . . . ● value: InterpretedStringLit { "foo" }
+. . . . . . . . . . }
+. . . . . . . . . . CompositeLitElem {
+. . . . . . . . . . . ● value: InterpretedStringLit { "bar" }
+. . . . . . . . . . }
+. . . . . . . . . . CompositeLitElem {
+. . . . . . . . . . . ● value: InterpretedStringLit { "baz" }
+. . . . . . . . . . }
+. . . . . . . . . }
+. . . . . . . . }
+. . . . . . . }
+. . . . . . }
+. . . . . }
+. . . . . CallExpr {
+. . . . . . ● fun: SelectorExpr {
+. . . . . . . ● x: Identifier { fmt }
+. . . . . . . ● sel: Identifier { Println }
+. . . . . . }
+. . . . . . ● args: List {
+. . . . . . . CallExpr {
+. . . . . . . . ● fun: Identifier { Index }
+. . . . . . . . ● args: List {
+. . . . . . . . . Identifier { ss }
+. . . . . . . . . InterpretedStringLit { "hello" }
+. . . . . . . . }
+. . . . . . . }
+. . . . . . }
+. . . . . }
+. . . . }
+. . . }
+. . }
+. }
+}

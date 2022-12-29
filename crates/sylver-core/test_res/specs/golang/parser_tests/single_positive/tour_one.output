@@ -1,0 +1,43 @@
+File {
+. ● name: Identifier { tour_one }
+. ● decls: List {
+. . ImportDecl {
+. . . ● specs: List {
+. . . . ImportSpec {
+. . . . . ● path: InterpretedStringLit { "fmt" }
+. . . . }
+. . . . ImportSpec {
+. . . . . ● path: InterpretedStringLit { "math/rand" }
+. . . . }
+. . . }
+. . }
+. . FuncDecl {
+. . . ● name: Identifier { main }
+. . . ● type: FuncType {
+. . . . ● params: List {  }
+. . . }
+. . . ● body: BlockStmt {
+. . . . ● list: List {
+. . . . . CallExpr {
+. . . . . . ● fun: SelectorExpr {
+. . . . . . . ● x: Identifier { fmt }
+. . . . . . . ● sel: Identifier { Println }
+. . . . . . }
+. . . . . . ● args: List {
+. . . . . . . InterpretedStringLit { "My favorite number is" }
+. . . . . . . CallExpr {
+. . . . . . . . ● fun: SelectorExpr {
+. . . . . . . . . ● x: Identifier { rand }
+. . . . . . . . . ● sel: Identifier { Intn }
+. . . . . . . . }
+. . . . . . . . ● args: List {
+. . . . . . . . . IntLit { 10 }
+. . . . . . . . }
+. . . . . . . }
+. . . . . . }
+. . . . . }
+. . . . }
+. . . }
+. . }
+. }
+}

@@ -1,0 +1,75 @@
+File {
+. ● name: Identifier { main }
+. ● decls: List {
+. . ImportDecl {
+. . . ● specs: ImportSpec {
+. . . . ● path: InterpretedStringLit { "fmt" }
+. . . }
+. . }
+. . ConstDecl {
+. . . ● names: List {
+. . . . Identifier { Pi }
+. . . }
+. . . ● exprs: List {
+. . . . FloatLit { 3.14 }
+. . . }
+. . }
+. . FuncDecl {
+. . . ● name: Identifier { main }
+. . . ● type: FuncType {
+. . . . ● params: List {  }
+. . . }
+. . . ● body: BlockStmt {
+. . . . ● list: List {
+. . . . . ConstDecl {
+. . . . . . ● names: List {
+. . . . . . . Identifier { World }
+. . . . . . }
+. . . . . . ● exprs: List {
+. . . . . . . InterpretedStringLit { "世界" }
+. . . . . . }
+. . . . . }
+. . . . . CallExpr {
+. . . . . . ● fun: SelectorExpr {
+. . . . . . . ● x: Identifier { fmt }
+. . . . . . . ● sel: Identifier { Println }
+. . . . . . }
+. . . . . . ● args: List {
+. . . . . . . InterpretedStringLit { "Hello" }
+. . . . . . . Identifier { World }
+. . . . . . }
+. . . . . }
+. . . . . CallExpr {
+. . . . . . ● fun: SelectorExpr {
+. . . . . . . ● x: Identifier { fmt }
+. . . . . . . ● sel: Identifier { Println }
+. . . . . . }
+. . . . . . ● args: List {
+. . . . . . . InterpretedStringLit { "Happy" }
+. . . . . . . Identifier { Pi }
+. . . . . . . InterpretedStringLit { "Day" }
+. . . . . . }
+. . . . . }
+. . . . . ConstDecl {
+. . . . . . ● names: List {
+. . . . . . . Identifier { Truth }
+. . . . . . }
+. . . . . . ● exprs: List {
+. . . . . . . BoolLit { true }
+. . . . . . }
+. . . . . }
+. . . . . CallExpr {
+. . . . . . ● fun: SelectorExpr {
+. . . . . . . ● x: Identifier { fmt }
+. . . . . . . ● sel: Identifier { Println }
+. . . . . . }
+. . . . . . ● args: List {
+. . . . . . . InterpretedStringLit { "Go rules?" }
+. . . . . . . Identifier { Truth }
+. . . . . . }
+. . . . . }
+. . . . }
+. . . }
+. . }
+. }
+}

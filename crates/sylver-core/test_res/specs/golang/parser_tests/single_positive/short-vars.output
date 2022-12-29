@@ -1,0 +1,67 @@
+File {
+. ● name: Identifier { main }
+. ● decls: List {
+. . ImportDecl {
+. . . ● specs: ImportSpec {
+. . . . ● path: InterpretedStringLit { "fmt" }
+. . . }
+. . }
+. . FuncDecl {
+. . . ● name: Identifier { main }
+. . . ● type: FuncType {
+. . . . ● params: List {  }
+. . . }
+. . . ● body: BlockStmt {
+. . . . ● list: List {
+. . . . . VarDecl {
+. . . . . . ● names: List {
+. . . . . . . Identifier { i }
+. . . . . . . Identifier { j }
+. . . . . . }
+. . . . . . ● type: TypeIdent {
+. . . . . . . ● name: Identifier { int }
+. . . . . . }
+. . . . . . ● values: List {
+. . . . . . . IntLit { 1 }
+. . . . . . . IntLit { 2 }
+. . . . . . }
+. . . . . }
+. . . . . ShortVarDecl {
+. . . . . . ● names: List {
+. . . . . . . Identifier { k }
+. . . . . . }
+. . . . . . ● values: List {
+. . . . . . . IntLit { 3 }
+. . . . . . }
+. . . . . }
+. . . . . ShortVarDecl {
+. . . . . . ● names: List {
+. . . . . . . Identifier { c }
+. . . . . . . Identifier { python }
+. . . . . . . Identifier { java }
+. . . . . . }
+. . . . . . ● values: List {
+. . . . . . . BoolLit { true }
+. . . . . . . BoolLit { false }
+. . . . . . . InterpretedStringLit { "no!" }
+. . . . . . }
+. . . . . }
+. . . . . CallExpr {
+. . . . . . ● fun: SelectorExpr {
+. . . . . . . ● x: Identifier { fmt }
+. . . . . . . ● sel: Identifier { Println }
+. . . . . . }
+. . . . . . ● args: List {
+. . . . . . . Identifier { i }
+. . . . . . . Identifier { j }
+. . . . . . . Identifier { k }
+. . . . . . . Identifier { c }
+. . . . . . . Identifier { python }
+. . . . . . . Identifier { java }
+. . . . . . }
+. . . . . }
+. . . . }
+. . . }
+. . }
+. }
+}

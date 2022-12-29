@@ -1,0 +1,210 @@
+File {
+. ● name: Identifier { main }
+. ● decls: List {
+. . ImportDecl {
+. . . ● specs: ImportSpec {
+. . . . ● path: InterpretedStringLit { "fmt" }
+. . . }
+. . }
+. . FuncDecl {
+. . . ● name: Identifier { sum }
+. . . ● type: FuncType {
+. . . . ● params: List {
+. . . . . FuncTypeParam {
+. . . . . . ● names: List {
+. . . . . . . Identifier { s }
+. . . . . . }
+. . . . . . ● type: SliceType {
+. . . . . . . ● elemsType: TypeIdent {
+. . . . . . . . ● name: Identifier { int }
+. . . . . . . }
+. . . . . . }
+. . . . . }
+. . . . . FuncTypeParam {
+. . . . . . ● names: List {
+. . . . . . . Identifier { c }
+. . . . . . }
+. . . . . . ● type: ChanType {
+. . . . . . . ● elemsType: TypeIdent {
+. . . . . . . . ● name: Identifier { int }
+. . . . . . . }
+. . . . . . }
+. . . . . }
+. . . . }
+. . . }
+. . . ● body: BlockStmt {
+. . . . ● list: List {
+. . . . . ShortVarDecl {
+. . . . . . ● names: List {
+. . . . . . . Identifier { sum }
+. . . . . . }
+. . . . . . ● values: List {
+. . . . . . . IntLit { 0 }
+. . . . . . }
+. . . . . }
+. . . . . ForStmt {
+. . . . . . ● clause: RangeClause {
+. . . . . . . ● left: List {
+. . . . . . . . Identifier { _ }
+. . . . . . . . Identifier { v }
+. . . . . . . }
+. . . . . . . ● right: Identifier { s }
+. . . . . . }
+. . . . . . ● body: BlockStmt {
+. . . . . . . ● list: List {
+. . . . . . . . BinOp {
+. . . . . . . . . ● left: Identifier { sum }
+. . . . . . . . . ● op: AddAssign { += }
+. . . . . . . . . ● right: Identifier { v }
+. . . . . . . . }
+. . . . . . . }
+. . . . . . }
+. . . . . }
+. . . . . SendStmt {
+. . . . . . ● channel: Identifier { c }
+. . . . . . ● value: Identifier { sum }
+. . . . . }
+. . . . }
+. . . }
+. . }
+. . FuncDecl {
+. . . ● name: Identifier { main }
+. . . ● type: FuncType {
+. . . . ● params: List {  }
+. . . }
+. . . ● body: BlockStmt {
+. . . . ● list: List {
+. . . . . ShortVarDecl {
+. . . . . . ● names: List {
+. . . . . . . Identifier { s }
+. . . . . . }
+. . . . . . ● values: List {
+. . . . . . . CompositeLit {
+. . . . . . . . ● type: SliceType {
+. . . . . . . . . ● elemsType: TypeIdent {
+. . . . . . . . . . ● name: Identifier { int }
+. . . . . . . . . }
+. . . . . . . . }
+. . . . . . . . ● body: LiteralValue {
+. . . . . . . . . ● elements: List {
+. . . . . . . . . . CompositeLitElem {
+. . . . . . . . . . . ● value: IntLit { 7 }
+. . . . . . . . . . }
+. . . . . . . . . . CompositeLitElem {
+. . . . . . . . . . . ● value: IntLit { 2 }
+. . . . . . . . . . }
+. . . . . . . . . . CompositeLitElem {
+. . . . . . . . . . . ● value: IntLit { 8 }
+. . . . . . . . . . }
+. . . . . . . . . . CompositeLitElem {
+. . . . . . . . . . . ● value: UnOp {
+. . . . . . . . . . . . ● op: Minus { - }
+. . . . . . . . . . . . ● value: IntLit { 9 }
+. . . . . . . . . . . }
+. . . . . . . . . . }
+. . . . . . . . . . CompositeLitElem {
+. . . . . . . . . . . ● value: IntLit { 4 }
+. . . . . . . . . . }
+. . . . . . . . . . CompositeLitElem {
+. . . . . . . . . . . ● value: IntLit { 0 }
+. . . . . . . . . . }
+. . . . . . . . . }
+. . . . . . . . }
+. . . . . . . }
+. . . . . . }
+. . . . . }
+. . . . . ShortVarDecl {
+. . . . . . ● names: List {
+. . . . . . . Identifier { c }
+. . . . . . }
+. . . . . . ● values: List {
+. . . . . . . CallExpr {
+. . . . . . . . ● fun: Identifier { make }
+. . . . . . . . ● args: List {
+. . . . . . . . . ChanType {
+. . . . . . . . . . ● elemsType: TypeIdent {
+. . . . . . . . . . . ● name: Identifier { int }
+. . . . . . . . . . }
+. . . . . . . . . }
+. . . . . . . . }
+. . . . . . . }
+. . . . . . }
+. . . . . }
+. . . . . GoStmt {
+. . . . . . ● call: CallExpr {
+. . . . . . . ● fun: Identifier { sum }
+. . . . . . . ● args: List {
+. . . . . . . . SliceExpr {
+. . . . . . . . . ● operand: Identifier { s }
+. . . . . . . . . ● end: BinOp {
+. . . . . . . . . . ● left: CallExpr {
+. . . . . . . . . . . ● fun: Identifier { len }
+. . . . . . . . . . . ● args: List {
+. . . . . . . . . . . . Identifier { s }
+. . . . . . . . . . . }
+. . . . . . . . . . }
+. . . . . . . . . . ● op: Div { / }
+. . . . . . . . . . ● right: IntLit { 2 }
+. . . . . . . . . }
+. . . . . . . . }
+. . . . . . . . Identifier { c }
+. . . . . . . }
+. . . . . . }
+. . . . . }
+. . . . . GoStmt {
+. . . . . . ● call: CallExpr {
+. . . . . . . ● fun: Identifier { sum }
+. . . . . . . ● args: List {
+. . . . . . . . SliceExpr {
+. . . . . . . . . ● operand: Identifier { s }
+. . . . . . . . . ● start: BinOp {
+. . . . . . . . . . ● left: CallExpr {
+. . . . . . . . . . . ● fun: Identifier { len }
+. . . . . . . . . . . ● args: List {
+. . . . . . . . . . . . Identifier { s }
+. . . . . . . . . . . }
+. . . . . . . . . . }
+. . . . . . . . . . ● op: Div { / }
+. . . . . . . . . . ● right: IntLit { 2 }
+. . . . . . . . . }
+. . . . . . . . }
+. . . . . . . . Identifier { c }
+. . . . . . . }
+. . . . . . }
+. . . . . }
+. . . . . ShortVarDecl {
+. . . . . . ● names: List {
+. . . . . . . Identifier { x }
+. . . . . . . Identifier { y }
+. . . . . . }
+. . . . . . ● values: List {
+. . . . . . . UnOp {
+. . . . . . . . ● op: Receive { <- }
+. . . . . . . . ● value: Identifier { c }
+. . . . . . . }
+. . . . . . . UnOp {
+. . . . . . . . ● op: Receive { <- }
+. . . . . . . . ● value: Identifier { c }
+. . . . . . . }
+. . . . . . }
+. . . . . }
+. . . . . CallExpr {
+. . . . . . ● fun: SelectorExpr {
+. . . . . . . ● x: Identifier { fmt }
+. . . . . . . ● sel: Identifier { Println }
+. . . . . . }
+. . . . . . ● args: List {
+. . . . . . . Identifier { x }
+. . . . . . . Identifier { y }
+. . . . . . . BinOp {
+. . . . . . . . ● left: Identifier { x }
+. . . . . . . . ● op: Plus { + }
+. . . . . . . . ● right: Identifier { y }
+. . . . . . . }
+. . . . . . }
+. . . . . }
+. . . . }
+. . . }
+. . }
+. }
+}

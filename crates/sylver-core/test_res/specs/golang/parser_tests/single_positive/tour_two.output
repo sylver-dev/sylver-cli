@@ -1,0 +1,82 @@
+File {
+. ● name: Identifier { main }
+. ● decls: List {
+. . ImportDecl {
+. . . ● specs: ImportSpec {
+. . . . ● path: InterpretedStringLit { "fmt" }
+. . . }
+. . }
+. . FuncDecl {
+. . . ● name: Identifier { add }
+. . . ● type: FuncType {
+. . . . ● params: List {
+. . . . . FuncTypeParam {
+. . . . . . ● names: List {
+. . . . . . . Identifier { x }
+. . . . . . }
+. . . . . . ● type: TypeIdent {
+. . . . . . . ● name: Identifier { int }
+. . . . . . }
+. . . . . }
+. . . . . FuncTypeParam {
+. . . . . . ● names: List {
+. . . . . . . Identifier { y }
+. . . . . . }
+. . . . . . ● type: TypeIdent {
+. . . . . . . ● name: Identifier { int }
+. . . . . . }
+. . . . . }
+. . . . }
+. . . . ● return: TypeIdent {
+. . . . . ● name: Identifier { int }
+. . . . }
+. . . }
+. . . ● body: BlockStmt {
+. . . . ● list: List {
+. . . . . ReturnStmt {
+. . . . . . ● results: List {
+. . . . . . . BinOp {
+. . . . . . . . ● left: BinOp {
+. . . . . . . . . ● left: IntLit { 1 }
+. . . . . . . . . ● op: Times { * }
+. . . . . . . . . ● right: IntLit { 2 }
+. . . . . . . . }
+. . . . . . . . ● op: Plus { + }
+. . . . . . . . ● right: BinOp {
+. . . . . . . . . ● left: Identifier { x }
+. . . . . . . . . ● op: Div { / }
+. . . . . . . . . ● right: Identifier { y }
+. . . . . . . . }
+. . . . . . . }
+. . . . . . }
+. . . . . }
+. . . . }
+. . . }
+. . }
+. . FuncDecl {
+. . . ● name: Identifier { main }
+. . . ● type: FuncType {
+. . . . ● params: List {  }
+. . . }
+. . . ● body: BlockStmt {
+. . . . ● list: List {
+. . . . . CallExpr {
+. . . . . . ● fun: SelectorExpr {
+. . . . . . . ● x: Identifier { fmt }
+. . . . . . . ● sel: Identifier { Println }
+. . . . . . }
+. . . . . . ● args: List {
+. . . . . . . CallExpr {
+. . . . . . . . ● fun: Identifier { add }
+. . . . . . . . ● args: List {
+. . . . . . . . . IntLit { 42 }
+. . . . . . . . . IntLit { 13 }
+. . . . . . . . }
+. . . . . . . }
+. . . . . . }
+. . . . . }
+. . . . }
+. . . }
+. . }
+. }
+}

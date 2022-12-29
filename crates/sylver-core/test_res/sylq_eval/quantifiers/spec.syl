@@ -1,0 +1,17 @@
+node Program {
+    groups: List<Group>
+}
+
+node Group {
+    values: List<A | B>
+}
+
+node A { }
+
+node B { }
+
+rule main = Program { groups@sepBy(`\n`, group) }
+
+rule group = Group { values@group_value+ }
+
+rule group_value = A { 'a' } | B { 'b' }

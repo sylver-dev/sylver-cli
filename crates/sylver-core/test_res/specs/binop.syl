@@ -1,0 +1,20 @@
+node Plus { }
+node Minus { }
+node Mul { }
+node Div { }
+node Num { }
+node Binop { }
+
+term WHITESPACE = `\s`
+
+rule plus = Plus { `\+` }
+rule minus = Minus { `\-` }
+rule mul = Mul { `\*` }
+rule div = Div { `/` }
+
+rule main =
+    [1,left] Binop { main plus main }
+  | [1,left] Binop { main minus main }
+  | [2,right] Binop { main mul main }
+  | [2,right] Binop { main div main }
+  |  Num { `[0-9]+` }

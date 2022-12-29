@@ -1,0 +1,14 @@
+{
+    "variables": [
+        {
+            "name": "country",
+            "description": "Customer's country of residence",
+            "values": ["us", 1, "it"]
+        },
+        {
+            "name": "age",
+            "description": "Customer's age",
+            "type": "number"
+        }
+    ]
+}

@@ -1,0 +1,106 @@
+File {
+. ● name: Identifier { main }
+. ● decls: List {
+. . ImportDecl {
+. . . ● specs: ImportSpec {
+. . . . ● path: InterpretedStringLit { "fmt" }
+. . . }
+. . }
+. . TypeDecl {
+. . . ● name: TypeIdent {
+. . . . ● name: Identifier { hello1 }
+. . . }
+. . . ● type: InterfaceType {
+. . . . ● elems: List {
+. . . . . InterfaceTypeConstraint {
+. . . . . . ● type: TypeIdent {
+. . . . . . . ● name: Identifier { int }
+. . . . . . }
+. . . . . }
+. . . . }
+. . . }
+. . }
+. . TypeDecl {
+. . . ● name: TypeIdent {
+. . . . ● name: Identifier { Ordered }
+. . . }
+. . . ● type: InterfaceType {
+. . . . ● elems: List {
+. . . . . UnionConstraint {
+. . . . . . ● first: UnderlyingTypeConstraint {
+. . . . . . . ● type: TypeIdent {
+. . . . . . . . ● name: Identifier { int }
+. . . . . . . }
+. . . . . . }
+. . . . . . ● rest: List {
+. . . . . . . UnderlyingTypeConstraint {
+. . . . . . . . ● type: TypeIdent {
+. . . . . . . . . ● name: Identifier { int8 }
+. . . . . . . . }
+. . . . . . . }
+. . . . . . . UnderlyingTypeConstraint {
+. . . . . . . . ● type: TypeIdent {
+. . . . . . . . . ● name: Identifier { int16 }
+. . . . . . . . }
+. . . . . . . }
+. . . . . . }
+. . . . . }
+. . . . }
+. . . }
+. . }
+. . TypeDecl {
+. . . ● name: TypeIdent {
+. . . . ● name: Identifier { hello2 }
+. . . }
+. . . ● type: InterfaceType {
+. . . . ● elems: List {
+. . . . . UnderlyingTypeConstraint {
+. . . . . . ● type: TypeIdent {
+. . . . . . . ● name: Identifier { int }
+. . . . . . }
+. . . . . }
+. . . . }
+. . . }
+. . }
+. . TypeDecl {
+. . . ● name: TypeIdent {
+. . . . ● name: Identifier { hello3 }
+. . . }
+. . . ● type: InterfaceType {
+. . . . ● elems: List {
+. . . . . UnderlyingTypeConstraint {
+. . . . . . ● type: TypeIdent {
+. . . . . . . ● name: Identifier { int }
+. . . . . . }
+. . . . . }
+. . . . . MethodSpec {
+. . . . . . ● name: Identifier { String }
+. . . . . . ● params: List {  }
+. . . . . . ● return: TypeIdent {
+. . . . . . . ● name: Identifier { string }
+. . . . . . }
+. . . . . }
+. . . . }
+. . . }
+. . }
+. . TypeDecl {
+. . . ● name: TypeIdent {
+. . . . ● name: Identifier { hello4 }
+. . . }
+. . . ● type: InterfaceType {
+. . . . ● elems: List {
+. . . . . InterfaceTypeConstraint {
+. . . . . . ● type: TypeIdent {
+. . . . . . . ● name: Identifier { int }
+. . . . . . }
+. . . . . }
+. . . . . InterfaceTypeConstraint {
+. . . . . . ● type: TypeIdent {
+. . . . . . . ● name: Identifier { string }
+. . . . . . }
+. . . . . }
+. . . . }
+. . . }
+. . }
+. }
+}

@@ -1,0 +1,111 @@
+File {
+. ● name: Identifier { main }
+. ● decls: List {
+. . ImportDecl {
+. . . ● specs: ImportSpec {
+. . . . ● path: InterpretedStringLit { "fmt" }
+. . . }
+. . }
+. . FuncDecl {
+. . . ● name: Identifier { main }
+. . . ● type: FuncType {
+. . . . ● params: List {  }
+. . . }
+. . . ● body: BlockStmt {
+. . . . ● list: List {
+. . . . . ShortVarDecl {
+. . . . . . ● names: List {
+. . . . . . . Identifier { i }
+. . . . . . . Identifier { j }
+. . . . . . }
+. . . . . . ● values: List {
+. . . . . . . IntLit { 42 }
+. . . . . . . IntLit { 2701 }
+. . . . . . }
+. . . . . }
+. . . . . ShortVarDecl {
+. . . . . . ● names: List {
+. . . . . . . Identifier { p }
+. . . . . . }
+. . . . . . ● values: List {
+. . . . . . . UnOp {
+. . . . . . . . ● op: Ref { & }
+. . . . . . . . ● value: Identifier { i }
+. . . . . . . }
+. . . . . . }
+. . . . . }
+. . . . . CallExpr {
+. . . . . . ● fun: SelectorExpr {
+. . . . . . . ● x: Identifier { fmt }
+. . . . . . . ● sel: Identifier { Println }
+. . . . . . }
+. . . . . . ● args: List {
+. . . . . . . UnOp {
+. . . . . . . . ● op: Deref { * }
+. . . . . . . . ● value: Identifier { p }
+. . . . . . . }
+. . . . . . }
+. . . . . }
+. . . . . AssignStmt {
+. . . . . . ● lhs: List {
+. . . . . . . UnOp {
+. . . . . . . . ● op: Deref { * }
+. . . . . . . . ● value: Identifier { p }
+. . . . . . . }
+. . . . . . }
+. . . . . . ● rhs: List {
+. . . . . . . IntLit { 21 }
+. . . . . . }
+. . . . . }
+. . . . . CallExpr {
+. . . . . . ● fun: SelectorExpr {
+. . . . . . . ● x: Identifier { fmt }
+. . . . . . . ● sel: Identifier { Println }
+. . . . . . }
+. . . . . . ● args: List {
+. . . . . . . Identifier { i }
+. . . . . . }
+. . . . . }
+. . . . . AssignStmt {
+. . . . . . ● lhs: List {
+. . . . . . . Identifier { p }
+. . . . . . }
+. . . . . . ● rhs: List {
+. . . . . . . UnOp {
+. . . . . . . . ● op: Ref { & }
+. . . . . . . . ● value: Identifier { j }
+. . . . . . . }
+. . . . . . }
+. . . . . }
+. . . . . AssignStmt {
+. . . . . . ● lhs: List {
+. . . . . . . UnOp {
+. . . . . . . . ● op: Deref { * }
+. . . . . . . . ● value: Identifier { p }
+. . . . . . . }
+. . . . . . }
+. . . . . . ● rhs: List {
+. . . . . . . BinOp {
+. . . . . . . . ● left: UnOp {
+. . . . . . . . . ● op: Deref { * }
+. . . . . . . . . ● value: Identifier { p }
+. . . . . . . . }
+. . . . . . . . ● op: Div { / }
+. . . . . . . . ● right: IntLit { 37 }
+. . . . . . . }
+. . . . . . }
+. . . . . }
+. . . . . CallExpr {
+. . . . . . ● fun: SelectorExpr {
+. . . . . . . ● x: Identifier { fmt }
+. . . . . . . ● sel: Identifier { Println }
+. . . . . . }
+. . . . . . ● args: List {
+. . . . . . . Identifier { j }
+. . . . . . }
+. . . . . }
+. . . . }
+. . . }
+. . }
+. }
+}

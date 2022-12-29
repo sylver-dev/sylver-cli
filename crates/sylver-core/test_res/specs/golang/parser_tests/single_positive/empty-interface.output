@@ -1,0 +1,92 @@
+File {
+. ● name: Identifier { main }
+. ● decls: List {
+. . ImportDecl {
+. . . ● specs: ImportSpec {
+. . . . ● path: InterpretedStringLit { "fmt" }
+. . . }
+. . }
+. . FuncDecl {
+. . . ● name: Identifier { main }
+. . . ● type: FuncType {
+. . . . ● params: List {  }
+. . . }
+. . . ● body: BlockStmt {
+. . . . ● list: List {
+. . . . . VarDecl {
+. . . . . . ● names: List {
+. . . . . . . Identifier { i }
+. . . . . . }
+. . . . . . ● type: InterfaceType {
+. . . . . . . ● elems: List {  }
+. . . . . . }
+. . . . . }
+. . . . . CallExpr {
+. . . . . . ● fun: Identifier { describe }
+. . . . . . ● args: List {
+. . . . . . . Identifier { i }
+. . . . . . }
+. . . . . }
+. . . . . AssignStmt {
+. . . . . . ● lhs: List {
+. . . . . . . Identifier { i }
+. . . . . . }
+. . . . . . ● rhs: List {
+. . . . . . . IntLit { 42 }
+. . . . . . }
+. . . . . }
+. . . . . CallExpr {
+. . . . . . ● fun: Identifier { describe }
+. . . . . . ● args: List {
+. . . . . . . Identifier { i }
+. . . . . . }
+. . . . . }
+. . . . . AssignStmt {
+. . . . . . ● lhs: List {
+. . . . . . . Identifier { i }
+. . . . . . }
+. . . . . . ● rhs: List {
+. . . . . . . InterpretedStringLit { "hello" }
+. . . . . . }
+. . . . . }
+. . . . . CallExpr {
+. . . . . . ● fun: Identifier { describe }
+. . . . . . ● args: List {
+. . . . . . . Identifier { i }
+. . . . . . }
+. . . . . }
+. . . . }
+. . . }
+. . }
+. . FuncDecl {
+. . . ● name: Identifier { describe }
+. . . ● type: FuncType {
+. . . . ● params: List {
+. . . . . FuncTypeParam {
+. . . . . . ● names: List {
+. . . . . . . Identifier { i }
+. . . . . . }
+. . . . . . ● type: InterfaceType {
+. . . . . . . ● elems: List {  }
+. . . . . . }
+. . . . . }
+. . . . }
+. . . }
+. . . ● body: BlockStmt {
+. . . . ● list: List {
+. . . . . CallExpr {
+. . . . . . ● fun: SelectorExpr {
+. . . . . . . ● x: Identifier { fmt }
+. . . . . . . ● sel: Identifier { Printf }
+. . . . . . }
+. . . . . . ● args: List {
+. . . . . . . InterpretedStringLit { "(%v, %T)\n" }
+. . . . . . . Identifier { i }
+. . . . . . . Identifier { i }
+. . . . . . }
+. . . . . }
+. . . . }
+. . . }
+. . }
+. }
+}

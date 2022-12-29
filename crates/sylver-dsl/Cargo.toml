@@ -1,0 +1,17 @@
+[package]
+name = "sylver-dsl"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+fancy-regex = "0.10.0"
+indoc = "1.0.8"
+itertools = "0.10.5"
+maplit = "1.0.2"
+non-empty-vec = "0.2.3"
+pest = "2.5.2"
+pest_derive = "2.5.2"
+thiserror = "1.0.38"
+derive_more = "0.99.*"

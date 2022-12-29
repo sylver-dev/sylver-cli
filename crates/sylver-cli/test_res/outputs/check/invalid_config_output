@@ -1,0 +1,29 @@
+error[types_or_values]: Fields 'type' and 'values' are multually exclusive
+   ┌─ invalid_config.json:13:9
+   │  
+13 │ ╭         {
+14 │ │             "name": "country",
+15 │ │             "description": "Customer's country of residence",
+16 │ │             "type": "string",
+17 │ │             "values": ["us", "fr", "it"]
+18 │ │         }
+19 │ │     ]
+   │ ╰────^
+   │  
+   = The type can be deduced from the values list.
+
+
+warning[variable_length]: Variable name is too long
+   ┌─ invalid_config.json:10:28
+   │
+10 │             "description": "A short text describing the customer's professional occupation",
+   │                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+note[variable_format]: Variable name isn't a lowercase word
+  ┌─ invalid_config.json:4:21
+  │
+4 │             "name": "date of birth",
+  │                     ^^^^^^^^^^^^^^^
+
+

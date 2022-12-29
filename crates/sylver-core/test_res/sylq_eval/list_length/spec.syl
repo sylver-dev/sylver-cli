@@ -1,0 +1,15 @@
+node Program {
+    values: List<A>
+}
+
+node A {
+ field: List<B>
+}
+
+node B { }
+
+rule main = Program { values@sepBy(',', a_rule) }
+
+rule a_rule = A { field@b_rule+ }
+
+rule b_rule = B { 'b' }

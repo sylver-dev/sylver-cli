@@ -1,0 +1,7 @@
+projects:
+  - language: json.syl
+
+    include:
+      - './**/*.json'
+
+    rulesets: [ ruleset.yaml ]

@@ -1,0 +1,96 @@
+File {
+. ● name: Identifier { main }
+. ● decls: List {
+. . ImportDecl {
+. . . ● specs: List {
+. . . . ImportSpec {
+. . . . . ● path: InterpretedStringLit { "fmt" }
+. . . . }
+. . . . ImportSpec {
+. . . . . ● path: InterpretedStringLit { "runtime" }
+. . . . }
+. . . }
+. . }
+. . FuncDecl {
+. . . ● name: Identifier { main }
+. . . ● type: FuncType {
+. . . . ● params: List {  }
+. . . }
+. . . ● body: BlockStmt {
+. . . . ● list: List {
+. . . . . CallExpr {
+. . . . . . ● fun: SelectorExpr {
+. . . . . . . ● x: Identifier { fmt }
+. . . . . . . ● sel: Identifier { Print }
+. . . . . . }
+. . . . . . ● args: List {
+. . . . . . . InterpretedStringLit { "Go runs on " }
+. . . . . . }
+. . . . . }
+. . . . . ExprSwitchStmt {
+. . . . . . ● initializer: ShortVarDecl {
+. . . . . . . ● names: List {
+. . . . . . . . Identifier { os }
+. . . . . . . }
+. . . . . . . ● values: List {
+. . . . . . . . SelectorExpr {
+. . . . . . . . . ● x: Identifier { runtime }
+. . . . . . . . . ● sel: Identifier { GOOS }
+. . . . . . . . }
+. . . . . . . }
+. . . . . . }
+. . . . . . ● value: Identifier { os }
+. . . . . . ● clauses: List {
+. . . . . . . ExprCaseClause {
+. . . . . . . . ● values: List {
+. . . . . . . . . InterpretedStringLit { "darwin" }
+. . . . . . . . }
+. . . . . . . . ● body: List {
+. . . . . . . . . CallExpr {
+. . . . . . . . . . ● fun: SelectorExpr {
+. . . . . . . . . . . ● x: Identifier { fmt }
+. . . . . . . . . . . ● sel: Identifier { Println }
+. . . . . . . . . . }
+. . . . . . . . . . ● args: List {
+. . . . . . . . . . . InterpretedStringLit { "OS X." }
+. . . . . . . . . . }
+. . . . . . . . . }
+. . . . . . . . }
+. . . . . . . }
+. . . . . . . ExprCaseClause {
+. . . . . . . . ● values: List {
+. . . . . . . . . InterpretedStringLit { "linux" }
+. . . . . . . . }
+. . . . . . . . ● body: List {
+. . . . . . . . . CallExpr {
+. . . . . . . . . . ● fun: SelectorExpr {
+. . . . . . . . . . . ● x: Identifier { fmt }
+. . . . . . . . . . . ● sel: Identifier { Println }
+. . . . . . . . . . }
+. . . . . . . . . . ● args: List {
+. . . . . . . . . . . InterpretedStringLit { "Linux." }
+. . . . . . . . . . }
+. . . . . . . . . }
+. . . . . . . . }
+. . . . . . . }
+. . . . . . . ExprCaseClause {
+. . . . . . . . ● body: List {
+. . . . . . . . . CallExpr {
+. . . . . . . . . . ● fun: SelectorExpr {
+. . . . . . . . . . . ● x: Identifier { fmt }
+. . . . . . . . . . . ● sel: Identifier { Printf }
+. . . . . . . . . . }
+. . . . . . . . . . ● args: List {
+. . . . . . . . . . . InterpretedStringLit { "%s.\n" }
+. . . . . . . . . . . Identifier { os }
+. . . . . . . . . . }
+. . . . . . . . . }
+. . . . . . . . }
+. . . . . . . }
+. . . . . . }
+. . . . . }
+. . . . }
+. . . }
+. . }
+. }
+}

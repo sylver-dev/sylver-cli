@@ -1,0 +1,63 @@
+int_literal = { ASCII_DIGIT+ }
+
+identifier = @{ (LOWERCASE_LETTER | UPPERCASE_LETTER) ~ (LOWERCASE_LETTER | UPPERCASE_LETTER | "_" | ASCII_DIGIT)* }
+term_name = @{ UPPERCASE_LETTER  ~ (UPPERCASE_LETTER | ASCII_DIGIT | "_" )* }
+type_name = @{ UPPERCASE_LETTER ~ (LOWERCASE_LETTER | UPPERCASE_LETTER | "_" | ASCII_DIGIT)* }
+
+type_lit = { type_lit_simple ~ ("|" ~ type_lit_simple)* }
+    type_lit_simple = { type_name ~ ("<" ~ (type_lit ~ ("," ~ type_lit)*) ~ ">" )? }
+
+terminal = { term_spec }
+ignore_terminal = { "ignore" ~ term_spec }
+comment_terminal = { "comment" ~ term_spec }
+term_spec = _{ "term" ~ term_name ~ "=" ~ term_content }
+    term_content = { term_content_regex | term_content_literal | term_content_call}
+    term_content_regex = { "`" ~ term_content_regex_inner  ~ "`"}
+    term_content_regex_inner = { (("\\`") | (!"`" ~ ANY))+ }
+    term_content_literal = { "'" ~ term_content_literal_inner ~ "'"}
+    term_content_literal_inner = { (!"'" ~ ANY)* }
+    term_content_call = { identifier ~ "(" ~ term_content_call_regex_args? ~ ")" }
+        term_content_call_regex_args = { term_content_call_regex_arg ~ ("," ~ term_content_call_regex_arg)* }
+            term_content_call_regex_arg = { identifier ~ "=" ~ term_content_call_regex_arg_value }
+                term_content_call_regex_arg_value = _{ term_content_regex | term_content_literal }
+term_expr = { term_alts | alt_level_term_expr }
+    term_alts = { "[" ~ alt_level_term_expr ~ ("," ~ alt_level_term_expr)* ~ "]" }
+    alt_level_term_expr = _{ term_name | term_content }
+
+node_decl = { "node" ~ type_name ~ (":" ~ type_name)? ~ "{" ~ node_field? ~ ("," ~ node_field)* ~ "}" }
+    node_field = { identifier ~ ":" ~ type_lit }
+
+rule_decl = { "rule" ~ identifier ~ "=" ~ rule_exprs }
+    rule_exprs = _{ rule_expr ~ ("|" ~ rule_expr)* }
+    rule_expr = { rule_expr_node | rule_expr_ref }
+        rule_expr_node = { node_expr_precedence? ~ type_name ~ "{" ~ alternative_comp+ ~ "}" }
+            node_expr_precedence = {
+                "[" ~
+                    ( (int_literal ~ "," ~ alternative_associativity)
+                    | (alternative_associativity ~ "," ~ int_literal)
+                    | int_literal
+                    | alternative_associativity)
+                ~ "]"
+            }
+                alternative_associativity = { "right" | "left" }
+            alternative_comp = _{ alternative_op_comp | alternative_quantified_comp | term_expr | identifier }
+            alternative_quantified_comp = { alternative_binding ~ identifier ~ alternative_quantifier? }
+            alternative_op_comp = { alternative_binding ~ operator }
+                alternative_binding = _{ (identifier ~ "@") }
+                operator = _{ sep_by_comp | sep_by_tr_comp | sep_by_1_comp | sep_by_tr_1_comp | many_comp | some_comp | opt_comp }
+                many_comp = { "many" ~ "(" ~ identifier ~ ")" }
+                some_comp = { "some" ~ "(" ~ identifier ~ ")" }
+                opt_comp = { "opt" ~ "(" ~ identifier ~ ")" }
+                sep_by_comp = { "sepBy" ~ "(" ~ term_expr ~ "," ~ identifier ~ ")"}
+                sep_by_tr_comp = { "sepByTr" ~ "(" ~ term_expr ~ "," ~ identifier ~ ")"}
+                sep_by_1_comp = { "sepBy1" ~ "(" ~ term_expr ~ "," ~ identifier ~ ")"}
+                sep_by_tr_1_comp = { "sepByTr1" ~ "(" ~ term_expr ~ "," ~ identifier ~ ")"}
+                alternative_quantifier = { ("?" | "*" | "+") }
+            comp_quantifier = { "?" | "*" | "+" }
+        rule_expr_ref = { identifier }
+
+
+main = { (node_decl | terminal | ignore_terminal | comment_terminal | rule_decl)+ ~ EOI }
+
+WHITESPACE = _{ " " | "\t" | "\r" | "\n" | NEWLINE }
+

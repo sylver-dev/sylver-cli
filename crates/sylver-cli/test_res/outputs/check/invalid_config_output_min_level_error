@@ -1,0 +1,15 @@
+error[types_or_values]: Fields 'type' and 'values' are multually exclusive
+   ┌─ invalid_config.json:13:9
+   │  
+13 │ ╭         {
+14 │ │             "name": "country",
+15 │ │             "description": "Customer's country of residence",
+16 │ │             "type": "string",
+17 │ │             "values": ["us", "fr", "it"]
+18 │ │         }
+19 │ │     ]
+   │ ╰────^
+   │  
+   = The type can be deduced from the values list.
+
+
