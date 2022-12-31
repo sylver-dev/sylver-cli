@@ -112,9 +112,23 @@ types:
         list: false
       - type: natural
         name: operator
-        types:
-          - "%=,&=,**=,*=,+=,-=,//=,/=,<<=,>>=,@=,^=,|="
         list: false
+        types:
+          - ModAssign,BitAndAssign,ExpAssign,MulAssign,AddAssign,SubAssign,IntDivAssign,DivAssign,ShiftLeftAssign,ShiftRightAssign,MatMulAssign,BitXorAssign,BitOrAssign
+        mappings:
+          "%=": ModAssign
+          "&=": BitAndAssign
+          "**=": ExpAssign
+          "*=": MulAssign
+          "+=": AddAssign
+          "-=": SubAssign
+          "//=": IntDivAssign
+          "/=": DivAssign
+          "<<=": ShiftLeftAssign
+          ">>=": ShiftRightAssign
+          "@=": MatMulAssign
+          "^=": BitXorAssign
+          "|=": BitOrAssign
       - type: natural
         name: right
         types:
@@ -137,11 +151,23 @@ types:
         list: false
       - type: natural
         name: operator
-        types:
-          - "%,&,*,**,+,-,/,//,<<,>>,@,^,|"
-        mappings:
-          "+": Add
         list: false
+        types:
+          - Mod,BitAnd,Mul,Exp,Add,Sub,Div,IntDiv,ShiftLeft,ShiftRight,MatMul,BitXor,BitOr
+        mappings:
+          "%": Mod
+          "&": BitAnd
+          "*": Mul
+          "**": Exp
+          "+": Add
+          "-": Sub
+          "/": Div
+          "//": IntDiv
+          "<<": ShiftLeft
+          ">>": ShiftRight
+          "@": MatMul
+          "^": BitXor
+          "|": BitOr
       - type: natural
         name: right
         types:
@@ -250,7 +276,15 @@ types:
       - type: natural
         name: operators
         types:
-          - List<!= | < | <= | <> | == | > | >= | In | Is | Not>
+          - List<NotEq | Inf | InfEq | Eq | Sup | SupEq | In | Is | Not>
+        mappings:
+          "!=": NotEq
+          "<": Inf
+          "<=": InfEq
+          "<>": NotEq
+          "==": Eq
+          ">": Sup
+          ">=": SupEq
         list: true
   - name: ConcatenatedString
     ts_name: concatenated_string
@@ -962,7 +996,131 @@ types:
     is_list: false
     is_terminal: false
     fields: []
+  - name: Mod
+    is_list: false
+    is_terminal: false
+    fields: []
+  - name: BitAnd
+    is_list: false
+    is_terminal: false
+    fields: []
+  - name: Mul
+    is_list: false
+    is_terminal: false
+    fields: []
+  - name: Exp
+    is_list: false
+    is_terminal: false
+    fields: []
   - name: Add
+    is_list: false
+    is_terminal: false
+    fields: []
+  - name: Sub
+    is_list: false
+    is_terminal: false
+    fields: []
+  - name: Div
+    is_list: false
+    is_terminal: false
+    fields: []
+  - name: IntDiv
+    is_list: false
+    is_terminal: false
+    fields: []
+  - name: ShiftLeft
+    is_list: false
+    is_terminal: false
+    fields: []
+  - name: ShiftRight
+    is_list: false
+    is_terminal: false
+    fields: []
+  - name: MatMul
+    is_list: false
+    is_terminal: false
+    fields: []
+  - name: BitXor
+    is_list: false
+    is_terminal: false
+    fields: []
+  - name: BitOr
+    is_list: false
+    is_terminal: false
+    fields: []
+  - name: ModAssign
+    is_list: false
+    is_terminal: false
+    fields: []
+  - name: BitAndAssign
+    is_list: false
+    is_terminal: false
+    fields: []
+  - name: ExpAssign
+    is_list: false
+    is_terminal: false
+    fields: []
+  - name: MulAssign
+    is_list: false
+    is_terminal: false
+    fields: []
+  - name: AddAssign
+    is_list: false
+    is_terminal: false
+    fields: []
+  - name: SubAssign
+    is_list: false
+    is_terminal: false
+    fields: []
+  - name: IntDivAssign
+    is_list: false
+    is_terminal: false
+    fields: []
+  - name: DivAssign
+    is_list: false
+    is_terminal: false
+    fields: []
+  - name: ShiftLeftAssign
+    is_list: false
+    is_terminal: false
+    fields: []
+  - name: ShiftRightAssign
+    is_list: false
+    is_terminal: false
+    fields: []
+  - name: MatMulAssign
+    is_list: false
+    is_terminal: false
+    fields: []
+  - name: BitXorAssign
+    is_list: false
+    is_terminal: false
+    fields: []
+  - name: BitOrAssign
+    is_list: false
+    is_terminal: false
+    fields: []
+  - name: NotEq
+    is_list: false
+    is_terminal: false
+    fields: []
+  - name: Inf
+    is_list: false
+    is_terminal: false
+    fields: []
+  - name: InfEq
+    is_list: false
+    is_terminal: false
+    fields: []
+  - name: Eq
+    is_list: false
+    is_terminal: false
+    fields: []
+  - name: Sup
+    is_list: false
+    is_terminal: false
+    fields: []
+  - name: SupEq
     is_list: false
     is_terminal: false
     fields: []
