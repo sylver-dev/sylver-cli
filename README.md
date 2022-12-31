@@ -5,7 +5,7 @@
   Language agnostic source code exploration and analysis.
 </h3>
 
-# Instalation
+# Installation
 
 ## Binary releases
 
@@ -21,3 +21,8 @@ git clone https://github.com/sylver-dev/sylver-cli.git
 cd sylver-cli 
 cargo build --release
 ```
+
+# Example
+
+**Sylver** helps you build your linters instead of starting from scratch.
+Here is an [example](https://blog.sylver.dev/build-a-custom-javascript-linter-in-5-minutes) for a Javascript linter.
