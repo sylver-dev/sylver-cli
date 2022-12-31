@@ -15,18 +15,6 @@ use crate::{
 
 type NodeWithField = (Option<FieldPos>, NodeId);
 
-#[derive(Debug, Clone, Eq, PartialEq, Hash)]
-pub struct PromotionCondition {
-    parent_kind: KindId,
-    self_kind: u16,
-}
-
-#[derive(Debug, Clone)]
-pub struct PromotionData {
-    new_kind: KindId,
-    field: FieldPos,
-}
-
 pub struct TsTreeConverter<'t> {
     builder: TreeBuilder<'t>,
     syntax: &'t Syntax,

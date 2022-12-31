@@ -86,6 +86,21 @@ pub enum TypeLit {
 impl TypeLit {
     pub const LIST_TYPE: &'static str = "List";
 
+    pub fn from_simple_types(types: impl IntoIterator<Item = SimpleTypeLit>) -> Option<TypeLit> {
+        let mut types_iter = types.into_iter().peekable();
+
+        let first = types_iter.next()?;
+
+        if types_iter.peek().is_none() {
+            Some(TypeLit::Simple(first))
+        } else {
+            let rest = types_iter.collect();
+            Some(TypeLit::Or(OrTypeLit {
+                alts: NonEmpty::from((first, rest)),
+            }))
+        }
+    }
+
     pub fn list_of(elem_type: TypeLit) -> TypeLit {
         TypeLit::Simple(SimpleTypeLit {
             name: TypeLit::LIST_TYPE.into(),

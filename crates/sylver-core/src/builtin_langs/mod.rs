@@ -5,7 +5,6 @@ use std::{
 };
 
 use anyhow::anyhow;
-use non_empty_vec::NonEmpty;
 use once_cell::sync::Lazy;
 use serde::{Deserialize, Serialize};
 
@@ -124,20 +123,10 @@ fn node_decl_from_mapping(m: &NodeMapping) -> NodeDecl {
             .fields
             .iter()
             .map(|f| {
-                let field_type = if f.types.len() > 1 {
-                    let first = SimpleTypeLit::from_name(f.types[0].clone());
-
-                    let rest = f.types[1..]
-                        .iter()
-                        .map(|t| SimpleTypeLit::from_name(t.clone()))
-                        .collect();
-
-                    TypeLit::Or(OrTypeLit {
-                        alts: NonEmpty::from((first, rest)),
-                    })
-                } else {
-                    TypeLit::Simple(SimpleTypeLit::from_name(f.name.clone()))
-                };
+                let field_type = TypeLit::from_simple_types(
+                    f.types.iter().map(|n| SimpleTypeLit::from_name(n.clone())),
+                )
+                .expect("node field missing associated types");
 
                 let lit = if f.list {
                     TypeLit::list_of(field_type)
