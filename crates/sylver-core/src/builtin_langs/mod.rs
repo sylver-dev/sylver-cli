@@ -1,4 +1,8 @@
-use std::fmt::{Display, Formatter};
+use std::{
+    collections::BTreeMap,
+    fmt::{Display, Formatter},
+    ops::Deref,
+};
 
 use anyhow::anyhow;
 use non_empty_vec::NonEmpty;
@@ -11,7 +15,7 @@ use crate::core::spec::{Syntax, SyntaxBuilder};
 
 pub mod parser;
 
-static PYTHON_MAPPING: Lazy<Vec<NodeMapping>> =
+static PYTHON_MAPPING: Lazy<MappingConfig> =
     Lazy::new(|| serde_yaml::from_str(include_str!("../../res/ts_mappings/python.yaml")).unwrap());
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize)]
@@ -40,16 +44,37 @@ impl TryFrom<&str> for BuiltinLang {
     }
 }
 
-pub fn get_builtin_lang(lang: BuiltinLang) -> (&'static [NodeMapping], tree_sitter::Language) {
+pub fn get_builtin_lang(lang: BuiltinLang) -> (&'static MappingConfig, tree_sitter::Language) {
     match lang {
-        BuiltinLang::Python => (PYTHON_MAPPING.as_slice(), sylver_langs::python_language()),
+        BuiltinLang::Python => (PYTHON_MAPPING.deref(), sylver_langs::python_language()),
     }
 }
 
 pub fn builtin_lang_mappings(lang: BuiltinLang) -> &'static [NodeMapping] {
     match lang {
-        BuiltinLang::Python => PYTHON_MAPPING.as_slice(),
+        BuiltinLang::Python => PYTHON_MAPPING.types.as_slice(),
     }
+}
+
+#[derive(Debug, Clone, Eq, PartialEq, Hash, Serialize, Deserialize)]
+pub struct MappingConfig {
+    pub types: Vec<NodeMapping>,
+    pub aliases: Vec<NodeAlias>,
+    pub promotions: Option<Vec<NodePromotion>>,
+}
+
+#[derive(Debug, Clone, Eq, PartialEq, Hash, Serialize, Deserialize)]
+pub struct NodeAlias {
+    ts_name: String,
+    alias: String,
+}
+
+#[derive(Debug, Clone, Eq, PartialEq, Hash, Serialize, Deserialize)]
+pub struct NodePromotion {
+    parent_kind: String,
+    self_ts_kind: String,
+    new_kind: String,
+    field: Option<String>,
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Hash, Serialize, Deserialize)]
@@ -66,6 +91,7 @@ struct NodeMappingField {
     name: String,
     types: Vec<String>,
     list: bool,
+    mappings: Option<BTreeMap<String, String>>,
 }
 
 impl From<&[NodeMapping]> for Syntax {
@@ -98,7 +124,7 @@ fn node_decl_from_mapping(m: &NodeMapping) -> NodeDecl {
             .fields
             .iter()
             .map(|f| {
-                let mut lit = if f.types.len() > 1 {
+                let field_type = if f.types.len() > 1 {
                     let first = SimpleTypeLit::from_name(f.types[0].clone());
 
                     let rest = f.types[1..]
@@ -113,11 +139,13 @@ fn node_decl_from_mapping(m: &NodeMapping) -> NodeDecl {
                     TypeLit::Simple(SimpleTypeLit::from_name(f.name.clone()))
                 };
 
-                if f.list {
-                    lit = TypeLit::Simple(SimpleTypeLit::new("List".to_string(), vec![lit]));
-                }
+                let lit = if f.list {
+                    TypeLit::Simple(SimpleTypeLit::new("List".to_string(), vec![field_type]))
+                } else {
+                    field_type
+                };
 
-                (f.name.clone(), lit)
+                (f.name.to_string(), lit)
             })
             .collect(),
     }
@@ -129,21 +157,32 @@ mod test {
         builtin_langs::parser::BuiltinParserRunner, core::source::Source,
         pretty_print::tree::TreePPrint, tree::info::raw::RawTreeInfo,
     };
+    use indoc::indoc;
 
     use super::*;
 
     #[test]
     fn python_simple() {
-        let syntax = PYTHON_MAPPING.as_slice().into();
-        let runner = BuiltinParserRunner::new(
-            sylver_langs::python_language(),
-            &syntax,
-            PYTHON_MAPPING.as_slice(),
-        );
+        let syntax = PYTHON_MAPPING.types.as_slice().into();
+        let runner =
+            BuiltinParserRunner::new(sylver_langs::python_language(), &syntax, &PYTHON_MAPPING);
         let source = Source::inline("hello + world".to_string(), "BUFFER".to_string());
         let tree = runner.run(source).tree;
         let pprint = TreePPrint::new(RawTreeInfo::new(&tree, &syntax));
 
-        println!("{}", pprint.render());
+        let expected = indoc!(
+            "
+            Module {
+            . ExpressionStatement {
+            . . BinaryOperator {
+            . . . ● left: Identifier { hello }
+            . . . ● operator: Add { + }
+            . . . ● right: Identifier { world }
+            . . }
+            . }
+            }"
+        );
+
+        assert_eq!(expected, pprint.render());
     }
 }
