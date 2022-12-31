@@ -140,7 +140,7 @@ types:
         types:
           - "%,&,*,**,+,-,/,//,<<,>>,@,^,|"
         mappings:
-          "+": True
+          "+": Add
         list: false
       - type: natural
         name: right
@@ -959,6 +959,10 @@ types:
     fields: []
   - name: TypeConversion
     ts_name: type_conversion
+    is_list: false
+    is_terminal: false
+    fields: []
+  - name: Add
     is_list: false
     is_terminal: false
     fields: []

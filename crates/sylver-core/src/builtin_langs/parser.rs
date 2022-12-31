@@ -183,7 +183,7 @@ impl<'s> BuiltinParserRunner<'s> {
         let mut ts_name_to_name: HashMap<&str, &str> = mapping_config
             .types
             .iter()
-            .map(|m| (m.ts_name.as_str(), m.name.as_str()))
+            .filter_map(|m| m.ts_name.as_ref().map(|n| (n.as_str(), m.name.as_str())))
             .collect();
 
         for alias in &mapping_config.aliases {

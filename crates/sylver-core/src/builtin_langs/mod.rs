@@ -80,7 +80,7 @@ pub struct NodePromotion {
 #[derive(Debug, Clone, Eq, PartialEq, Hash, Serialize, Deserialize)]
 pub struct NodeMapping {
     name: String,
-    ts_name: String,
+    ts_name: Option<String>,
     fields: Vec<NodeMappingField>,
     is_list: bool,
     is_terminal: bool,
@@ -140,7 +140,7 @@ fn node_decl_from_mapping(m: &NodeMapping) -> NodeDecl {
                 };
 
                 let lit = if f.list {
-                    TypeLit::Simple(SimpleTypeLit::new("List".to_string(), vec![field_type]))
+                    TypeLit::list_of(field_type)
                 } else {
                     field_type
                 };
