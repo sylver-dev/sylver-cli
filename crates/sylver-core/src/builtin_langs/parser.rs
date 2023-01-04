@@ -2,28 +2,40 @@ use std::collections::HashMap;
 
 use tree_sitter::Point;
 
-use crate::builtin_langs::NodeMapping;
-use crate::core::pos::{InclPosRange, Pos};
-use crate::core::source::{Source, SourceTree};
-use crate::core::spec::{FieldPos, KindId, Syntax, TagId};
-use crate::parsing::parser_runner::ParsingResult;
-use crate::parsing::scanner::Token;
-use crate::tree::{NodeId, Tree, TreeBuilder};
+use crate::{
+    builtin_langs::MappingConfig,
+    core::{
+        pos::{InclPosRange, Pos},
+        source::{Source, SourceTree},
+        spec::{FieldPos, KindId, Syntax, TagId},
+    },
+    parsing::{parser_runner::ParsingResult, scanner::Token},
+    tree::{NodeId, Tree, TreeBuilder},
+};
 
 type NodeWithField = (Option<FieldPos>, NodeId);
+
+#[derive(Debug, Clone, Eq, PartialEq)]
+pub struct TsMappings {
+    /// Maps a tree-sitter kind to the corresponding sylver kind id.
+    pub kinds: HashMap<u16, KindId>,
+    /// For every node matching a (parent sylver kind, tree-sitter kind) pair, create a wrapping
+    /// node with the given sylver kind.
+    pub field_kinds: HashMap<(KindId, u16), KindId>,
+}
 
 pub struct TsTreeConverter<'t> {
     builder: TreeBuilder<'t>,
     syntax: &'t Syntax,
-    kind_names: &'t HashMap<u16, String>,
+    mappings: &'t TsMappings,
 }
 
 impl<'t> TsTreeConverter<'t> {
-    pub fn new(syntax: &'t Syntax, kind_names: &'t HashMap<u16, String>) -> Self {
+    pub fn new(syntax: &'t Syntax, mappings: &'t TsMappings) -> Self {
         TsTreeConverter {
             builder: TreeBuilder::new(syntax),
             syntax,
-            kind_names,
+            mappings,
         }
     }
 
@@ -34,8 +46,7 @@ impl<'t> TsTreeConverter<'t> {
     }
 
     fn convert_from(&mut self, node: tree_sitter::Node) -> anyhow::Result<(NodeId, Vec<usize>)> {
-        let kind_name = self.kind_names.get(&node.kind_id()).unwrap();
-        let kind_id: KindId = self.syntax.existing_kind_id(kind_name);
+        let kind_id = *self.mappings.kinds.get(&node.kind_id()).unwrap();
 
         let (node_childs, mut node_tokens) = self.convert_childs(kind_id, node)?;
 
@@ -59,14 +70,26 @@ impl<'t> TsTreeConverter<'t> {
         let mut cursor = node.walk();
 
         for (child_pos, child) in node.children(&mut cursor).enumerate() {
+            let field_name = node.field_name_for_child(child_pos as u32);
+
+            let field_pos = field_name.and_then(|n| self.syntax.field_position(kind_id, n));
+
             if child.is_named() {
-                let field_name = node.field_name_for_child(child_pos as u32);
-                let field_pos = field_name.and_then(|n| self.syntax.field_position(kind_id, n));
                 let (child_node, child_tokens) = self.convert_from(child)?;
                 childs.push((field_pos, child_node));
                 tokens_pos.extend(child_tokens);
             } else {
-                self.add_node_tokens(child, &mut tokens_pos);
+                let mut field_tokens = vec![];
+                self.add_node_tokens(child, &mut field_tokens);
+
+                if let Some(&field_kind) =
+                    self.mappings.field_kinds.get(&(kind_id, child.kind_id()))
+                {
+                    let new_node = self.builder.add_node(field_kind, &[], &field_tokens);
+                    childs.push((field_pos, new_node));
+                }
+
+                tokens_pos.extend(field_tokens);
             }
         }
 
@@ -102,18 +125,17 @@ pub struct BuiltinParserRunner<'s> {
     syntax: &'s Syntax,
     language: tree_sitter::Language,
     kind_names: HashMap<u16, String>,
+    field_mappings: HashMap<(KindId, u16), KindId>,
+    ts_mappings: TsMappings,
 }
 
 impl<'s> BuiltinParserRunner<'s> {
     pub fn new(
         language: tree_sitter::Language,
         syntax: &'s Syntax,
-        mappings: &[NodeMapping],
+        mapping_config: &MappingConfig,
     ) -> BuiltinParserRunner<'s> {
-        let ts_name_to_name: HashMap<&str, &str> = mappings
-            .iter()
-            .map(|m| (m.ts_name.as_str(), m.name.as_str()))
-            .collect();
+        let ts_name_to_name = Self::build_kind_mapping(&mapping_config);
 
         let kind_names = (0..language.node_kind_count() as u16)
             .filter_map(|n| {
@@ -123,11 +145,86 @@ impl<'s> BuiltinParserRunner<'s> {
             })
             .collect();
 
+        let field_mappings = mapping_config
+            .types
+            .iter()
+            .flat_map(|n| {
+                n.fields.iter().flat_map(|f| {
+                    f.mappings
+                        .clone()
+                        .unwrap_or_default()
+                        .iter()
+                        .map(|(ts_kind, kind)| {
+                            let parent_kind = syntax.existing_kind_id(&n.name);
+                            let new_kind = syntax.existing_kind_id(kind);
+                            let self_kind = language.id_for_node_kind(ts_kind, false);
+                            ((parent_kind, self_kind), new_kind)
+                        })
+                        .collect::<Vec<_>>()
+                })
+            })
+            .collect();
+
+        let ts_mappings = Self::build_ts_mappings(&language, syntax, mapping_config);
+
         BuiltinParserRunner {
             syntax,
             language,
             kind_names,
+            field_mappings,
+            ts_mappings,
         }
+    }
+
+    fn build_ts_mappings(
+        language: &tree_sitter::Language,
+        syntax: &Syntax,
+        mapping_config: &MappingConfig,
+    ) -> TsMappings {
+        let ts_name_to_name = Self::build_kind_mapping(&mapping_config);
+
+        let kind_names = (0..language.node_kind_count() as u16)
+            .filter_map(|n| {
+                language.node_kind_for_id(n).and_then(|k| {
+                    ts_name_to_name
+                        .get(k)
+                        .map(|name| (n, syntax.existing_kind_id(name.to_string())))
+                })
+            })
+            .collect();
+
+        let field_kind = mapping_config
+            .fields
+            .iter()
+            .map(|field| {
+                let parent_kind_id = syntax.existing_kind_id(&field.parent_kind);
+                let ts_kind_id = language.id_for_node_kind(&field.ts_kind, false);
+                let new_kind_id = syntax.existing_kind_id(&field.new_kind);
+                ((parent_kind_id, ts_kind_id), new_kind_id)
+            })
+            .collect();
+
+        TsMappings {
+            kinds: kind_names,
+            field_kinds: field_kind,
+        }
+    }
+
+    fn build_kind_mapping(mapping_config: &MappingConfig) -> HashMap<&str, &str> {
+        let mut ts_name_to_name: HashMap<&str, &str> = mapping_config
+            .types
+            .iter()
+            .filter_map(|m| m.ts_name.as_ref().map(|n| (n.as_str(), m.name.as_str())))
+            .collect();
+
+        for alias in &mapping_config.aliases {
+            ts_name_to_name.insert(
+                &alias.alias,
+                ts_name_to_name.get(alias.ts_name.as_str()).unwrap(),
+            );
+        }
+
+        ts_name_to_name
     }
 
     pub fn run(&self, source: Source) -> ParsingResult {
@@ -137,7 +234,7 @@ impl<'s> BuiltinParserRunner<'s> {
             .expect("Builtin language should always be valid !");
 
         let ts_tree = ts_parser.parse(source.src(), None).unwrap();
-        let (tree, tokens) = TsTreeConverter::new(self.syntax, &self.kind_names)
+        let (tree, tokens) = TsTreeConverter::new(self.syntax, &self.ts_mappings)
             .convert(ts_tree.root_node())
             .unwrap();
 

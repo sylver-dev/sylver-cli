@@ -82,7 +82,7 @@ pub fn build_sylva(
         }
         ProjectLang::Builtin(b) => {
             let (mappings, lang) = get_builtin_lang(*b);
-            let syntax = mappings.into();
+            let syntax = mappings.types.as_slice().into();
             let parser = BuiltinParserRunner::new(lang, &syntax, mappings);
             let sylva = Sylva::build_concurrently(SylvaParser::Builtin(parser), sources)?;
             let spec = Spec::from_syntax(syntax);
