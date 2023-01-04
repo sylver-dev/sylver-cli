@@ -29,19 +29,18 @@ types:
     ts_name: primary_expression
     is_list: false
     is_terminal: false
+    inherits: Expression
     fields: []
   - name: AliasedImport
     ts_name: aliased_import
     is_list: false
     is_terminal: false
     fields:
-      - type: natural
-        name: alias
+      - name: alias
         types:
           - Identifier
         list: false
-      - type: natural
-        name: name
+      - name: name
         types:
           - DottedName
         list: false
@@ -54,9 +53,9 @@ types:
     ts_name: as_pattern
     is_list: false
     is_terminal: false
+    inherits: Expression
     fields:
-      - type: natural
-        name: alias
+      - name: alias
         types:
           - AsPatternTarget
         list: false
@@ -70,18 +69,15 @@ types:
     is_list: false
     is_terminal: false
     fields:
-      - type: natural
-        name: left
+      - name: left
         types:
           - Pattern,PatternList
         list: false
-      - type: natural
-        name: right
+      - name: right
         types:
           - Assignment,AugmentedAssignment,Expression,ExpressionList,Yield
         list: false
-      - type: natural
-        name: type
+      - name: type
         types:
           - Type
         list: false
@@ -89,14 +85,13 @@ types:
     ts_name: attribute
     is_list: false
     is_terminal: false
+    inherits: PrimaryExpression
     fields:
-      - type: natural
-        name: attribute
+      - name: attribute
         types:
           - Identifier
         list: false
-      - type: natural
-        name: object
+      - name: object
         types:
           - PrimaryExpression
         list: false
@@ -105,32 +100,15 @@ types:
     is_list: false
     is_terminal: false
     fields:
-      - type: natural
-        name: left
+      - name: left
         types:
           - Pattern,PatternList
         list: false
-      - type: natural
-        name: operator
-        list: false
+      - name: operator
         types:
-          - ModAssign,BitAndAssign,ExpAssign,MulAssign,AddAssign,SubAssign,IntDivAssign,DivAssign,ShiftLeftAssign,ShiftRightAssign,MatMulAssign,BitXorAssign,BitOrAssign
-        mappings:
-          "%=": ModAssign
-          "&=": BitAndAssign
-          "**=": ExpAssign
-          "*=": MulAssign
-          "+=": AddAssign
-          "-=": SubAssign
-          "//=": IntDivAssign
-          "/=": DivAssign
-          "<<=": ShiftLeftAssign
-          ">>=": ShiftRightAssign
-          "@=": MatMulAssign
-          "^=": BitXorAssign
-          "|=": BitOrAssign
-      - type: natural
-        name: right
+          - "%=,&=,**=,*=,+=,-=,//=,/=,<<=,>>=,@=,^=,|="
+        list: false
+      - name: right
         types:
           - Assignment,AugmentedAssignment,Expression,ExpressionList,Yield
         list: false
@@ -138,38 +116,22 @@ types:
     ts_name: await
     is_list: false
     is_terminal: false
+    inherits: Expression
     fields: []
   - name: BinaryOperator
     ts_name: binary_operator
     is_list: false
     is_terminal: false
+    inherits: PrimaryExpression
     fields:
-      - type: natural
-        name: left
+      - name: left
         types:
           - PrimaryExpression
         list: false
-      - type: natural
-        name: operator
+      - name: operator
+        types: [Mod,BitAnd,Mul,Exp,Add,Sub,Div,IntDiv,ShiftLeft,ShiftRight,MatMul,BitXor,BitOr]
         list: false
-        types:
-          - Mod,BitAnd,Mul,Exp,Add,Sub,Div,IntDiv,ShiftLeft,ShiftRight,MatMul,BitXor,BitOr
-        mappings:
-          "%": Mod
-          "&": BitAnd
-          "*": Mul
-          "**": Exp
-          "+": Add
-          "-": Sub
-          "/": Div
-          "//": IntDiv
-          "<<": ShiftLeft
-          ">>": ShiftRight
-          "@": MatMul
-          "^": BitXor
-          "|": BitOr
-      - type: natural
-        name: right
+      - name: right
         types:
           - PrimaryExpression
         list: false
@@ -182,19 +144,17 @@ types:
     ts_name: boolean_operator
     is_list: false
     is_terminal: false
+    inherits: Expression
     fields:
-      - type: natural
-        name: left
+      - name: left
         types:
           - Expression
         list: false
-      - type: natural
-        name: operator
+      - name: operator
         types:
           - And,Or
         list: false
-      - type: natural
-        name: right
+      - name: right
         types:
           - Expression
         list: false
@@ -207,14 +167,13 @@ types:
     ts_name: call
     is_list: false
     is_terminal: false
+    inherits: PrimaryExpression
     fields:
-      - type: natural
-        name: arguments
+      - name: arguments
         types:
           - ArgumentList,GeneratorExpression
         list: false
-      - type: natural
-        name: function
+      - name: function
         types:
           - PrimaryExpression
         list: false
@@ -223,18 +182,15 @@ types:
     is_list: false
     is_terminal: false
     fields:
-      - type: natural
-        name: consequence
+      - name: consequence
         types:
           - Block
         list: false
-      - type: natural
-        name: guard
+      - name: guard
         types:
           - IfClause
         list: false
-      - type: natural
-        name: pattern
+      - name: pattern
         types:
           - List<CasePattern>
         list: true
@@ -253,18 +209,15 @@ types:
     is_list: false
     is_terminal: false
     fields:
-      - type: natural
-        name: body
+      - name: body
         types:
           - Block
         list: false
-      - type: natural
-        name: name
+      - name: name
         types:
           - Identifier
         list: false
-      - type: natural
-        name: superclasses
+      - name: superclasses
         types:
           - ArgumentList
         list: false
@@ -272,29 +225,30 @@ types:
     ts_name: comparison_operator
     is_list: false
     is_terminal: false
+    inherits: Expression
     fields:
-      - type: natural
-        name: operators
+      - name: left
         types:
-          - List<NotEq | Inf | InfEq | Eq | Sup | SupEq | In | Is | Not>
-        mappings:
-          "!=": NotEq
-          "<": Inf
-          "<=": InfEq
-          "<>": NotEq
-          "==": Eq
-          ">": Sup
-          ">=": SupEq
+          - Expression
+        list: false
+      - name: operators
+        types: [NotEq, Inf, InfEq, Eq, Sup, SupEq, In, Is, Not]
         list: true
+      - name: right
+        types:
+          - Expression
+        list: false
   - name: ConcatenatedString
     ts_name: concatenated_string
     is_list: true
     is_terminal: false
+    inherits: PrimaryExpression
     fields: []
   - name: ConditionalExpression
     ts_name: conditional_expression
     is_list: true
     is_terminal: false
+    inherits: Expression
     fields: []
   - name: ContinueStatement
     ts_name: continue_statement
@@ -306,8 +260,7 @@ types:
     is_list: false
     is_terminal: false
     fields:
-      - type: natural
-        name: definition
+      - name: definition
         types:
           - CompoundStatement
         list: false
@@ -320,14 +273,13 @@ types:
     ts_name: default_parameter
     is_list: false
     is_terminal: false
+    inherits: Parameter
     fields:
-      - type: natural
-        name: name
+      - name: name
         types:
           - Identifier
         list: false
-      - type: natural
-        name: value
+      - name: value
         types:
           - Expression
         list: false
@@ -340,14 +292,15 @@ types:
     ts_name: dictionary
     is_list: true
     is_terminal: false
+    inherits: PrimaryExpression
     fields: []
   - name: DictionaryComprehension
     ts_name: dictionary_comprehension
     is_list: false
     is_terminal: false
+    inherits: PrimaryExpression
     fields:
-      - type: natural
-        name: body
+      - name: body
         types:
           - Pair
         list: false
@@ -360,6 +313,7 @@ types:
     ts_name: dictionary_splat_pattern
     is_list: false
     is_terminal: false
+    inherits: Parameter
     fields: []
   - name: DottedName
     ts_name: dotted_name
@@ -371,13 +325,11 @@ types:
     is_list: false
     is_terminal: false
     fields:
-      - type: natural
-        name: condition
+      - name: condition
         types:
           - Expression
         list: false
-      - type: natural
-        name: consequence
+      - name: consequence
         types:
           - Block
         list: false
@@ -386,8 +338,7 @@ types:
     is_list: false
     is_terminal: false
     fields:
-      - type: natural
-        name: body
+      - name: body
         types:
           - Block
         list: false
@@ -406,8 +357,7 @@ types:
     is_list: false
     is_terminal: false
     fields:
-      - type: natural
-        name: code
+      - name: code
         types:
           - String
         list: false
@@ -431,13 +381,11 @@ types:
     is_list: false
     is_terminal: false
     fields:
-      - type: natural
-        name: left
+      - name: left
         types:
           - Pattern,PatternList
         list: false
-      - type: natural
-        name: right
+      - name: right
         types:
           - List<, | Expression>
         list: true
@@ -446,23 +394,19 @@ types:
     is_list: false
     is_terminal: false
     fields:
-      - type: natural
-        name: alternative
+      - name: alternative
         types:
           - ElseClause
         list: false
-      - type: natural
-        name: body
+      - name: body
         types:
           - Block
         list: false
-      - type: natural
-        name: left
+      - name: left
         types:
           - Pattern,PatternList
         list: false
-      - type: natural
-        name: right
+      - name: right
         types:
           - Expression,ExpressionList
         list: false
@@ -481,23 +425,19 @@ types:
     is_list: false
     is_terminal: false
     fields:
-      - type: natural
-        name: body
+      - name: body
         types:
           - Block
         list: false
-      - type: natural
-        name: name
+      - name: name
         types:
           - Identifier
         list: false
-      - type: natural
-        name: parameters
+      - name: parameters
         types:
           - Parameters
         list: false
-      - type: natural
-        name: return_type
+      - name: return_type
         types:
           - Type
         list: false
@@ -506,8 +446,7 @@ types:
     is_list: false
     is_terminal: false
     fields:
-      - type: natural
-        name: name
+      - name: name
         types:
           - List<AliasedImport | DottedName>
         list: true
@@ -515,9 +454,9 @@ types:
     ts_name: generator_expression
     is_list: false
     is_terminal: false
+    inherits: PrimaryExpression
     fields:
-      - type: natural
-        name: body
+      - name: body
         types:
           - Expression
         list: false
@@ -536,18 +475,15 @@ types:
     is_list: false
     is_terminal: false
     fields:
-      - type: natural
-        name: alternative
+      - name: alternative
         types:
           - List<ElifClause | ElseClause>
         list: true
-      - type: natural
-        name: condition
+      - name: condition
         types:
           - Expression
         list: false
-      - type: natural
-        name: consequence
+      - name: consequence
         types:
           - Block
         list: false
@@ -556,13 +492,11 @@ types:
     is_list: false
     is_terminal: false
     fields:
-      - type: natural
-        name: module_name
+      - name: module_name
         types:
           - DottedName,RelativeImport
         list: false
-      - type: natural
-        name: name
+      - name: name
         types:
           - List<AliasedImport | DottedName>
         list: true
@@ -576,8 +510,7 @@ types:
     is_list: false
     is_terminal: false
     fields:
-      - type: natural
-        name: name
+      - name: name
         types:
           - List<AliasedImport | DottedName>
         list: true
@@ -591,13 +524,11 @@ types:
     is_list: false
     is_terminal: false
     fields:
-      - type: natural
-        name: name
+      - name: name
         types:
           - Identifier
         list: false
-      - type: natural
-        name: value
+      - name: value
         types:
           - Expression
         list: false
@@ -605,19 +536,19 @@ types:
     ts_name: keyword_separator
     is_list: false
     is_terminal: false
+    inherits: Parameter
     fields: []
   - name: Lambda
     ts_name: lambda
     is_list: false
     is_terminal: false
+    inherits: Expression
     fields:
-      - type: natural
-        name: body
+      - name: body
         types:
           - Expression
         list: false
-      - type: natural
-        name: parameters
+      - name: parameters
         types:
           - LambdaParameters
         list: false
@@ -630,14 +561,15 @@ types:
     ts_name: list
     is_list: true
     is_terminal: false
+    inherits: PrimaryExpression
     fields: []
   - name: ListComprehension
     ts_name: list_comprehension
     is_list: false
     is_terminal: false
+    inherits: PrimaryExpression
     fields:
-      - type: natural
-        name: body
+      - name: body
         types:
           - Expression
         list: false
@@ -645,6 +577,7 @@ types:
     ts_name: list_pattern
     is_list: true
     is_terminal: false
+    inherits: Pattern
     fields: []
   - name: ListSplat
     ts_name: list_splat
@@ -655,19 +588,18 @@ types:
     ts_name: list_splat_pattern
     is_list: false
     is_terminal: false
+    inherits: Pattern
     fields: []
   - name: MatchStatement
     ts_name: match_statement
     is_list: false
     is_terminal: false
     fields:
-      - type: natural
-        name: alternative
+      - name: alternative
         types:
           - List<CaseClause>
         list: true
-      - type: natural
-        name: subject
+      - name: subject
         types:
           - List<Expression>
         list: true
@@ -680,14 +612,13 @@ types:
     ts_name: named_expression
     is_list: false
     is_terminal: false
+    inherits: Expression
     fields:
-      - type: natural
-        name: name
+      - name: name
         types:
           - Identifier
         list: false
-      - type: natural
-        name: value
+      - name: value
         types:
           - Expression
         list: false
@@ -700,9 +631,9 @@ types:
     ts_name: not_operator
     is_list: false
     is_terminal: false
+    inherits: Expression
     fields:
-      - type: natural
-        name: argument
+      - name: argument
         types:
           - Expression
         list: false
@@ -711,13 +642,11 @@ types:
     is_list: false
     is_terminal: false
     fields:
-      - type: natural
-        name: key
+      - name: key
         types:
           - Expression
         list: false
-      - type: natural
-        name: value
+      - name: value
         types:
           - Expression
         list: false
@@ -730,6 +659,7 @@ types:
     ts_name: parenthesized_expression
     is_list: false
     is_terminal: false
+    inherits: PrimaryExpression
     fields: []
   - name: ParenthesizedListSplat
     ts_name: parenthesized_list_splat
@@ -750,14 +680,14 @@ types:
     ts_name: positional_separator
     is_list: false
     is_terminal: false
+    inherits: Parameter
     fields: []
   - name: PrintStatement
     ts_name: print_statement
     is_list: false
     is_terminal: false
     fields:
-      - type: natural
-        name: argument
+      - name: argument
         types:
           - List<Expression>
         list: true
@@ -766,8 +696,7 @@ types:
     is_list: false
     is_terminal: false
     fields:
-      - type: natural
-        name: cause
+      - name: cause
         types:
           - Expression
         list: false
@@ -785,14 +714,15 @@ types:
     ts_name: set
     is_list: true
     is_terminal: false
+    inherits: PrimaryExpression
     fields: []
   - name: SetComprehension
     ts_name: set_comprehension
     is_list: false
     is_terminal: false
+    inherits: PrimaryExpression
     fields:
-      - type: natural
-        name: body
+      - name: body
         types:
           - Expression
         list: false
@@ -805,19 +735,19 @@ types:
     ts_name: string
     is_list: true
     is_terminal: false
+    inherits: PrimaryExpression
     fields: []
   - name: Subscript
     ts_name: subscript
     is_list: false
     is_terminal: false
+    inherits: PrimaryExpression
     fields:
-      - type: natural
-        name: subscript
+      - name: subscript
         types:
           - List<Expression | Slice>
         list: true
-      - type: natural
-        name: value
+      - name: value
         types:
           - PrimaryExpression
         list: false
@@ -826,8 +756,7 @@ types:
     is_list: false
     is_terminal: false
     fields:
-      - type: natural
-        name: body
+      - name: body
         types:
           - Block
         list: false
@@ -835,11 +764,13 @@ types:
     ts_name: tuple
     is_list: true
     is_terminal: false
+    inherits: PrimaryExpression
     fields: []
   - name: TuplePattern
     ts_name: tuple_pattern
     is_list: true
     is_terminal: false
+    inherits: Pattern
     fields: []
   - name: Type
     ts_name: type
@@ -850,19 +781,17 @@ types:
     ts_name: typed_default_parameter
     is_list: false
     is_terminal: false
+    inherits: Parameter
     fields:
-      - type: natural
-        name: name
+      - name: name
         types:
           - Identifier
         list: false
-      - type: natural
-        name: type
+      - name: type
         types:
           - Type
         list: false
-      - type: natural
-        name: value
+      - name: value
         types:
           - Expression
         list: false
@@ -870,9 +799,9 @@ types:
     ts_name: typed_parameter
     is_list: false
     is_terminal: false
+    inherits: Parameter
     fields:
-      - type: natural
-        name: type
+      - name: type
         types:
           - Type
         list: false
@@ -880,34 +809,29 @@ types:
     ts_name: unary_operator
     is_list: false
     is_terminal: false
+    inherits: PrimaryExpression
     fields:
-      - type: natural
-        name: argument
+      - name: argument
         types:
           - PrimaryExpression
         list: false
-      - type: natural
-        name: operator
-        types:
-          - "+,-,~"
+      - name: operator
+        types: [Add, Sub, Not]
         list: false
   - name: WhileStatement
     ts_name: while_statement
     is_list: false
     is_terminal: false
     fields:
-      - type: natural
-        name: alternative
+      - name: alternative
         types:
           - ElseClause
         list: false
-      - type: natural
-        name: body
+      - name: body
         types:
           - Block
         list: false
-      - type: natural
-        name: condition
+      - name: condition
         types:
           - Expression
         list: false
@@ -926,8 +850,7 @@ types:
     is_list: false
     is_terminal: false
     fields:
-      - type: natural
-        name: value
+      - name: value
         types:
           - Expression
         list: false
@@ -936,8 +859,7 @@ types:
     is_list: false
     is_terminal: false
     fields:
-      - type: natural
-        name: body
+      - name: body
         types:
           - Block
         list: false
@@ -955,6 +877,7 @@ types:
     ts_name: ellipsis
     is_list: false
     is_terminal: false
+    inherits: PrimaryExpression
     fields: []
   - name: EscapeSequence
     ts_name: escape_sequence
@@ -965,31 +888,37 @@ types:
     ts_name: 'false'
     is_list: false
     is_terminal: false
+    inherits: PrimaryExpression
     fields: []
   - name: Float
     ts_name: float
     is_list: false
     is_terminal: false
+    inherits: PrimaryExpression
     fields: []
   - name: Identifier
     ts_name: identifier
     is_list: false
     is_terminal: false
+    inherits: PrimaryExpression
     fields: []
   - name: Integer
     ts_name: integer
     is_list: false
     is_terminal: false
+    inherits: PrimaryExpression
     fields: []
   - name: None
     ts_name: none
     is_list: false
     is_terminal: false
+    inherits: PrimaryExpression
     fields: []
   - name: 'True'
     ts_name: 'true'
     is_list: false
     is_terminal: false
+    inherits: PrimaryExpression
     fields: []
   - name: TypeConversion
     ts_name: type_conversion
@@ -999,131 +928,233 @@ types:
   - name: Mod
     is_list: false
     is_terminal: false
-    fields: []
+    fields: [ ]
   - name: BitAnd
     is_list: false
     is_terminal: false
-    fields: []
+    fields: [ ]
   - name: Mul
     is_list: false
     is_terminal: false
-    fields: []
+    fields: [ ]
   - name: Exp
     is_list: false
     is_terminal: false
-    fields: []
+    fields: [ ]
   - name: Add
     is_list: false
     is_terminal: false
-    fields: []
+    fields: [ ]
   - name: Sub
     is_list: false
     is_terminal: false
-    fields: []
+    fields: [ ]
   - name: Div
     is_list: false
     is_terminal: false
-    fields: []
+    fields: [ ]
   - name: IntDiv
     is_list: false
     is_terminal: false
-    fields: []
+    fields: [ ]
   - name: ShiftLeft
     is_list: false
     is_terminal: false
-    fields: []
+    fields: [ ]
   - name: ShiftRight
     is_list: false
     is_terminal: false
-    fields: []
+    fields: [ ]
   - name: MatMul
     is_list: false
     is_terminal: false
-    fields: []
+    fields: [ ]
   - name: BitXor
     is_list: false
     is_terminal: false
-    fields: []
+    fields: [ ]
   - name: BitOr
     is_list: false
     is_terminal: false
-    fields: []
+    fields: [ ]
   - name: ModAssign
     is_list: false
     is_terminal: false
-    fields: []
+    fields: [ ]
   - name: BitAndAssign
     is_list: false
     is_terminal: false
-    fields: []
+    fields: [ ]
   - name: ExpAssign
     is_list: false
     is_terminal: false
-    fields: []
+    fields: [ ]
   - name: MulAssign
     is_list: false
     is_terminal: false
-    fields: []
+    fields: [ ]
   - name: AddAssign
     is_list: false
     is_terminal: false
-    fields: []
+    fields: [ ]
   - name: SubAssign
     is_list: false
     is_terminal: false
-    fields: []
+    fields: [ ]
   - name: IntDivAssign
     is_list: false
     is_terminal: false
-    fields: []
+    fields: [ ]
   - name: DivAssign
     is_list: false
     is_terminal: false
-    fields: []
+    fields: [ ]
   - name: ShiftLeftAssign
     is_list: false
     is_terminal: false
-    fields: []
+    fields: [ ]
   - name: ShiftRightAssign
     is_list: false
     is_terminal: false
-    fields: []
+    fields: [ ]
   - name: MatMulAssign
     is_list: false
     is_terminal: false
-    fields: []
+    fields: [ ]
   - name: BitXorAssign
     is_list: false
     is_terminal: false
-    fields: []
+    fields: [ ]
   - name: BitOrAssign
     is_list: false
     is_terminal: false
-    fields: []
+    fields: [ ]
   - name: NotEq
     is_list: false
     is_terminal: false
-    fields: []
+    fields: [ ]
   - name: Inf
     is_list: false
     is_terminal: false
-    fields: []
+    fields: [ ]
   - name: InfEq
     is_list: false
     is_terminal: false
-    fields: []
+    fields: [ ]
   - name: Eq
     is_list: false
     is_terminal: false
-    fields: []
+    fields: [ ]
   - name: Sup
     is_list: false
     is_terminal: false
-    fields: []
+    fields: [ ]
   - name: SupEq
     is_list: false
     is_terminal: false
-    fields: []
+    fields: [ ]
+  - name: Not
+    is_list: false
+    is_terminal: false
+    fields: [ ]
+  - name: Or
+    is_list: false
+    is_terminal: false
+    fields: [ ]
+  - name: And
+    is_list: false
+    is_terminal: false
+    fields: [ ]
+  - name: In
+    is_list: false
+    is_terminal: false
+    fields: [ ]
+  - name: Is
+    is_list: false
+    is_terminal: false
+    fields: [ ]
 aliases:
   - ts_name: expression
     alias: as_pattern_target
+fields:
+  - parent_kind: UnaryOperator
+    ts_kind: "~"
+    new_kind: Not
+  - parent_kind: UnaryOperator
+    ts_kind: "+"
+    new_kind: Add
+  - parent_kind: UnaryOperator
+    ts_kind: "-"
+    new_kind: Sub
+  - parent_kind: BinaryOperator
+    ts_kind: "%"
+    new_kind: Mod
+  - parent_kind: BinaryOperator
+    ts_kind: "&"
+    new_kind: BitAnd
+  - parent_kind: BinaryOperator
+    ts_kind: "*"
+    new_kind: Mul
+  - parent_kind: BinaryOperator
+    ts_kind: "**"
+    new_kind: Exp
+  - parent_kind: BinaryOperator
+    ts_kind: "+"
+    new_kind: Add
+  - parent_kind: BinaryOperator
+    ts_kind: "-"
+    new_kind: Sub
+  - parent_kind: BinaryOperator
+    ts_kind: "/"
+    new_kind: Div
+  - parent_kind: BinaryOperator
+    ts_kind: "//"
+    new_kind: IntDiv
+  - parent_kind: BinaryOperator
+    ts_kind: "<<"
+    new_kind: ShiftLeft
+  - parent_kind: BinaryOperator
+    ts_kind: ">>"
+    new_kind: ShiftRight
+  - parent_kind: BinaryOperator
+    ts_kind: "@"
+    new_kind: MatMul
+  - parent_kind: BinaryOperator
+    ts_kind: "^"
+    new_kind: BitXor
+  - parent_kind: BinaryOperator
+    ts_kind: "|"
+    new_kind: BitOr
+  - parent_kind: ComparisonOperator
+    ts_kind: "!="
+    new_kind: NotEq
+  - parent_kind: ComparisonOperator
+    ts_kind: "<"
+    new_kind: Inf
+  - parent_kind: ComparisonOperator
+    ts_kind: "<>"
+    new_kind: NotEq
+  - parent_kind: ComparisonOperator
+    ts_kind: "=="
+    new_kind: Eq
+  - parent_kind: ComparisonOperator
+    ts_kind: ">"
+    new_kind: Sup
+  - parent_kind: ComparisonOperator
+    ts_kind: ">="
+    new_kind: SupEq
+  - parent_kind: ComparisonOperator
+    ts_kind: "not"
+    new_kind: Not
+  - parent_kind: ComparisonOperator
+    ts_kind: "in"
+    new_kind: In
+  - parent_kind: ComparisonOperator
+    ts_kind: "is"
+    new_kind: Is
+  - parent_kind: ComparisonOperator
+    ts_kind: "and"
+    new_kind: And
+  - parent_kind: ComparisonOperator
+    ts_kind: "or"
+    new_kind: Or

@@ -59,7 +59,14 @@ pub fn builtin_lang_mappings(lang: BuiltinLang) -> &'static [NodeMapping] {
 pub struct MappingConfig {
     pub types: Vec<NodeMapping>,
     pub aliases: Vec<NodeAlias>,
-    pub promotions: Option<Vec<NodePromotion>>,
+    pub fields: Vec<FieldSettings>,
+}
+
+#[derive(Debug, Clone, Eq, PartialEq, Hash, Serialize, Deserialize)]
+pub struct FieldSettings {
+    pub parent_kind: String,
+    pub ts_kind: String,
+    pub new_kind: String,
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Hash, Serialize, Deserialize)]
@@ -79,6 +86,7 @@ pub struct NodePromotion {
 #[derive(Debug, Clone, Eq, PartialEq, Hash, Serialize, Deserialize)]
 pub struct NodeMapping {
     name: String,
+    inherits: Option<String>,
     ts_name: Option<String>,
     fields: Vec<NodeMappingField>,
     is_list: bool,
@@ -118,7 +126,7 @@ fn term_decl_from_mapping(m: &NodeMapping) -> TermDecl {
 fn node_decl_from_mapping(m: &NodeMapping) -> NodeDecl {
     NodeDecl {
         name: m.name.clone(),
-        parent_type: None,
+        parent_type: m.inherits.clone(),
         fields: m
             .fields
             .iter()
