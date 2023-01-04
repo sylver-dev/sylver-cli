@@ -24,6 +24,7 @@ id_type! { SylvaId: Sylva }
 id_type! { SylvaTreeId: SylvaTree }
 
 #[derive(Debug, Clone)]
+#[allow(clippy::large_enum_variant)]
 pub enum SylvaParser<'s> {
     Custom(ParserRunner<'s>),
     Builtin(BuiltinParserRunner<'s>),

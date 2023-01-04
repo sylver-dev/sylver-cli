@@ -23,7 +23,7 @@ type MetaParserRes<T> = Result<T, MetaParserErr>;
 #[derive(Debug, Error)]
 pub enum MetaParserErr {
     #[error(transparent)]
-    PestErr(#[from] pest::error::Error<Rule>),
+    PestErr(Box<pest::error::Error<Rule>>),
     #[error(transparent)]
     Walk(#[from] WalkError<Rule>),
     #[error(transparent)]
@@ -34,6 +34,12 @@ pub enum MetaParserErr {
     UnknownTermType(String),
     #[error("Missing argument: {0}")]
     MissingArgument(String),
+}
+
+impl From<pest::error::Error<Rule>> for MetaParserErr {
+    fn from(e: pest::error::Error<Rule>) -> Self {
+        MetaParserErr::PestErr(Box::new(e))
+    }
 }
 
 #[derive(Parser)]
@@ -702,13 +708,11 @@ fn term_regex_or_literal(mut pairs: Pairs<Rule>) -> MetaParserRes<TermContent> {
 
     let content = match grand_child.as_rule() {
         Rule::term_content_regex_inner => {
-            let regex = fancy_regex::Regex::new(term_content_str.as_str())
-                .map_err(MetaParserErr::RegexParsing)?;
+            let regex = fancy_regex::Regex::new(term_content_str.as_str())?;
             TermContent::Regex(regex)
         }
         Rule::term_content_literal_inner => {
-            let regex = fancy_regex::Regex::new(&fancy_regex::escape(term_content_str.as_str()))
-                .map_err(MetaParserErr::RegexParsing)?;
+            let regex = fancy_regex::Regex::new(&fancy_regex::escape(term_content_str.as_str()))?;
             TermContent::Literal(regex)
         }
         r => unexpected_rule(

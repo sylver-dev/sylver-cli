@@ -124,8 +124,6 @@ fn point_to_pos(point: Point, byte_pos: usize) -> Pos {
 pub struct BuiltinParserRunner<'s> {
     syntax: &'s Syntax,
     language: tree_sitter::Language,
-    kind_names: HashMap<u16, String>,
-    field_mappings: HashMap<(KindId, u16), KindId>,
     ts_mappings: TsMappings,
 }
 
@@ -135,43 +133,11 @@ impl<'s> BuiltinParserRunner<'s> {
         syntax: &'s Syntax,
         mapping_config: &MappingConfig,
     ) -> BuiltinParserRunner<'s> {
-        let ts_name_to_name = Self::build_kind_mapping(&mapping_config);
-
-        let kind_names = (0..language.node_kind_count() as u16)
-            .filter_map(|n| {
-                language
-                    .node_kind_for_id(n)
-                    .and_then(|k| ts_name_to_name.get(k).map(|name| (n, name.to_string())))
-            })
-            .collect();
-
-        let field_mappings = mapping_config
-            .types
-            .iter()
-            .flat_map(|n| {
-                n.fields.iter().flat_map(|f| {
-                    f.mappings
-                        .clone()
-                        .unwrap_or_default()
-                        .iter()
-                        .map(|(ts_kind, kind)| {
-                            let parent_kind = syntax.existing_kind_id(&n.name);
-                            let new_kind = syntax.existing_kind_id(kind);
-                            let self_kind = language.id_for_node_kind(ts_kind, false);
-                            ((parent_kind, self_kind), new_kind)
-                        })
-                        .collect::<Vec<_>>()
-                })
-            })
-            .collect();
-
         let ts_mappings = Self::build_ts_mappings(&language, syntax, mapping_config);
 
         BuiltinParserRunner {
             syntax,
             language,
-            kind_names,
-            field_mappings,
             ts_mappings,
         }
     }
@@ -181,14 +147,14 @@ impl<'s> BuiltinParserRunner<'s> {
         syntax: &Syntax,
         mapping_config: &MappingConfig,
     ) -> TsMappings {
-        let ts_name_to_name = Self::build_kind_mapping(&mapping_config);
+        let ts_name_to_name = Self::build_kind_mapping(mapping_config);
 
         let kind_names = (0..language.node_kind_count() as u16)
             .filter_map(|n| {
                 language.node_kind_for_id(n).and_then(|k| {
                     ts_name_to_name
                         .get(k)
-                        .map(|name| (n, syntax.existing_kind_id(name.to_string())))
+                        .map(|name| (n, syntax.existing_kind_id(name)))
                 })
             })
             .collect();
