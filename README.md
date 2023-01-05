@@ -5,6 +5,13 @@
   Language agnostic source code exploration and analysis.
 </h3>
 
+<div align="center" style="font-weight: bolder">
+    <a href="https://app.sylver.dev">Dashboard</a> |
+    <a href="https://discord.gg/PaVTgTSSxu">Discord</a> | 
+    <a href="https://blog.sylver.dev">Blog</a> | 
+    <a href="https://twitter.com/Geoffrey198">Twitter</a>
+</div>
+
 # Installation
 
 ## Binary releases
