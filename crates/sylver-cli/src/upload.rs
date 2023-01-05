@@ -5,7 +5,7 @@ use anyhow::{bail, Context};
 use sylver_core::dashboard::api::ReportDTO;
 use sylver_core::{
     core::source::SourceTree,
-    dashboard::api::{NewReportDTO, NewDiagnosticDTO, ReportCustomLanguage, ReportLanguage},
+    dashboard::api::{NewDiagnosticDTO, NewReportDTO, ReportCustomLanguage, ReportLanguage},
     land::{cmds::RuleResult, ruleset::Rule, LandSpecId},
     query::SylvaNode,
     specs::{
