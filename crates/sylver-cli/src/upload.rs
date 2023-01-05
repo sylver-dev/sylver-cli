@@ -5,7 +5,7 @@ use anyhow::{bail, Context};
 use sylver_core::dashboard::api::ReportDTO;
 use sylver_core::{
     core::source::SourceTree,
-    dashboard::api::{CreateReportData, NewDiagnostic, ReportCustomLanguage, ReportLanguage},
+    dashboard::api::{NewReportDTO, NewDiagnosticDTO, ReportCustomLanguage, ReportLanguage},
     land::{cmds::RuleResult, ruleset::Rule, LandSpecId},
     query::SylvaNode,
     specs::{
@@ -70,7 +70,7 @@ impl<'s> ReportUploader<'s> {
         report: &ReportDTO,
         results: Vec<RuleResult>,
     ) -> anyhow::Result<()> {
-        let diagnostics: Vec<NewDiagnostic> = results
+        let diagnostics: Vec<NewDiagnosticDTO> = results
             .iter()
             .map(|r| self.build_diagnostic(report, &r))
             .collect();
@@ -91,10 +91,10 @@ impl<'s> ReportUploader<'s> {
         Ok(())
     }
 
-    fn build_diagnostic(&self, report: &ReportDTO, r: &&RuleResult) -> NewDiagnostic {
+    fn build_diagnostic(&self, report: &ReportDTO, r: &&RuleResult) -> NewDiagnosticDTO {
         let info = self.get_tree_info(r.node);
 
-        NewDiagnostic {
+        NewDiagnosticDTO {
             report_id: report.id,
             rule_set: self.check_data.rulesets.get(&r.ruleset).unwrap().clone(),
             rule: r.rule_id.to_string(),
@@ -143,7 +143,7 @@ impl<'s> ReportUploader<'s> {
         Ok(report)
     }
 
-    pub fn build_report(&self, lang: LandSpecId) -> anyhow::Result<CreateReportData> {
+    pub fn build_report(&self, lang: LandSpecId) -> anyhow::Result<NewReportDTO> {
         let commit = GitClient::current_commit()?;
         let branch = GitClient::current_branch()?;
 
@@ -157,7 +157,7 @@ impl<'s> ReportUploader<'s> {
             }),
         };
 
-        Ok(CreateReportData {
+        Ok(NewReportDTO {
             commit,
             branch,
             language,

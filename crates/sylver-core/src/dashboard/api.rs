@@ -7,7 +7,7 @@ use crate::{
 };
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
-pub struct CreateReportData {
+pub struct NewReportDTO {
     pub language: ReportLanguage,
     pub commit: String,
     pub branch: String,
@@ -35,7 +35,7 @@ pub struct ReportDTO {
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
-pub struct DiagnosticResp {
+pub struct DiagnosticDTO {
     pub id: i64,
     pub report_id: i64,
     pub rule_set: StemLocation,
@@ -43,10 +43,13 @@ pub struct DiagnosticResp {
     pub description: String,
     pub file: String,
     pub position: Position,
+    pub repo_name: String,
+    pub repo_owner: String,
+    pub file_url: String,
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
-pub struct NewDiagnostic {
+pub struct NewDiagnosticDTO {
     pub report_id: i64,
     pub rule_set: StemLocation,
     pub rule: String,
