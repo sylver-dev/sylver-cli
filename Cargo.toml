@@ -4,6 +4,7 @@ members = [
     "crates/sylver-cli",
     "crates/sylver-langs",
     "crates/sylver-dsl",
+    "crates/sylver-script",
     "crates/log",
 ]
 
