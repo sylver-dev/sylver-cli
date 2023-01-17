@@ -51,7 +51,7 @@ impl<'i> PythonScriptCompiler<'i> {
 
     fn compile_ast(path: &str, ast: &mut ast::Mod) -> Result<CodeObject, ScriptError> {
         rustpython_codegen::compile::compile_top(
-            &ast,
+            ast,
             path.to_string(),
             rustpython_vm::compiler::Mode::Single,
             rustpython_codegen::CompileOpts { optimize: 1 },
