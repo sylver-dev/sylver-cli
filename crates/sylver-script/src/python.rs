@@ -1,6 +1,8 @@
+use anyhow::anyhow;
 use std::collections::BTreeMap;
 
 use rustpython_parser::ast;
+use rustpython_vm::builtins::PyList;
 use rustpython_vm::{
     builtins::{PyDict, PyInt, PyStr},
     bytecode::CodeObject,
@@ -33,20 +35,21 @@ impl<'i> PythonScriptCompiler<'i> {
         let mut ast = Self::parse_module(code, path)?;
         Self::append_func_ref(path, fn_name, &mut ast)?;
 
-        let invokable = self.run_code_obj(path, Self::compile_ast(path, &mut ast)?)?;
+        let invokable = self.run_code_obj(Self::compile_ast(path, &mut ast)?)?;
 
         Ok(PythonScript { invokable })
     }
 
-    fn run_code_obj(&self, path: &str, module_obj: CodeObject) -> Result<PyObjectRef, ScriptError> {
-        self.interpreter
-            .enter(|vm| {
-                let module_code = vm.ctx.new_code(module_obj);
-                vm.run_code_obj(module_code, vm.new_scope_with_builtins())
-            })
-            .map_err(|_| {
-                ScriptError::Compilation(path.to_string(), "failed to run code object".to_string())
-            })
+    fn run_code_obj(&self, module_obj: CodeObject) -> Result<PyObjectRef, ScriptError> {
+        self.interpreter.enter(|vm| {
+            let module_code = vm.ctx.new_code(module_obj);
+            vm.run_code_obj(module_code, vm.new_scope_with_builtins())
+                .map_err(|e| {
+                    let mut msg = String::new();
+                    vm.write_exception(&mut msg, &e).unwrap();
+                    ScriptError::RuntimeError(msg)
+                })
+        })
     }
 
     fn compile_ast(path: &str, ast: &mut ast::Mod) -> Result<CodeObject, ScriptError> {
@@ -129,10 +132,34 @@ impl ScriptEngine for PythonScriptEngine {
     ) -> Result<ScriptValue, ScriptError> {
         let value = self.interpreter.enter(|vm| {
             let args: Vec<PyObjectRef> = args.into_iter().map(|arg| arg.to_pyobject(vm)).collect();
-            vm.invoke(&script.invokable, args).unwrap()
-        });
+            vm.invoke(&script.invokable, args).map_err(|e| {
+                let mut msg = String::new();
+                vm.write_exception(&mut msg, &e).unwrap();
+                ScriptError::RuntimeError(msg)
+            })
+        })?;
 
         value.try_into()
+    }
+
+    fn compile_function(
+        &self,
+        script: &str,
+        file_name: &str,
+        fun_name: &str,
+    ) -> Result<Self::Script, ScriptError> {
+        PythonScriptCompiler::new(&self.interpreter).compile_function(script, file_name, fun_name)
+    }
+}
+
+impl Default for PythonScriptEngine {
+    fn default() -> Self {
+        Self {
+            interpreter: Interpreter::with_init(Default::default(), |vm| {
+                vm.add_frozen(rustpython_pylib::frozen_stdlib());
+                vm.add_native_modules(rustpython_vm::stdlib::get_module_inits());
+            }),
+        }
     }
 }
 
@@ -141,6 +168,13 @@ impl ToPyObject for ScriptValue {
         match self {
             ScriptValue::Integer(i) => i.to_pyobject(vm),
             ScriptValue::Str(s) => s.to_pyobject(vm),
+            ScriptValue::List(l) => {
+                let list = PyList::default();
+                for item in l {
+                    list.borrow_vec_mut().push(item.to_pyobject(vm));
+                }
+                list.to_pyobject(vm)
+            }
             ScriptValue::Dict(d) => {
                 let dict = PyDict::default();
                 for (k, v) in d {
@@ -163,11 +197,12 @@ impl TryInto<ScriptValue> for PyObjectRef {
             pystr_to_value(pystr)
         } else if let Ok(pydict) = self.clone().downcast::<PyDict>() {
             pydict_to_value(pydict)?
+        } else if let Some(pylist) = self.payload::<PyList>() {
+            pylist_to_value(pylist)?
         } else {
-            return Err(ScriptError::UnsupportedType(format!(
-                "Unsupported type: {}",
-                self.class()
-            )));
+            return Err(ScriptError::UnsupportedType(
+                self.class().name().to_string(),
+            ));
         };
 
         Ok(value)
@@ -183,6 +218,16 @@ fn pyint_to_value(pyint: &PyInt) -> Result<ScriptValue, ScriptError> {
 
 fn pystr_to_value(pystr: &PyStr) -> ScriptValue {
     ScriptValue::Str(pystr.to_string())
+}
+
+fn pylist_to_value(pylist: &PyList) -> Result<ScriptValue, ScriptError> {
+    let values = pylist
+        .borrow_vec()
+        .iter()
+        .map(|item| item.clone().try_into())
+        .collect::<Result<_, ScriptError>>()?;
+
+    Ok(ScriptValue::List(values))
 }
 
 fn pydict_to_value(pydict: PyRef<PyDict>) -> Result<ScriptValue, ScriptError> {
@@ -242,6 +287,17 @@ def hello(n: int):
             ScriptValue::Str("hello".to_string()),
             eval_python_expr("'hello'")
         );
+    }
+
+    #[test]
+    fn python_list_to_list() {
+        assert_eq!(
+            ScriptValue::List(vec![
+                ScriptValue::Integer(1),
+                ScriptValue::Str("hello".to_string())
+            ]),
+            eval_python_expr("[1, 'hello']")
+        )
     }
 
     #[test]

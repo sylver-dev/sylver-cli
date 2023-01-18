@@ -8,6 +8,8 @@ impl Logger for TestLogger {
         Box::new(())
     }
 
+    fn info(&self, _msg: &str) {}
+
     fn error(&self, _msg: &str) {}
 }
 

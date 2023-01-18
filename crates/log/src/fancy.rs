@@ -11,6 +11,10 @@ impl Logger for FancyLogger {
         Box::new(FancyScoped::new(msg, done_msg))
     }
 
+    fn info(&self, msg: &str) {
+        println!("{}", msg);
+    }
+
     fn error(&self, msg: &str) {
         let formatted_msg = format!("❗️{}", yansi::Paint::red(msg));
         eprintln!("{formatted_msg}")

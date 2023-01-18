@@ -2283,6 +2283,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "rustpython-pylib"
+version = "0.2.0"
+source = "git+https://github.com/RustPython/RustPython?rev=59b191c#59b191c789c891a500659d2c3b29a645883f780a"
+dependencies = [
+ "glob",
+ "rustpython-compiler-core",
+ "rustpython-derive",
+]
+
+[[package]]
 name = "rustpython-stdlib"
 version = "0.2.0"
 source = "git+https://github.com/RustPython/RustPython?rev=59b191c#59b191c789c891a500659d2c3b29a645883f780a"
@@ -2734,6 +2744,7 @@ dependencies = [
  "serde_json",
  "sylver-core",
  "sylver-dsl",
+ "sylver-script",
  "temp-dir",
 ]
 
@@ -2797,9 +2808,12 @@ dependencies = [
 name = "sylver-script"
 version = "0.1.0"
 dependencies = [
+ "anyhow",
+ "derive_more",
  "num-bigint",
  "rustpython-codegen",
  "rustpython-parser",
+ "rustpython-pylib",
  "rustpython-stdlib",
  "rustpython-vm",
  "thiserror",

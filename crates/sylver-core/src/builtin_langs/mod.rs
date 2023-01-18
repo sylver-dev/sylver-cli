@@ -43,6 +43,16 @@ impl TryFrom<&str> for BuiltinLang {
     }
 }
 
+pub fn get_detection_script(lang: BuiltinLang) -> &'static str {
+    match lang {
+        BuiltinLang::Python => include_str!("../../res/detection_scripts/python.py"),
+    }
+}
+
+pub fn get_builtin_langs() -> Vec<BuiltinLang> {
+    vec![BuiltinLang::Python]
+}
+
 pub fn get_builtin_lang(lang: BuiltinLang) -> (&'static MappingConfig, tree_sitter::Language) {
     match lang {
         BuiltinLang::Python => (PYTHON_MAPPING.deref(), sylver_langs::python_language()),

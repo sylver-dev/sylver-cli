@@ -39,7 +39,7 @@ fn main() -> Result<()> {
     };
 
     if let Err(e) = res {
-        logger.error(&format!("{}", e));
+        logger.error(&format!("{:?}", e));
         std::process::exit(1);
     }
 
@@ -50,6 +50,7 @@ fn eval(state: Arc<SylverState>, cmd: Cli) -> Result<()> {
     let loader = SylverLoader::from_state(state.clone());
 
     match cmd.command {
+        Commands::Init(_) => init::init(state)?,
         Commands::Check(cmd) => check::check(state, &loader, &cmd)?,
         Commands::Parse(cmd) => parse(state, &cmd)?,
         Commands::Query(cmd) => query(state, &loader, &cmd)?,

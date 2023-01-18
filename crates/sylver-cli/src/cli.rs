@@ -19,6 +19,8 @@ pub struct Cli {
 
 #[derive(Subcommand, Debug)]
 pub enum Commands {
+    /// Automatically detect projects and install the appropriate rulesets.
+    Init(InitCmd),
     /// Run all of the configured rulesets.
     Check(CheckCmd),
     /// Parse a single file.
@@ -28,6 +30,9 @@ pub enum Commands {
     /// Install and run rulesets.
     Ruleset(RulesetCmd),
 }
+
+#[derive(Parser, Debug)]
+pub struct InitCmd {}
 
 #[derive(Parser, Debug)]
 #[command(group(ArgGroup::new("api_upload").requires_all(["upload", "token"])))]

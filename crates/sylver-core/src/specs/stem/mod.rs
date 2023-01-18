@@ -191,6 +191,7 @@ mod test {
         let stem: Stem<ProjectConfigStem> = read_stem(indoc!(
             "
             language: python
+            root: dir
             include:
                 - '*.py'
         "
@@ -202,6 +203,7 @@ mod test {
             Stem {
                 data: ProjectConfigStem::Flat(ProjectStem {
                     language: ProjectLang::Builtin(BuiltinLang::Python),
+                    root: Some("dir".to_string()),
                     include: vec!["*.py".to_string()],
                     exclude: vec![],
                     rulesets: vec![],
@@ -226,6 +228,7 @@ mod test {
             stem,
             Stem {
                 data: ProjectConfigStem::Flat(ProjectStem {
+                    root: None,
                     language: ProjectLang::Custom(StemLocation::local("lang.syl")),
                     include: vec!["*.ext".to_string()],
                     exclude: vec![],
@@ -259,6 +262,7 @@ mod test {
                 data: ProjectConfigStem::Nested {
                     projects: vec![
                         ProjectStem {
+                            root: None,
                             language: ProjectLang::Custom(StemLocation::Local(
                                 "javascript.yml".into()
                             )),
@@ -267,6 +271,7 @@ mod test {
                             exclude: vec![],
                         },
                         ProjectStem {
+                            root: None,
                             language: ProjectLang::Custom(StemLocation::Local("golang.yml".into())),
                             rulesets: vec![],
                             include: vec!["src/**/*.go".to_string()],

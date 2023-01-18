@@ -10,5 +10,9 @@ rustpython-vm = { git = "https://github.com/RustPython/RustPython", rev = "59b19
 rustpython-codegen = { git = "https://github.com/RustPython/RustPython", rev = "59b191c" }
 rustpython-parser = { git = "https://github.com/RustPython/RustPython", rev = "59b191c" }
 rustpython-stdlib = { git = "https://github.com/RustPython/RustPython", rev = "59b191c" }
+rustpython-pylib = { git = "https://github.com/RustPython/RustPython", rev = "59b191c", features = ["freeze-stdlib"] }
+
 thiserror = "1.0.38"
 num-bigint = "0.4.3"
+anyhow = "1.0.68"
+derive_more = "0.99.17"

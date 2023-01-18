@@ -92,4 +92,5 @@ pub struct ProjectStem {
     pub language: ProjectLang,
     #[serde(default)]
     pub rulesets: Vec<StemLocation>,
+    pub root: Option<String>,
 }
