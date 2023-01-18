@@ -203,6 +203,7 @@ mod test {
                 data: ProjectConfigStem::Flat(ProjectStem {
                     language: ProjectLang::Builtin(BuiltinLang::Python),
                     include: vec!["*.py".to_string()],
+                    exclude: vec![],
                     rulesets: vec![],
                 }),
                 description: None,
@@ -227,6 +228,7 @@ mod test {
                 data: ProjectConfigStem::Flat(ProjectStem {
                     language: ProjectLang::Custom(StemLocation::local("lang.syl")),
                     include: vec!["*.ext".to_string()],
+                    exclude: vec![],
                     rulesets: vec![],
                 }),
                 description: None,
@@ -262,11 +264,13 @@ mod test {
                             )),
                             rulesets: vec![StemLocation::Local("default.yml".into())],
                             include: vec!["src/**/*.js".to_string()],
+                            exclude: vec![],
                         },
                         ProjectStem {
                             language: ProjectLang::Custom(StemLocation::Local("golang.yml".into())),
                             rulesets: vec![],
                             include: vec!["src/**/*.go".to_string()],
+                            exclude: vec![],
                         },
                     ]
                 },

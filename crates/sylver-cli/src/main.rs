@@ -18,6 +18,7 @@ use crate::{
 
 mod check;
 mod cli;
+mod init;
 mod parse;
 mod query;
 mod repl;

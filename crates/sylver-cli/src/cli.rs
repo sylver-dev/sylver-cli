@@ -77,6 +77,10 @@ pub struct QueryCmd {
     #[clap(short, long, num_args = 1.., required = true)]
     pub files: Vec<String>,
 
+    /// Glob patterns of the files to exlude
+    #[clap(long, num_args = 1..)]
+    pub exclude: Vec<String>,
+
     /// Query to execute.
     #[clap(short, long)]
     pub query: Option<String>,
@@ -103,6 +107,10 @@ pub struct RulesetRun {
     /// Glob patterns of the files to include.
     #[clap(short, long, required = true)]
     pub files: Vec<String>,
+
+    /// Glob patterns of the files to exlude
+    #[clap(long, num_args = 1..)]
+    pub exclude: Vec<String>,
 
     #[clap(long, value_parser)]
     pub min_level: Option<ViolationLevel>,

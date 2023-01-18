@@ -87,6 +87,8 @@ impl ProjectConfigStem {
 #[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize)]
 pub struct ProjectStem {
     pub include: Vec<String>,
+    #[serde(default)]
+    pub exclude: Vec<String>,
     pub language: ProjectLang,
     #[serde(default)]
     pub rulesets: Vec<StemLocation>,

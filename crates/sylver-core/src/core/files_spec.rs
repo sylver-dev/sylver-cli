@@ -1,3 +1,5 @@
+use std::collections::HashSet;
+
 use anyhow::Context;
 
 use super::source::{source_from_file, Source};
@@ -5,6 +7,7 @@ use super::source::{source_from_file, Source};
 #[derive(Debug, Clone, Eq, PartialEq, Hash)]
 pub struct FileSpec {
     pub include: Vec<String>,
+    pub exclude: Vec<String>,
 }
 
 pub trait FileSpecLoader {
@@ -14,15 +17,23 @@ pub trait FileSpecLoader {
 #[derive(Default, Clone, Eq, PartialEq, Hash)]
 pub struct FsFileSpecLoader {}
 
+impl FsFileSpecLoader {
+    fn sources_from_globs(&self, globs: &[String]) -> anyhow::Result<HashSet<Source>> {
+        let mut sources = HashSet::new();
+        for glob in globs {
+            sources.extend(sources_from_glob(glob)?);
+        }
+        Ok(sources)
+    }
+}
+
 impl FileSpecLoader for FsFileSpecLoader {
     fn load(&self, spec: &FileSpec) -> anyhow::Result<Vec<Source>> {
-        let mut result = Vec::new();
-
-        for glob in &spec.include {
-            result.extend(sources_from_glob(glob)?);
-        }
-
-        Ok(result)
+        Ok(self
+            .sources_from_globs(&spec.include)?
+            .difference(&self.sources_from_globs(&spec.exclude)?)
+            .cloned()
+            .collect())
     }
 }
 
@@ -57,6 +68,32 @@ mod tests {
 
         let spec = FileSpec {
             include: vec![format!("{}/*.ok", d.path().display())],
+            exclude: vec![],
+        };
+
+        let loaded = FsFileSpecLoader::default().load(&spec).unwrap();
+
+        assert_eq!(
+            loaded.into_iter().collect::<HashSet<Source>>(),
+            hashset![
+                source_from_file(&match1).unwrap(),
+                source_from_file(&match2).unwrap(),
+            ]
+        )
+    }
+
+    #[test]
+    fn fs_file_spec_with_exclude() {
+        let d = TempDir::new().unwrap();
+
+        let match1 = create_tmp_child(&d, "match1.ok", "content1").unwrap();
+        let match2 = create_tmp_child(&d, "match2.ok", "content2").unwrap();
+        let _ = create_tmp_child(&d, "excluded_match.ok", "content3").unwrap();
+        let _ = create_tmp_child(&d, "nomatch.other", "nomatch_content").unwrap();
+
+        let spec = FileSpec {
+            include: vec![format!("{}/*.ok", d.path().display())],
+            exclude: vec![format!("{}/excluded*", d.path().display())],
         };
 
         let loaded = FsFileSpecLoader::default().load(&spec).unwrap();

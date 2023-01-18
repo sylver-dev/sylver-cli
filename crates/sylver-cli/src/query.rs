@@ -46,6 +46,7 @@ fn build_land(loader: &SylverLoader, cmd: &QueryCmd) -> anyhow::Result<Land> {
 
     let sources = loader.load_file_spec(&FileSpec {
         include: cmd.files.clone(),
+        exclude: cmd.exclude.clone(),
     })?;
 
     build_sylva(loader, &mut builder, &cmd.language, sources)?;
