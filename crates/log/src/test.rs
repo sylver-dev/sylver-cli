@@ -11,6 +11,10 @@ impl Logger for TestLogger {
     fn info(&self, _msg: &str) {}
 
     fn error(&self, _msg: &str) {}
+
+    fn important(&self, _msg: &str) {}
+
+    fn success(&self, _msg: &str) {}
 }
 
 impl ScopedMsg for () {}

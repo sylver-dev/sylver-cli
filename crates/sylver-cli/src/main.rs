@@ -50,7 +50,7 @@ fn eval(state: Arc<SylverState>, cmd: Cli) -> Result<()> {
     let loader = SylverLoader::from_state(state.clone());
 
     match cmd.command {
-        Commands::Init(_) => init::init(state)?,
+        Commands::Init(cmd) => init::init(state, &cmd)?,
         Commands::Check(cmd) => check::check(state, &loader, &cmd)?,
         Commands::Parse(cmd) => parse(state, &cmd)?,
         Commands::Query(cmd) => query(state, &loader, &cmd)?,

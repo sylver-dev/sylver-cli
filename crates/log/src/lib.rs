@@ -11,6 +11,10 @@ pub trait Logger: Debug + Send + Sync {
 
     fn error(&self, msg: &str);
 
+    fn success(&self, msg: &str);
+
+    fn important(&self, msg: &str);
+
     fn info(&self, msg: &str);
 }
 

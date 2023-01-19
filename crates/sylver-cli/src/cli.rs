@@ -7,7 +7,7 @@ use sylver_core::{land::ruleset::RuleSeverity, specs::stem::project::ProjectLang
 #[derive(Parser, Debug)]
 #[clap(version)]
 /// Sylver is a language-agnostic source code analyzer.
-/// Find out more at https://sylver.dev/docs/getting_started
+/// Find out more at https://docs.sylver.dev/docs/getting_started
 pub struct Cli {
     #[clap(subcommand)]
     pub command: Commands,
@@ -32,7 +32,11 @@ pub enum Commands {
 }
 
 #[derive(Parser, Debug)]
-pub struct InitCmd {}
+pub struct InitCmd {
+    /// Override the default configuration path
+    #[clap(long, default_value_t = String::from("sylver.yaml"))]
+    pub config_path: String,
+}
 
 #[derive(Parser, Debug)]
 #[command(group(ArgGroup::new("api_upload").requires_all(["upload", "token"])))]

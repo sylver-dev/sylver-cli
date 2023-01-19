@@ -38,7 +38,7 @@ impl<S> DetectableLanguage<S> {
         }
     }
 
-    pub fn build_project_stem(
+    fn build_project_stem(
         &self,
         detection_root: &Path,
         project: DetectedProject,
@@ -90,7 +90,7 @@ fn detect_projects<E: ScriptEngine>(
     root: &Path,
     languages: &[DetectableLanguage<E::Script>],
 ) -> anyhow::Result<Vec<ProjectStem>> {
-    logger.scoped("Detecting projects...", None);
+    logger.important("Detecting projects...");
 
     let mut projects = vec![];
 
