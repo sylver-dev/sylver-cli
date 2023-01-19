@@ -29,6 +29,7 @@ once_cell = "1.16.0"
 tree-sitter = "0.20.9"
 sylver-langs = { path = "../sylver-langs" }
 sylver-dsl = { path = "../sylver-dsl" }
+semver = "1.0.16"
 
 [dev-dependencies]
 criterion = "0.4.0"

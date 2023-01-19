@@ -188,6 +188,7 @@ impl<L: PathLoader> GitLocationLoader<L> {
     fn loaded_location_path(&self, location: &StemLocation) -> anyhow::Result<PathBuf> {
         match location {
             StemLocation::Local(p) => Ok(p.clone()),
+            StemLocation::Registry { .. } => unimplemented!(),
             StemLocation::Git { repo, file, .. } => self
                 .client
                 .clone_repo(

@@ -1,11 +1,11 @@
+use fancy_regex::Regex;
+use semver::Version;
 use std::{
     ffi::OsStr,
     path::{Path, PathBuf},
 };
 
 use serde::{Deserialize, Serialize};
-
-static REPO_FILE_SEPARATOR: &str = "#";
 
 #[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize)]
 pub enum GitRepoMetaData {
@@ -18,6 +18,11 @@ pub enum GitRepoMetaData {
 #[serde(from = "IntermediateStemLocation", into = "IntermediateStemLocation")]
 pub enum StemLocation {
     Local(PathBuf),
+    Registry {
+        author: String,
+        name: String,
+        version: Option<Version>,
+    },
     Git {
         /// Url of the git repository
         repo: String,
@@ -35,12 +40,22 @@ impl StemLocation {
     }
 }
 
+fn format_registry_location(author: &str, name: &str, version: Option<&Version>) -> String {
+    let mut res = format!("@{}/{}", author, name);
+
+    if let Some(version) = version {
+        res.push_str(&format!(":{}", version));
+    }
+
+    res
+}
+
 // Justification for the indirection: if a `Local` variant contains a git url,
 // it is transformed when calling `into`. (cf the `From` implementation bellow).
 #[derive(Serialize, Deserialize)]
 #[serde(untagged)]
 enum IntermediateStemLocation {
-    Local(String),
+    Inline(String),
     Git {
         repo: String,
         file: PathBuf,
@@ -60,7 +75,7 @@ impl From<IntermediateStemLocation> for StemLocation {
                 file,
                 metadata,
             },
-            IntermediateStemLocation::Local(path) => path.as_str().into(),
+            IntermediateStemLocation::Inline(path) => path.as_str().into(),
         }
     }
 }
@@ -69,8 +84,17 @@ impl From<StemLocation> for IntermediateStemLocation {
     fn from(stem: StemLocation) -> Self {
         match stem {
             StemLocation::Local(path) => {
-                IntermediateStemLocation::Local(path.to_string_lossy().to_string())
+                IntermediateStemLocation::Inline(path.to_string_lossy().to_string())
             }
+            StemLocation::Registry {
+                author,
+                name,
+                version,
+            } => IntermediateStemLocation::Inline(format_registry_location(
+                &author,
+                &name,
+                version.as_ref(),
+            )),
             StemLocation::Git {
                 repo,
                 file,
@@ -86,22 +110,43 @@ impl From<StemLocation> for IntermediateStemLocation {
 
 impl From<&str> for StemLocation {
     fn from(s: &str) -> Self {
-        repo_location_from_str(s).unwrap_or_else(|| StemLocation::Local(s.into()))
+        stem_location_from_str(s).unwrap_or_else(|| StemLocation::Local(s.into()))
     }
 }
 
-/// If the input string is of the form GIT_URL#file, return the corresponding
-/// stem location. Otherwise return None.
-pub fn repo_location_from_str(s: &str) -> Option<StemLocation> {
-    let split: Vec<&str> = s.split(REPO_FILE_SEPARATOR).collect();
+/// If the input string is of the form matches a registry or repository id, return the
+/// corresponding `StemLocation`.
+pub fn stem_location_from_str(s: &str) -> Option<StemLocation> {
+    git_locaton_from_str(s).or_else(|| registry_location_from_str(s))
+}
 
-    match split.as_slice() {
-        [url, file] if url::Url::parse(url).is_ok() => Some(StemLocation::Git {
-            repo: url.to_string(),
-            file: file.into(),
+pub fn git_locaton_from_str(s: &str) -> Option<StemLocation> {
+    let git_regex = Regex::new(r"^(?<repo>.*)#(?<file>.*)$").unwrap();
+
+    if let Ok(Some(captures)) = git_regex.captures(s) {
+        Some(StemLocation::Git {
+            repo: captures.name("repo").unwrap().as_str().to_string(),
+            file: PathBuf::from(captures.name("file").unwrap().as_str()),
             metadata: None,
-        }),
-        _ => None,
+        })
+    } else {
+        None
+    }
+}
+
+pub fn registry_location_from_str(s: &str) -> Option<StemLocation> {
+    let registry_regex = Regex::new(r"^@(?<author>.+)/(?<name>[^:]+)(?<version>:.+)?$").unwrap();
+
+    if let Ok(Some(captures)) = registry_regex.captures(s) {
+        Some(StemLocation::Registry {
+            author: captures.name("author").unwrap().as_str().to_string(),
+            name: captures.name("name").unwrap().as_str().to_string(),
+            version: captures
+                .name("version")
+                .and_then(|v| v.as_str()[1..].parse().ok()),
+        })
+    } else {
+        None
     }
 }
 
@@ -110,9 +155,39 @@ mod tests {
     use super::*;
 
     #[test]
+    fn versioned_registry_location_from_str() {
+        let registry_id = "@sylver/awesome-stem:1.0.0";
+        let location = StemLocation::from(registry_id);
+
+        assert_eq!(
+            StemLocation::Registry {
+                author: "sylver".to_string(),
+                name: "awesome-stem".to_string(),
+                version: Some(Version::new(1, 0, 0)),
+            },
+            location
+        )
+    }
+
+    #[test]
+    fn unversioned_registry_location_from_str() {
+        let registry_id = "@sylver/awesome-stem";
+        let location = StemLocation::from(registry_id);
+
+        assert_eq!(
+            StemLocation::Registry {
+                author: "sylver".to_string(),
+                name: "awesome-stem".to_string(),
+                version: None,
+            },
+            location
+        )
+    }
+
+    #[test]
     fn git_repo_from_str_ok() {
         let repo_str = "https://github.com/geoffreycopin/my-language.git#language.syl";
-        let parsed = repo_location_from_str(repo_str);
+        let parsed = stem_location_from_str(repo_str);
 
         assert_eq!(
             Some(StemLocation::Git {
@@ -127,7 +202,7 @@ mod tests {
     #[test]
     fn git_repo_from_str_notok() {
         let repo_str = "../path/to/language.syl";
-        let parsed = repo_location_from_str(repo_str);
+        let parsed = stem_location_from_str(repo_str);
 
         assert_eq!(None, parsed);
     }

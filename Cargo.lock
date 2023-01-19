@@ -2521,9 +2521,9 @@ dependencies = [
 
 [[package]]
 name = "semver"
-version = "1.0.14"
+version = "1.0.16"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e25dfac463d778e353db5be2449d1cce89bd6fd23c9f1ea21310ce6e5a1b29c4"
+checksum = "58bc9567378fc7690d6b2addae4e60ac2eeea07becb2c64b9f218b53865cba2a"
 
 [[package]]
 name = "serde"
@@ -2570,9 +2570,9 @@ dependencies = [
 
 [[package]]
 name = "serde_yaml"
-version = "0.9.14"
+version = "0.9.16"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6d232d893b10de3eb7258ff01974d6ee20663d8e833263c99409d4b13a0209da"
+checksum = "92b5b431e8907b50339b51223b97d102db8d987ced36f6e4d03621db9316c834"
 dependencies = [
  "indexmap",
  "itoa",
@@ -2742,6 +2742,7 @@ dependencies = [
  "rustyline",
  "rustyline-derive",
  "serde_json",
+ "serde_yaml",
  "sylver-core",
  "sylver-dsl",
  "sylver-script",
@@ -2768,6 +2769,7 @@ dependencies = [
  "petgraph",
  "rayon",
  "rustc-hash",
+ "semver",
  "serde",
  "serde_yaml",
  "smallvec",
