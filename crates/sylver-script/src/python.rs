@@ -1,10 +1,8 @@
-use anyhow::anyhow;
 use std::collections::BTreeMap;
 
 use rustpython_parser::ast;
-use rustpython_vm::builtins::PyList;
 use rustpython_vm::{
-    builtins::{PyDict, PyInt, PyStr},
+    builtins::{PyBaseExceptionRef, PyDict, PyInt, PyList, PyStr},
     bytecode::CodeObject,
     convert::ToPyObject,
     AsObject, Interpreter, PyObjectRef, PyRef, VirtualMachine,
@@ -44,11 +42,7 @@ impl<'i> PythonScriptCompiler<'i> {
         self.interpreter.enter(|vm| {
             let module_code = vm.ctx.new_code(module_obj);
             vm.run_code_obj(module_code, vm.new_scope_with_builtins())
-                .map_err(|e| {
-                    let mut msg = String::new();
-                    vm.write_exception(&mut msg, &e).unwrap();
-                    ScriptError::RuntimeError(msg)
-                })
+                .map_err(|e| to_script_error(vm, e))
         })
     }
 
@@ -56,7 +50,7 @@ impl<'i> PythonScriptCompiler<'i> {
         rustpython_codegen::compile::compile_top(
             ast,
             path.to_string(),
-            rustpython_vm::compiler::Mode::Single,
+            rustpython_vm::compiler::Mode::BlockExpr,
             rustpython_codegen::CompileOpts { optimize: 1 },
         )
         .map_err(|e| ScriptError::Compilation(path.to_string(), e.to_string()))
@@ -66,7 +60,7 @@ impl<'i> PythonScriptCompiler<'i> {
     /// that function at the end of the module's body (so that evaluating the module as a block
     /// expression returns a reference to the given function).
     fn append_func_ref(path: &str, fn_name: &str, ast: &mut ast::Mod) -> Result<(), ScriptError> {
-        let ast::Mod::Interactive { ref mut body } = ast else {
+        let ast::Mod::Interactive { ref mut body , ..} = ast else {
             return Err(ScriptError::Compilation(path.to_string(), "Not a module".to_string()));
         };
 
@@ -118,6 +112,12 @@ impl<'i> PythonScriptCompiler<'i> {
     }
 }
 
+fn to_script_error(vm: &VirtualMachine, err: PyBaseExceptionRef) -> ScriptError {
+    let mut msg = String::new();
+    vm.write_exception(&mut msg, &err).unwrap();
+    ScriptError::RuntimeError(msg)
+}
+
 pub struct PythonScriptEngine {
     interpreter: Interpreter,
 }
@@ -132,11 +132,8 @@ impl ScriptEngine for PythonScriptEngine {
     ) -> Result<ScriptValue, ScriptError> {
         let value = self.interpreter.enter(|vm| {
             let args: Vec<PyObjectRef> = args.into_iter().map(|arg| arg.to_pyobject(vm)).collect();
-            vm.invoke(&script.invokable, args).map_err(|e| {
-                let mut msg = String::new();
-                vm.write_exception(&mut msg, &e).unwrap();
-                ScriptError::RuntimeError(msg)
-            })
+            vm.invoke(&script.invokable, args)
+                .map_err(|e| to_script_error(vm, e))
         })?;
 
         value.try_into()
