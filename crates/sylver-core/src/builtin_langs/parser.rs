@@ -117,7 +117,7 @@ impl From<tree_sitter::Range> for InclPosRange {
 }
 
 fn point_to_pos(point: Point, byte_pos: usize) -> Pos {
-    Pos::new((point.column + 1, point.row + 1), byte_pos)
+    Pos::new((point.row + 1, point.column + 1), byte_pos)
 }
 
 #[derive(Debug, Clone)]
