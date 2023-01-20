@@ -1,0 +1,154 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+'
+
+env:
+  BIN_NAME: sylver
+
+
+jobs:
+  create-release:
+    runs-on: ubuntu-latest
+    steps:
+      # Create a release on the current directorty
+      - run: gh release create ${{github.ref_name}} --notes ""
+        env:
+          GH_TOKEN: ${{ secrets.SELF_PUBLISH_TOKEN }}
+      # Also create a release in the 'legacy' distrib repo
+      - run: gh repo clone geoffreycopin/sylver-distrib
+        env:
+          GH_TOKEN: ${{ secrets.PUBLISH_TOKEN }}
+      - run: gh release create ${{github.ref_name}} --notes ""
+        working-directory: sylver-distrib
+        env:
+          GH_TOKEN: ${{ secrets.PUBLISH_TOKEN }}
+
+  dist:
+    name: Dist
+    needs: [create-release]
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false # don't fail other jobs if one fails
+      matrix:
+        build: [ x86_64-linux, aarch64-linux, x86_64-macos, aarch64-macos, x86_64-windows ] #, x86_64-win-gnu, win32-msvc
+        include:
+          - build: x86_64-linux
+            os: ubuntu-latest
+            rust: stable
+            target: x86_64-unknown-linux-gnu
+            cross: false
+          - build: aarch64-linux
+            os: ubuntu-latest
+            rust: stable
+            target: aarch64-unknown-linux-gnu
+            cross: true
+          - build: x86_64-macos
+            os: macos-latest
+            rust: stable
+            target: x86_64-apple-darwin
+            cross: false
+          - build: aarch64-macos
+            os: macos-latest
+            rust: stable
+            target: aarch64-apple-darwin
+            cross: false
+          - build: x86_64-windows
+            os: windows-latest
+            rust: stable
+            target: x86_64-pc-windows-msvc
+            cross: false
+        # - build: aarch64-macos
+        #   os: macos-latest
+        #   rust: stable
+        #   target: aarch64-apple-darwin
+        # - build: x86_64-win-gnu
+        #   os: windows-2019
+        #   rust: stable-x86_64-gnu
+        #   target: x86_64-pc-windows-gnu
+        # - build: win32-msvc
+        #   os: windows-2019
+        #   rust: stable
+        #   target: i686-pc-windows-msvc
+
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v2
+        with:
+          submodules: true
+
+      - name: Install ${{ matrix.rust }} toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: ${{ matrix.rust }}
+          target: ${{ matrix.target }}
+          override: true
+
+      # Workaround for <https://github.com/actions/virtual-environments/issues/2557>
+      - name: Switch Xcode SDK
+        if: runner.os == 'macos'
+        run: echo "SDKROOT=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk" >> $GITHUB_ENV
+
+      - name: Build release binary
+        if: matrix.cross == false
+        run: cargo build --release --locked --target ${{ matrix.target }}
+
+      - name: Install cross
+        if: matrix.cross == true
+        run: cargo install cross --git https://github.com/cross-rs/cross
+        
+      - name: Build release binary (cross)
+        if: matrix.cross == true
+        run: cross build --release --locked --target ${{ matrix.target }}
+
+      - name: Strip release binary (linux and macos)
+        if: matrix.build == 'x86_64-linux' || matrix.build == 'x86_64-macos'
+        run: strip "target/${{ matrix.target }}/release/$BIN_NAME"
+
+      - name: Strip release binary (arm)
+        if: matrix.build == 'aarch64-linux'
+        run: |
+          docker run --rm -v \
+            "$PWD/target:/target:Z" \
+            rustembedded/cross:${{ matrix.target }} \
+            aarch64-linux-gnu-strip \
+            /target/${{ matrix.target }}/release/$BIN_NAME
+
+      - name: Build archive
+        shell: bash
+        run: |
+          mkdir dist
+          
+          pkgname=$BIN_NAME-$TAG-${{ matrix.build }}
+          
+          if [ "${{ matrix.os }}" = "windows-latest" ]; then
+            compiled_bin="target/${{ matrix.target }}/release/$BIN_NAME.exe" 
+            chmod +x $compiled_bin
+            cp $compiled_bin .
+            7z a dist/$pkgname.zip $BIN_NAME.exe
+          else
+            compiled_bin="target/${{ matrix.target }}/release/$BIN_NAME" 
+            chmod +x $compiled_bin
+            cp $compiled_bin .
+            tar cJf dist/$pkgname.tar.xz $BIN_NAME
+          fi
+
+      # Upload release asset to the current directory
+      - run: find dist -type f \( -name "*.zip" -o -name "*.tar.xz" \) -exec gh release upload ${{github.ref_name}} {} \;
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.SELF_PUBLISH_TOKEN }}
+
+      # Also push the archive to the 'legacy' distrib repo.
+      - run: gh repo clone geoffreycopin/sylver-distrib
+        env:
+          GH_TOKEN: ${{ secrets.PUBLISH_TOKEN }}
+
+      - run: find ../dist -type f \( -name "*.zip" -o -name "*.tar.xz" \) -exec gh release upload ${{github.ref_name}} {} \;
+        shell: bash
+        working-directory: sylver-distrib
+        env:
+          GH_TOKEN: ${{ secrets.PUBLISH_TOKEN }}
