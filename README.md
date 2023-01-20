@@ -17,7 +17,7 @@
 ## Binary releases
 
 ```
-curl -s https://www.sylver.dev/install.sh | bash
+curl -s https://sylver.dev/install.sh | bash
 ```
 
 ## From source
