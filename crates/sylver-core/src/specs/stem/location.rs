@@ -1,5 +1,6 @@
 use fancy_regex::Regex;
 use semver::Version;
+use std::fmt::{Display, Formatter};
 use std::{
     ffi::OsStr,
     path::{Path, PathBuf},
@@ -104,6 +105,26 @@ impl From<StemLocation> for IntermediateStemLocation {
                 file,
                 metadata,
             },
+        }
+    }
+}
+
+impl Display for StemLocation {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        match self {
+            StemLocation::Local(path) => write!(f, "{}", path.to_string_lossy()),
+            StemLocation::Registry {
+                author,
+                name,
+                version,
+            } => write!(
+                f,
+                "{}",
+                format_registry_location(author, name, version.as_ref())
+            ),
+            StemLocation::Git { repo, file, .. } => {
+                write!(f, "{}#{}", repo, file.to_string_lossy())
+            }
         }
     }
 }
