@@ -1,3 +1,4 @@
+pub mod archive;
 pub mod debug;
 pub mod depth_iter;
 pub mod fs;
