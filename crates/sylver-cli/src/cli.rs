@@ -15,6 +15,10 @@ pub struct Cli {
     /// Disable colored output.
     #[clap(long)]
     pub no_color: bool,
+
+    /// Override server URL.
+    #[clap(long, default_value_t = String::from("https://api.sylver.dev"))]
+    pub server_url: String,
 }
 
 #[derive(Subcommand, Debug)]

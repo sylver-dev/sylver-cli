@@ -18,6 +18,7 @@ static PYTHON_MAPPING: Lazy<MappingConfig> =
     Lazy::new(|| serde_yaml::from_str(include_str!("../../res/ts_mappings/python.yaml")).unwrap());
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize)]
+#[serde(tag = "name", rename_all = "snake_case")]
 pub enum BuiltinLang {
     Python,
 }

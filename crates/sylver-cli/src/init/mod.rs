@@ -1,4 +1,5 @@
 use anyhow::Context;
+use log::Logger;
 use rustyline::hint::Hint;
 use std::sync::Arc;
 
@@ -6,16 +7,20 @@ use sylver_core::specs::stem::project::ProjectStem;
 use sylver_core::{specs::stem::project::ProjectConfigStem, state::SylverState};
 use sylver_script::python::PythonScriptEngine;
 
-use crate::{cli::InitCmd, init::detect::detect_builtin_lang_projects};
+use crate::{cli::InitCmd, init::detect::ProjectDetector};
 
 mod detect;
 
 pub fn init(state: Arc<SylverState>, cmd: &InitCmd) -> anyhow::Result<()> {
     let detection_root = std::env::current_dir()?;
-    let script_engine = PythonScriptEngine::default();
 
-    let project_stems =
-        detect_builtin_lang_projects(&script_engine, state.logger.as_ref(), &detection_root)?;
+    let detector = ProjectDetector::new(
+        state.settings.backend_url.clone(),
+        Box::new(state.logger.clone()),
+        PythonScriptEngine::default(),
+    );
+
+    let project_stems = detector.detect_builtin_lang_projects(&detection_root)?;
 
     create_dir_and_config(state, cmd, project_stems)?;
 

@@ -192,7 +192,7 @@ impl<L: PathLoader> GitLocationLoader<L> {
             StemLocation::Git { repo, file, .. } => self
                 .client
                 .clone_repo(
-                    self.state.logger.as_ref(),
+                    &self.state.logger,
                     self.loader.artefact_type(),
                     repo,
                     &self.state.locations.repos,

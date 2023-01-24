@@ -14,7 +14,7 @@ PATTERNS = [
 ]
 
 
-def detect_project(root):
+def detect_projects(root):
     projects = []
     add_project_if_match(projects, root, root)
     return projects

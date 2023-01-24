@@ -14,6 +14,7 @@ pub struct NewReportDTO {
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
+#[serde(tag = "type", rename_all = "snake_case")]
 pub enum ReportLanguage {
     Builtin(BuiltinLang),
     Custom(ReportCustomLanguage),

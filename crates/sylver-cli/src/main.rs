@@ -27,7 +27,7 @@ mod shared;
 mod upload;
 
 fn main() -> Result<()> {
-    let logger: Box<FancyLogger> = Box::default();
+    let logger = FancyLogger::default();
 
     let cmd = cli::Cli::parse();
 
@@ -68,6 +68,7 @@ fn build_conf(cmd: &Cli) -> SylverSettings {
 
     SylverSettings {
         color_output: !cmd.no_color,
+        backend_url: cmd.server_url.clone(),
         config_override,
     }
 }

@@ -5,7 +5,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
-use log::Logger;
+use log::{FancyLogger, Logger};
 
 use crate::util::fs::find_upward_path;
 
@@ -19,6 +19,7 @@ static REPOS_DIR_NAME: &str = "repos";
 pub struct SylverSettings {
     pub color_output: bool,
     pub config_override: Option<PathBuf>,
+    pub backend_url: String,
 }
 
 impl Default for SylverSettings {
@@ -26,35 +27,29 @@ impl Default for SylverSettings {
         SylverSettings {
             color_output: true,
             config_override: None,
+            backend_url: "https://api.sylver.dev".to_string(),
         }
     }
 }
 
 /// Global configuration.
 #[derive(Debug)]
-pub struct SylverState {
+pub struct SylverState<L: Logger = FancyLogger> {
     pub settings: SylverSettings,
     pub locations: Locations,
-    pub logger: Box<dyn Logger + Sync>,
+    pub logger: L,
 }
 
-impl SylverState {
-    pub fn with_settings(
-        logger: Box<dyn Logger + Sync>,
-        conf: SylverSettings,
-    ) -> anyhow::Result<SylverState> {
+impl<L: Logger> SylverState<L> {
+    pub fn with_settings(logger: L, conf: SylverSettings) -> anyhow::Result<SylverState<L>> {
         Self::load_from(logger, conf, std::env::current_dir()?)
     }
 
-    pub fn load(logger: Box<dyn Logger + Sync>) -> anyhow::Result<SylverState> {
+    pub fn load(logger: L) -> anyhow::Result<SylverState<L>> {
         Self::load_from(logger, Default::default(), std::env::current_dir()?)
     }
 
-    fn load_from(
-        logger: Box<dyn Logger + Sync>,
-        settings: SylverSettings,
-        dir: PathBuf,
-    ) -> anyhow::Result<Self> {
+    fn load_from(logger: L, settings: SylverSettings, dir: PathBuf) -> anyhow::Result<Self> {
         let locations = Locations::from_sylver_dir(&settings, sylver_dir_location(&dir))?;
 
         Ok(SylverState {
@@ -153,7 +148,7 @@ mod test {
         create_dir(&subdir_path).unwrap();
         set_current_dir(&subdir_path).unwrap();
 
-        let state = SylverState::load(Box::new(TestLogger::default())).unwrap();
+        let state = SylverState::load(TestLogger::default()).unwrap();
 
         assert_eq!(
             state.locations,
