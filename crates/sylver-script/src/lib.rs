@@ -19,10 +19,22 @@ pub enum ScriptError {
 
 #[derive(Debug, Clone, Eq, PartialEq, Hash, From)]
 pub enum ScriptValue {
+    Bool(bool),
     Integer(i64),
     Str(String),
     Dict(BTreeMap<String, ScriptValue>),
     List(Vec<ScriptValue>),
+}
+
+impl TryInto<bool> for ScriptValue {
+    type Error = ScriptError;
+
+    fn try_into(self) -> Result<bool, Self::Error> {
+        match self {
+            ScriptValue::Bool(bool_value) => Ok(bool_value),
+            _ => Err(ScriptError::InvalidType("bool".to_string(), self)),
+        }
+    }
 }
 
 impl TryInto<i64> for ScriptValue {

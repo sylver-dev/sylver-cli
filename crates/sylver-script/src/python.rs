@@ -164,6 +164,7 @@ impl ToPyObject for ScriptValue {
     fn to_pyobject(self, vm: &VirtualMachine) -> PyObjectRef {
         match self {
             ScriptValue::Integer(i) => i.to_pyobject(vm),
+            ScriptValue::Bool(b) => b.to_pyobject(vm),
             ScriptValue::Str(s) => s.to_pyobject(vm),
             ScriptValue::List(l) => {
                 let list = PyList::default();
@@ -188,7 +189,9 @@ impl TryInto<ScriptValue> for PyObjectRef {
     type Error = ScriptError;
 
     fn try_into(self) -> Result<ScriptValue, Self::Error> {
-        let value = if let Some(pyint) = self.payload::<PyInt>() {
+        let value = if self.class().name().to_string() == "bool" {
+            pybool_to_value(self.payload::<PyInt>().unwrap())
+        } else if let Some(pyint) = self.payload::<PyInt>() {
             pyint_to_value(pyint)?
         } else if let Some(pystr) = self.payload::<PyStr>() {
             pystr_to_value(pystr)
@@ -211,6 +214,11 @@ fn pyint_to_value(pyint: &PyInt) -> Result<ScriptValue, ScriptError> {
         .map_err(|_| ScriptError::UnsupportedType("big_int".to_string()))?;
 
     Ok(ScriptValue::Integer(int_value))
+}
+
+fn pybool_to_value(pyint: &PyInt) -> ScriptValue {
+    let bool_value = pyint_to_value(pyint).unwrap() == ScriptValue::Integer(1);
+    ScriptValue::Bool(bool_value)
 }
 
 fn pystr_to_value(pystr: &PyStr) -> ScriptValue {
@@ -276,6 +284,16 @@ def hello(n: int):
     #[test]
     fn python_int_to_int() {
         assert_eq!(ScriptValue::Integer(42), eval_python_expr("42"));
+    }
+
+    #[test]
+    fn python_true_to_bool() {
+        assert_eq!(ScriptValue::Bool(true), eval_python_expr("True"));
+    }
+
+    #[test]
+    fn python_false_to_bool() {
+        assert_eq!(ScriptValue::Bool(false), eval_python_expr("False"));
     }
 
     #[test]
