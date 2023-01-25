@@ -48,10 +48,9 @@ pub fn build_diagnostic<FileId>(report: &Report, file_id: FileId) -> Diagnostic<
 
 fn report_severity(report: &Report) -> Severity {
     match report.kind {
-        ReportKind::Error | ReportKind::Category(RuleCategory::Error | RuleCategory::Bug) => {
-            Severity::Error
-        }
-        ReportKind::Category(RuleCategory::Smell | RuleCategory::Style) => Severity::Warning,
-        ReportKind::Category(RuleCategory::Deprecated) => Severity::Help,
+        ReportKind::Error | ReportKind::Category(RuleCategory::Error) => Severity::Error,
+        ReportKind::Category(RuleCategory::Bug) => Severity::Bug,
+        ReportKind::Category(RuleCategory::Smell | RuleCategory::Deprecated) => Severity::Warning,
+        ReportKind::Category(RuleCategory::Style) => Severity::Help,
     }
 }

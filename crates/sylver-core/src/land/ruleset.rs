@@ -19,11 +19,11 @@ use crate::{
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum RuleCategory {
-    Error,
-    Bug,
     Style,
     Smell,
     Deprecated,
+    Bug,
+    Error,
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Hash)]
