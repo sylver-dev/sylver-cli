@@ -45,6 +45,7 @@ fn build_land(loader: &SylverLoader, cmd: &QueryCmd) -> anyhow::Result<Land> {
     let mut builder = LandBuilder::new();
 
     let sources = loader.load_file_spec(&FileSpec {
+        root: None,
         include: cmd.files.clone(),
         exclude: cmd.exclude.clone(),
     })?;

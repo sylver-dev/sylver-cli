@@ -23,7 +23,6 @@ static RULESET_CONFIG_FUN: &str = "configure";
 
 #[derive(Debug, Clone)]
 struct DetectedProject {
-    root: Option<String>,
     file_spec: FileSpec,
 }
 
@@ -55,6 +54,7 @@ impl<S> DetectableLanguage<S> {
         };
 
         let root = project
+            .file_spec
             .root
             .map(|r| keep_project_root_if_subdir(detection_root, &r))
             .transpose()?
@@ -312,11 +312,11 @@ fn project_from_value(value: ScriptValue) -> anyhow::Result<DetectedProject> {
         .unwrap_or_else(|| ScriptValue::List(vec![]));
 
     Ok(DetectedProject {
-        root: root_value
-            .map(|r| r.try_into())
-            .transpose()
-            .context("root should be a string")?,
         file_spec: FileSpec {
+            root: root_value
+                .map(|r| r.try_into())
+                .transpose()
+                .context("root should be a string")?,
             include: as_str_list(include_value).context("invalid 'include' field for file spec")?,
             exclude: as_str_list(exclude_value).context("invalid 'exlude' field for file spec")?,
         },

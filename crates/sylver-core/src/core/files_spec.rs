@@ -1,4 +1,4 @@
-use std::collections::HashSet;
+use std::{collections::HashSet, path::Path};
 
 use anyhow::Context;
 
@@ -6,6 +6,7 @@ use super::source::{source_from_file, Source};
 
 #[derive(Debug, Clone, Eq, PartialEq, Hash)]
 pub struct FileSpec {
+    pub root: Option<String>,
     pub include: Vec<String>,
     pub exclude: Vec<String>,
 }
@@ -18,10 +19,20 @@ pub trait FileSpecLoader {
 pub struct FsFileSpecLoader {}
 
 impl FsFileSpecLoader {
-    fn sources_from_globs(&self, globs: &[String]) -> anyhow::Result<HashSet<Source>> {
+    fn sources_from_globs(
+        &self,
+        root: Option<&String>,
+        globs: &[String],
+    ) -> anyhow::Result<HashSet<Source>> {
         let mut sources = HashSet::new();
         for glob in globs {
-            sources.extend(sources_from_glob(glob)?);
+            let glob_in_root = if let Some(r) = root {
+                Path::new(r).join(glob).to_string_lossy().to_string()
+            } else {
+                glob.clone()
+            };
+
+            sources.extend(sources_from_glob(&glob_in_root)?);
         }
         Ok(sources)
     }
@@ -30,8 +41,8 @@ impl FsFileSpecLoader {
 impl FileSpecLoader for FsFileSpecLoader {
     fn load(&self, spec: &FileSpec) -> anyhow::Result<Vec<Source>> {
         Ok(self
-            .sources_from_globs(&spec.include)?
-            .difference(&self.sources_from_globs(&spec.exclude)?)
+            .sources_from_globs(spec.root.as_ref(), &spec.include)?
+            .difference(&self.sources_from_globs(spec.root.as_ref(), &spec.exclude)?)
             .cloned()
             .collect())
     }
@@ -59,6 +70,32 @@ mod tests {
     use crate::util::test::create_tmp_child;
 
     #[test]
+    fn fs_file_spec_handles_root_directory() {
+        let d = TempDir::new().unwrap();
+
+        std::fs::create_dir(d.path().join("root")).unwrap();
+        let match1 = create_tmp_child(&d, "root/match1.ok", "content1").unwrap();
+        let match2 = create_tmp_child(&d, "root/match2.ok", "content2").unwrap();
+        create_tmp_child(&d, "match.ok", "nomatch_content").unwrap();
+
+        let spec = FileSpec {
+            root: Some(d.path().join("root").to_string_lossy().to_string()),
+            include: vec!["*.ok".to_string()],
+            exclude: vec![],
+        };
+
+        let loaded = FsFileSpecLoader::default().load(&spec).unwrap();
+
+        assert_eq!(
+            loaded.into_iter().collect::<HashSet<Source>>(),
+            hashset![
+                source_from_file(&match1).unwrap(),
+                source_from_file(&match2).unwrap(),
+            ]
+        )
+    }
+
+    #[test]
     fn fs_file_spec_ok() {
         let d = TempDir::new().unwrap();
 
@@ -67,6 +104,7 @@ mod tests {
         let _ = create_tmp_child(&d, "nomatch.other", "nomatch_content").unwrap();
 
         let spec = FileSpec {
+            root: None,
             include: vec![format!("{}/*.ok", d.path().display())],
             exclude: vec![],
         };
@@ -92,6 +130,7 @@ mod tests {
         let _ = create_tmp_child(&d, "nomatch.other", "nomatch_content").unwrap();
 
         let spec = FileSpec {
+            root: None,
             include: vec![format!("{}/*.ok", d.path().display())],
             exclude: vec![format!("{}/excluded*", d.path().display())],
         };

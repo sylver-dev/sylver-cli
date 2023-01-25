@@ -67,6 +67,7 @@ fn build_check_state(loader: &SylverLoader, config_path: &Path) -> anyhow::Resul
 
     for project in config.projects() {
         let sources = loader.load_file_spec(&FileSpec {
+            root: project.root.clone(),
             include: project.include.clone(),
             exclude: project.exclude.clone(),
         })?;

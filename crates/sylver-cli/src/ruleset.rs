@@ -41,6 +41,7 @@ fn run_ruleset(
 
 fn build_land(loader: &SylverLoader, cmd: &RulesetRun) -> anyhow::Result<Land> {
     let sources = loader.load_file_spec(&FileSpec {
+        root: None,
         include: cmd.files.clone(),
         exclude: cmd.exclude.clone(),
     })?;
