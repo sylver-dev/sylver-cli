@@ -31,6 +31,7 @@ sylver-langs = { path = "../sylver-langs" }
 sylver-dsl = { path = "../sylver-dsl" }
 semver = "1.0.16"
 zip = "0.6.3"
+reqwest = { version = "0.11.13", default-features = false, features = ["blocking", "rustls-tls"] }
 
 [dev-dependencies]
 criterion = "0.4.0"

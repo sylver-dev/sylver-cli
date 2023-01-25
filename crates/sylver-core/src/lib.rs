@@ -1,3 +1,4 @@
+pub mod api;
 pub mod builtin_langs;
 pub mod core;
 pub mod dashboard;
