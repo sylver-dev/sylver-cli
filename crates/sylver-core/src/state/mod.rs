@@ -14,6 +14,7 @@ pub static DEFAULT_SYLVER_CONFIG_NAMES: [&str; 2] = ["sylver.yml", "sylver.yaml"
 static SYLVER_DIR_NAME: &str = ".sylver";
 static DL_DIR_NAME: &str = "dl";
 static REPOS_DIR_NAME: &str = "repos";
+static REGISTRY_DIR_NAME: &str = "registry";
 
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct SylverSettings {
@@ -74,6 +75,8 @@ pub struct Locations {
     pub sylver_dir: PathBuf,
     /// Directory for cloning git repos.
     pub repos: PathBuf,
+    /// Directory for storing artefacts downloaded from the registry.
+    pub registry_artefacts: PathBuf,
     /// sylver.yaml file... or it's equivalent
     pub config_file: Option<PathBuf>,
 }
@@ -84,6 +87,7 @@ impl Locations {
         sylver_dir: PathBuf,
     ) -> anyhow::Result<Locations> {
         let repos = sylver_dir.join(DL_DIR_NAME).join(REPOS_DIR_NAME);
+        let registry_artefacts = sylver_dir.join(DL_DIR_NAME).join(REGISTRY_DIR_NAME);
 
         let config_file = match &settings.config_override {
             Some(p) => {
@@ -96,6 +100,7 @@ impl Locations {
         Ok(Locations {
             sylver_dir,
             repos,
+            registry_artefacts,
             config_file,
         })
     }
@@ -160,6 +165,12 @@ mod test {
                     .join(".sylver")
                     .join("dl")
                     .join("repos"),
+                registry_artefacts: Path::new("..")
+                    .canonicalize()
+                    .unwrap()
+                    .join(".sylver")
+                    .join("dl")
+                    .join("registry"),
                 config_file: None
             }
         );

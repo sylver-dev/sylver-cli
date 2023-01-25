@@ -1,10 +1,11 @@
-use std::path::PathBuf;
-use std::{ffi::OsStr, fs::read_to_string, path::Path, sync::Arc};
+use std::{ffi::OsStr, fs::read_to_string, path::Path, path::PathBuf, sync::Arc};
 
 use anyhow::{anyhow, Context};
+use semver::Version;
 use serde::de::DeserializeOwned;
 
 use crate::{
+    api::{ApiClient, RegistryItemKind},
     core::{
         files_spec::{FileSpec, FileSpecLoader, FsFileSpecLoader},
         source::Source,
@@ -21,9 +22,9 @@ use crate::{
 #[derive(Debug, Clone)]
 pub struct SylverLoader<
     F: FileSpecLoader = FsFileSpecLoader,
-    R: LocationLoader<RuleSetStem> = GitLocationLoader<RulesetStemLoader>,
+    R: LocationLoader<RuleSetStem> = FullLocationLoader<RulesetStemLoader>,
     C: PathLoader<Output = ProjectConfigStem> = DefaultPathLoader<ProjectConfigStem>,
-    S: LocationLoader<Spec> = GitLocationLoader<LanguageStemLoader>,
+    S: LocationLoader<Spec> = FullLocationLoader<LanguageStemLoader>,
 > {
     files: F,
     rulesets: R,
@@ -68,9 +69,9 @@ impl SylverLoader {
     pub fn from_state(state: Arc<SylverState>) -> SylverLoader {
         SylverLoader::new(
             FsFileSpecLoader::default(),
-            GitLocationLoader::from_state(state.clone()),
+            FullLocationLoader::from_state(state.clone()),
             DefaultPathLoader::new("config".to_string()),
-            GitLocationLoader::from_state(state),
+            FullLocationLoader::from_state(state),
         )
     }
 }
@@ -159,38 +160,104 @@ pub trait Loader<T> {
     fn id(&self, res: &T) -> anyhow::Result<String>;
 }
 
+#[derive(Debug, Clone)]
+pub struct RegistryLoader {
+    state: Arc<SylverState>,
+    item_kind: RegistryItemKind,
+    client: ApiClient,
+}
+
+impl RegistryLoader {
+    pub fn new(state: Arc<SylverState>, client: ApiClient) -> RegistryLoader {
+        RegistryLoader {
+            state,
+            client,
+            item_kind: RegistryItemKind::RuleSet,
+        }
+    }
+
+    fn item_file_name(&self) -> &str {
+        match self.item_kind {
+            RegistryItemKind::RuleSet => "ruleset.yaml",
+        }
+    }
+
+    fn load(&self, author: &str, name: &str, version: Option<&Version>) -> anyhow::Result<PathBuf> {
+        let version_suffix = match version {
+            Some(v) => format!(":{}", v),
+            None => "".to_string(),
+        };
+
+        let path = self
+            .state
+            .locations
+            .registry_artefacts
+            .join(format!("@{author}"))
+            .join(format!("{}{}", name, version_suffix))
+            .join(self.item_file_name());
+
+        if !path.exists() || !path.is_file() {
+            self.client.fetch_from_registry(
+                &self.state.locations.registry_artefacts,
+                self.item_kind,
+                author,
+                name,
+                version,
+            )?;
+        }
+
+        Ok(path)
+    }
+}
+
 pub trait LocationLoader<O>: Loader<StemLocation, Output = O> {}
 
 #[derive(Debug, Clone)]
-pub struct GitLocationLoader<Load: PathLoader> {
+pub struct FullLocationLoader<Load: PathLoader> {
     state: Arc<SylverState>,
-    client: GitClient,
+    registry_loader: RegistryLoader,
+    git_client: GitClient,
     loader: Load,
 }
 
-impl<L: PathLoader> GitLocationLoader<L> {
-    pub fn new(state: Arc<SylverState>, client: GitClient, loader: L) -> GitLocationLoader<L> {
-        GitLocationLoader {
+impl<L: PathLoader> FullLocationLoader<L> {
+    pub fn new(
+        state: Arc<SylverState>,
+        registry_loader: RegistryLoader,
+        git_client: GitClient,
+        loader: L,
+    ) -> FullLocationLoader<L> {
+        FullLocationLoader {
             state,
-            client,
+            registry_loader,
+            git_client,
             loader,
         }
     }
 }
 
-impl<L: PathLoader + Default> GitLocationLoader<L> {
+impl<L: PathLoader + Default> FullLocationLoader<L> {
     pub fn from_state(state: Arc<SylverState>) -> Self {
-        Self::new(state, GitClient::default(), L::default())
+        Self::new(
+            state.clone(),
+            RegistryLoader::new(state.clone(), ApiClient::from_state(state)),
+            GitClient::default(),
+            L::default(),
+        )
     }
 }
 
-impl<L: PathLoader> GitLocationLoader<L> {
+impl<L: PathLoader> FullLocationLoader<L> {
     fn loaded_location_path(&self, location: &StemLocation) -> anyhow::Result<PathBuf> {
         match location {
             StemLocation::Local(p) => Ok(p.clone()),
-            StemLocation::Registry { .. } => unimplemented!(),
+            StemLocation::Registry {
+                author,
+                name,
+                version,
+            } => self.registry_loader.load(author, name, version.as_ref()),
             StemLocation::Git { repo, file, .. } => self
-                .client
+                .git_client
                 .clone_repo(
                     &self.state.logger,
                     self.loader.artefact_type(),
@@ -202,7 +269,7 @@ impl<L: PathLoader> GitLocationLoader<L> {
     }
 }
 
-impl<L: PathLoader> Loader<StemLocation> for GitLocationLoader<L> {
+impl<L: PathLoader> Loader<StemLocation> for FullLocationLoader<L> {
     type Output = L::Output;
 
     fn load(&self, res: &StemLocation) -> anyhow::Result<Self::Output> {
@@ -218,7 +285,7 @@ impl<L: PathLoader> Loader<StemLocation> for GitLocationLoader<L> {
     }
 }
 
-impl<L: PathLoader> LocationLoader<L::Output> for GitLocationLoader<L> {}
+impl<L: PathLoader> LocationLoader<L::Output> for FullLocationLoader<L> {}
 
 #[derive(Debug)]
 pub struct LanguageStemLoader {
