@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use crate::{land::ruleset::RuleSeverity, specs::stem::project::ProjectLang};
+use crate::{land::ruleset::RuleCategory, specs::stem::project::ProjectLang};
 
 /// Static description of a ruleset
 #[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize)]
@@ -19,8 +19,8 @@ pub struct RuleStem {
     pub message: String,
     /// Code of the query matching violating nodes.
     pub query: String,
-    /// Severity of the lint.
-    pub severity: RuleSeverity,
+    /// Category of the lint.
+    pub category: RuleCategory,
     /// Additional node
     pub note: Option<String>,
 }

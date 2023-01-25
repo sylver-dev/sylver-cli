@@ -9,6 +9,7 @@ use codespan_reporting::{
 
 use crate::{
     core::source::Source,
+    land::ruleset::RuleCategory,
     report::{Report, ReportKind},
 };
 
@@ -47,8 +48,10 @@ pub fn build_diagnostic<FileId>(report: &Report, file_id: FileId) -> Diagnostic<
 
 fn report_severity(report: &Report) -> Severity {
     match report.kind {
-        ReportKind::Error => Severity::Error,
-        ReportKind::Warning => Severity::Warning,
-        ReportKind::Info => Severity::Note,
+        ReportKind::Error | ReportKind::Category(RuleCategory::Error | RuleCategory::Bug) => {
+            Severity::Error
+        }
+        ReportKind::Category(RuleCategory::Smell | RuleCategory::Style) => Severity::Warning,
+        ReportKind::Category(RuleCategory::Deprecated) => Severity::Help,
     }
 }

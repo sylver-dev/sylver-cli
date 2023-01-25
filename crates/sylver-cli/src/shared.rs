@@ -7,7 +7,6 @@ use sylver_core::{
     land::{
         builder::LandBuilder,
         cmds::{exec_rules, parsing_errors, RuleResult},
-        ruleset::RuleSeverity,
         sylva::{Sylva, SylvaId, SylvaParser},
         Land, LandSpecId,
     },
@@ -16,13 +15,9 @@ use sylver_core::{
     specs::{loader::SylverLoader, stem::project::ProjectLang},
 };
 
-pub fn verify_land(
-    color: bool,
-    land: &Land,
-    min_severity: Option<RuleSeverity>,
-) -> anyhow::Result<()> {
+pub fn verify_land(color: bool, land: &Land) -> anyhow::Result<()> {
     print_land_reports(color, land)?;
-    let res = run_land_rules(color, land, min_severity)?;
+    let res = run_land_rules(color, land)?;
 
     if !res.is_empty() {
         std::process::exit(1);
@@ -42,16 +37,12 @@ pub fn print_land_reports(color: bool, land: &Land) -> anyhow::Result<()> {
     Ok(())
 }
 
-pub fn run_land_rules(
-    color: bool,
-    land: &Land,
-    min_severity: Option<RuleSeverity>,
-) -> anyhow::Result<Vec<RuleResult>> {
-    let mut exec_res = exec_rules(land, min_severity)?;
+pub fn run_land_rules(color: bool, land: &Land) -> anyhow::Result<Vec<RuleResult>> {
+    let mut exec_res = exec_rules(land)?;
 
     exec_res.sort_by_key(|r| {
-        let severity = r.rule(land).level;
-        (severity, r.ruleset, r.node)
+        let category = r.rule(land).category;
+        (category, r.ruleset, r.node)
     });
 
     exec_res.reverse();

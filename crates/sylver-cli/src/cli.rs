@@ -1,8 +1,8 @@
 use std::path::PathBuf;
 
-use clap::{ArgGroup, Parser, Subcommand, ValueEnum};
+use clap::{ArgGroup, Parser, Subcommand};
 
-use sylver_core::{land::ruleset::RuleSeverity, specs::stem::project::ProjectLang};
+use sylver_core::specs::stem::project::ProjectLang;
 
 #[derive(Parser, Debug)]
 #[clap(version)]
@@ -48,10 +48,6 @@ pub struct CheckCmd {
     /// Override the default config file location
     #[clap(short, long, value_parser)]
     pub config: Option<PathBuf>,
-
-    /// Ignore diagnostics up to a certain severity level
-    #[clap(long, value_parser)]
-    pub min_level: Option<ViolationLevel>,
 
     /// Upload this results of the analysis to the Cloud Dashboard
     #[clap(long)]
@@ -124,24 +120,4 @@ pub struct RulesetRun {
     /// Glob patterns of the files to exlude
     #[clap(long, num_args = 1..)]
     pub exclude: Vec<String>,
-
-    #[clap(long, value_parser)]
-    pub min_level: Option<ViolationLevel>,
-}
-
-#[derive(Debug, Copy, Clone, ValueEnum)]
-pub enum ViolationLevel {
-    Info,
-    Warning,
-    Error,
-}
-
-impl From<ViolationLevel> for RuleSeverity {
-    fn from(level: ViolationLevel) -> Self {
-        match level {
-            ViolationLevel::Info => RuleSeverity::Info,
-            ViolationLevel::Warning => RuleSeverity::Warning,
-            ViolationLevel::Error => RuleSeverity::Error,
-        }
-    }
 }

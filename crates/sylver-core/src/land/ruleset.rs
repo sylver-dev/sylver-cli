@@ -17,18 +17,20 @@ use crate::{
 };
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub enum RuleSeverity {
-    Info,
-    Warning,
+#[serde(rename_all = "snake_case")]
+pub enum RuleCategory {
     Error,
+    Bug,
+    Style,
+    Smell,
+    Deprecated,
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Hash)]
 pub struct Rule {
     predicate: Task,
     pub message: String,
-    pub level: RuleSeverity,
+    pub category: RuleCategory,
     pub note: Option<String>,
 }
 
@@ -54,7 +56,7 @@ impl Rule {
         Ok(Rule {
             message: stem.message.clone(),
             predicate: compile(spec, &query_ast)?,
-            level: stem.severity,
+            category: stem.category,
             note: stem.note.clone(),
         })
     }
@@ -77,11 +79,10 @@ impl RuleSet {
         builder: B,
         land: &'b Land,
         sylva_id: SylvaId,
-        min_level: Option<RuleSeverity>,
     ) -> anyhow::Result<HashMap<String, HashSet<SylvaNode>>> {
         let mut result: HashMap<String, HashSet<SylvaNode>> = HashMap::new();
 
-        for (rule_id, rule) in self.rules_above_severity(min_level) {
+        for (rule_id, rule) in &self.rules {
             let flagged = rule.verify(builder.clone(), land, sylva_id)?;
 
             if !flagged.is_empty() {
@@ -90,15 +91,6 @@ impl RuleSet {
         }
 
         Ok(result)
-    }
-
-    fn rules_above_severity(
-        &self,
-        min_severity: Option<RuleSeverity>,
-    ) -> impl Iterator<Item = (&String, &Rule)> {
-        self.rules
-            .iter()
-            .filter(move |(_, r)| min_severity.map(|l| r.level >= l).unwrap_or(true))
     }
 
     pub fn get_rule(&self, rule_id: &str) -> Option<&Rule> {
@@ -116,81 +108,5 @@ impl RuleSet {
         }
 
         Ok(RuleSet { rules })
-    }
-}
-
-#[cfg(test)]
-mod test {
-    use maplit::{btreemap, hashset};
-
-    use crate::query::{expr::Expr, FilterTask};
-
-    use super::*;
-
-    #[test]
-    fn rules_above_severity() {
-        let info_rule = rule_with_level(RuleSeverity::Info);
-        let warning_rule = rule_with_level(RuleSeverity::Warning);
-        let error_rule = rule_with_level(RuleSeverity::Error);
-
-        let ruleset = RuleSet::new(btreemap! {
-            "info_rule".to_string() => info_rule.clone(),
-            "warning_rule".to_string() => warning_rule.clone(),
-            "error_rule".to_string() => error_rule.clone(),
-        });
-
-        let no_min: HashSet<_> = ruleset
-            .rules_above_severity(None)
-            .map(|(s, r)| (s.as_str(), r))
-            .collect();
-
-        assert_eq!(
-            no_min,
-            hashset![
-                ("info_rule", &info_rule),
-                ("warning_rule", &warning_rule),
-                ("error_rule", &error_rule),
-            ]
-        );
-
-        let min_info: HashSet<_> = ruleset
-            .rules_above_severity(Some(RuleSeverity::Info))
-            .map(|(s, r)| (s.as_str(), r))
-            .collect();
-
-        assert_eq!(
-            min_info,
-            hashset![
-                ("info_rule", &info_rule),
-                ("warning_rule", &warning_rule),
-                ("error_rule", &error_rule),
-            ]
-        );
-
-        let min_warning: HashSet<_> = ruleset
-            .rules_above_severity(Some(RuleSeverity::Warning))
-            .map(|(s, r)| (s.as_str(), r))
-            .collect();
-
-        assert_eq!(
-            min_warning,
-            hashset![("warning_rule", &warning_rule), ("error_rule", &error_rule),]
-        );
-
-        let min_error: HashSet<_> = ruleset
-            .rules_above_severity(Some(RuleSeverity::Error))
-            .map(|(s, r)| (s.as_str(), r))
-            .collect();
-
-        assert_eq!(min_error, hashset![("error_rule", &error_rule),]);
-    }
-
-    fn rule_with_level(level: RuleSeverity) -> Rule {
-        Rule {
-            predicate: Task::Filter(FilterTask::new(Expr::const_expr(true.into()))),
-            message: "rule_message".to_string(),
-            level,
-            note: None,
-        }
     }
 }

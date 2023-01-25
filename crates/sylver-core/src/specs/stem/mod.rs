@@ -41,7 +41,7 @@ mod test {
 
     use crate::{
         builtin_langs::BuiltinLang,
-        land::ruleset::RuleSeverity,
+        land::ruleset::RuleCategory,
         specs::stem::project::{ProjectConfigStem, ProjectLang, ProjectStem},
     };
 
@@ -89,12 +89,12 @@ mod test {
                 - id: rule1Id
                   message: Rule 1 message
                   query: match NodeKind1
-                  severity: error 
+                  category: bug
 
                 - id: rule2Id
                   message: Rule 2 message
                   query: match NodeKind2
-                  severity: warning
+                  category: style
                   note: More info
         "
         ))
@@ -112,14 +112,14 @@ mod test {
                             id: "rule1Id".to_string(),
                             message: "Rule 1 message".to_string(),
                             query: "match NodeKind1".to_string(),
-                            severity: RuleSeverity::Error,
+                            category: RuleCategory::Bug,
                             note: None,
                         },
                         RuleStem {
                             id: "rule2Id".to_string(),
                             message: "Rule 2 message".to_string(),
                             query: "match NodeKind2".to_string(),
-                            severity: RuleSeverity::Warning,
+                            category: RuleCategory::Style,
                             note: Some("More info".to_string()),
                         },
                     ],
@@ -143,7 +143,7 @@ mod test {
                 - id: rule1Id
                   message: Rule 1 message
                   query: match NodeKind1
-                  severity: error 
+                  category: error 
         "
         ))
         .unwrap();
@@ -171,7 +171,7 @@ mod test {
                 - id: rule1Id
                   message: Rule 1 message
                   query: match NodeKind1
-                  severity: error
+                  category: error
         "
         ))
         .unwrap();

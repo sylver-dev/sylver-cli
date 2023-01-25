@@ -3,7 +3,7 @@ use std::collections::{HashMap, HashSet};
 use crate::{
     core::source::Source,
     land::{
-        ruleset::{Rule, RuleSetId, RuleSeverity},
+        ruleset::{Rule, RuleSetId},
         sylva::SylvaId,
         Land,
     },
@@ -25,11 +25,7 @@ impl RuleResult {
 
         let rule = self.rule(land);
 
-        let kind = match rule.level {
-            RuleSeverity::Warning => ReportKind::Warning,
-            RuleSeverity::Error => ReportKind::Error,
-            RuleSeverity::Info => ReportKind::Info,
-        };
+        let kind = ReportKind::Category(rule.category);
 
         let tree = land.sylva(self.node.sylva).tree(self.node.tree).unwrap();
 
@@ -58,7 +54,7 @@ impl RuleResult {
     }
 }
 
-pub fn exec_rules(land: &Land, min_level: Option<RuleSeverity>) -> anyhow::Result<Vec<RuleResult>> {
+pub fn exec_rules(land: &Land) -> anyhow::Result<Vec<RuleResult>> {
     let res: Vec<RuleResult> = land
         .sylvae()
         .filter_map(|sylva_id| {
@@ -66,7 +62,7 @@ pub fn exec_rules(land: &Land, min_level: Option<RuleSeverity>) -> anyhow::Resul
             Some((sylva_id, rulesets))
         })
         .flat_map(|(sylva, rulesets)| rulesets.iter().map(move |ruleset| (sylva, ruleset)))
-        .map(|(sylva, &ruleset)| verify_sylva(land, ruleset, min_level, sylva))
+        .map(|(sylva, &ruleset)| verify_sylva(land, ruleset, sylva))
         .collect::<anyhow::Result<Vec<Vec<RuleResult>>>>()?
         .into_iter()
         .flatten()
@@ -78,7 +74,6 @@ pub fn exec_rules(land: &Land, min_level: Option<RuleSeverity>) -> anyhow::Resul
 fn verify_sylva(
     land: &Land,
     ruleset_id: RuleSetId,
-    min_level: Option<RuleSeverity>,
     sylva_id: SylvaId,
 ) -> anyhow::Result<Vec<RuleResult>> {
     let sylva = land.sylva(sylva_id);
@@ -87,7 +82,7 @@ fn verify_sylva(
 
     let builder = RawTreeInfoBuilder::new(spec, sylva);
 
-    let results = ruleset.verify(builder.clone(), land, sylva_id, min_level)?;
+    let results = ruleset.verify(builder.clone(), land, sylva_id)?;
 
     Ok(to_rule_results(ruleset_id, results))
 }

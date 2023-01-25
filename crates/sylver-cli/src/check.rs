@@ -39,14 +39,8 @@ fn run_check(
 ) -> anyhow::Result<()> {
     let check_data = build_check_state(loader, config_path)?;
 
-    let min_level = if cmd.upload { None } else { cmd.min_level };
-
     print_land_reports(state.settings.color_output, &check_data.land)?;
-    let res = run_land_rules(
-        state.settings.color_output,
-        &check_data.land,
-        min_level.map(Into::into),
-    )?;
+    let res = run_land_rules(state.settings.color_output, &check_data.land)?;
 
     if cmd.upload {
         ReportUploader::new(loader, cmd, &check_data).upload(&res);

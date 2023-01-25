@@ -32,11 +32,7 @@ fn run_ruleset(
     loader: &SylverLoader,
     cmd: &RulesetRun,
 ) -> anyhow::Result<()> {
-    verify_land(
-        state.settings.color_output,
-        &build_land(loader, cmd)?,
-        cmd.min_level.map(Into::into),
-    )
+    verify_land(state.settings.color_output, &build_land(loader, cmd)?)
 }
 
 fn build_land(loader: &SylverLoader, cmd: &RulesetRun) -> anyhow::Result<Land> {

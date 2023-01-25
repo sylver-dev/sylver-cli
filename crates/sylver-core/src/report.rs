@@ -1,12 +1,11 @@
 use std::path::PathBuf;
 
-use crate::core::pos::InclPosRange;
+use crate::{core::pos::InclPosRange, land::ruleset::RuleCategory};
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]
 pub enum ReportKind {
     Error,
-    Warning,
-    Info,
+    Category(RuleCategory),
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Hash)]
