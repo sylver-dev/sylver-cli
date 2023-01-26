@@ -24,7 +24,7 @@ impl Logger for FancyLogger {
     }
 
     fn info(&self, msg: &str) {
-        println!("{}", msg);
+        println!("{msg}");
     }
 }
 
