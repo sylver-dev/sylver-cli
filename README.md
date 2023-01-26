@@ -42,7 +42,7 @@ You can then run the analysis:
 sylver check
 ```
 
-The source of the rulesets is available at [https://github.com/sylver-dev/rulesets](https://github.com/sylver-dev/rulesets).
+The ruleset definitions available at [https://github.com/sylver-dev/rulesets](https://github.com/sylver-dev/rulesets).
 
 # Writing your own rulesets
 
