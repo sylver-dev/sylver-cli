@@ -1,6 +1,7 @@
 use std::{ffi::OsStr, fs::read_to_string, path::Path, path::PathBuf, sync::Arc};
 
 use anyhow::{anyhow, Context};
+use log::Logger;
 use semver::Version;
 use serde::de::DeserializeOwned;
 
@@ -197,6 +198,17 @@ impl RegistryLoader {
             .join(self.item_file_name());
 
         if !path.exists() || !path.is_file() {
+            let artefact_id = StemLocation::Registry {
+                name: name.to_string(),
+                author: author.to_string(),
+                version: version.cloned(),
+            }
+            .to_string();
+
+            let message = format!("Downloading {artefact_id} from registry");
+
+            let _ = self.state.logger.scoped(&message, None);
+
             self.client.fetch_from_registry(
                 &self.state.locations.registry_artefacts,
                 self.item_kind,
