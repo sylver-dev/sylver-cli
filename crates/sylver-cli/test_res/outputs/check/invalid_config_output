@@ -1,17 +1,3 @@
-warning[variable_length]: Variable name is too long
-   ┌─ invalid_config.json:10:28
-   │
-10 │             "description": "A short text describing the customer's professional occupation",
-   │                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-
-warning[variable_format]: Variable name isn't a lowercase word
-  ┌─ invalid_config.json:4:21
-  │
-4 │             "name": "date of birth",
-  │                     ^^^^^^^^^^^^^^^
-
-
 error[types_or_values]: Fields 'type' and 'values' are multually exclusive
    ┌─ invalid_config.json:13:9
    │  
@@ -25,5 +11,19 @@ error[types_or_values]: Fields 'type' and 'values' are multually exclusive
    │ ╰────^
    │  
    = The type can be deduced from the values list.
+
+
+help[variable_length]: Variable name is too long
+   ┌─ invalid_config.json:10:28
+   │
+10 │             "description": "A short text describing the customer's professional occupation",
+   │                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+help[variable_format]: Variable name isn't a lowercase word
+  ┌─ invalid_config.json:4:21
+  │
+4 │             "name": "date of birth",
+  │                     ^^^^^^^^^^^^^^^
 
 
