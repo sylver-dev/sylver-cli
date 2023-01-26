@@ -1,7 +1,7 @@
 import os
 import re
 
-VENV_PATTERN = re.compile(r'^\.venv$')
+VENV_PATTERN = re.compile(r'^venv$')
 PY_PATTERN = re.compile(r'^.*\.py$')
 PYPROJECT_PATTERN = re.compile(r'^pyproject\.toml$')
 POETRY_PATTERN = re.compile(r'^poetry\.toml$')
@@ -28,7 +28,7 @@ def add_project_if_match(projects, detection_root, current_path):
 
     if any(matches_python_patterns(name) for name in childs):
         project_root = os.path.relpath(current_path, detection_root)
-        projects.append({"root": project_root, "include": ["*.py"], "exclude": [".venv"]})
+        projects.append({"root": project_root, "include": ["**/*.py"], "exclude": ["venv/*"]})
         return
 
     for child in childs:
