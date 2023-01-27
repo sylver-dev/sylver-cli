@@ -8,6 +8,7 @@ edition = "2021"
 [dependencies]
 tree-sitter = "0.20.9"
 tree-sitter-python = "0.20.2"
+tree-sitter-javascript = "0.20.0"
 
 [build-dependencies]
 cc = "*"

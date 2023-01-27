@@ -17,16 +17,22 @@ pub mod parser;
 static PYTHON_MAPPING: Lazy<MappingConfig> =
     Lazy::new(|| serde_yaml::from_str(include_str!("../../res/ts_mappings/python.yaml")).unwrap());
 
+static JAVASCRIPT_MAPPING: Lazy<MappingConfig> = Lazy::new(|| {
+    serde_yaml::from_str(include_str!("../../res/ts_mappings/javascript.yaml")).unwrap()
+});
+
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize)]
 #[serde(tag = "name", rename_all = "snake_case")]
 pub enum BuiltinLang {
     Python,
+    Javascript,
 }
 
 impl Display for BuiltinLang {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         let lang_name = match self {
             BuiltinLang::Python => "python",
+            BuiltinLang::Javascript => "javascript",
         };
 
         lang_name.fmt(f)
@@ -39,6 +45,7 @@ impl TryFrom<&str> for BuiltinLang {
     fn try_from(value: &str) -> Result<Self, Self::Error> {
         match value {
             "python" => Ok(BuiltinLang::Python),
+            "javascript" => Ok(BuiltinLang::Javascript),
             _ => Err(anyhow!("Unsupported language: {}", value)),
         }
     }
@@ -47,6 +54,7 @@ impl TryFrom<&str> for BuiltinLang {
 pub fn get_detection_script(lang: BuiltinLang) -> &'static str {
     match lang {
         BuiltinLang::Python => include_str!("../../res/detection_scripts/python.py"),
+        BuiltinLang::Javascript => include_str!("../../res/detection_scripts/javascript.py"),
     }
 }
 
@@ -57,12 +65,17 @@ pub fn get_builtin_langs() -> Vec<BuiltinLang> {
 pub fn get_builtin_lang(lang: BuiltinLang) -> (&'static MappingConfig, tree_sitter::Language) {
     match lang {
         BuiltinLang::Python => (PYTHON_MAPPING.deref(), sylver_langs::python_language()),
+        BuiltinLang::Javascript => (
+            JAVASCRIPT_MAPPING.deref(),
+            sylver_langs::javascript_language(),
+        ),
     }
 }
 
 pub fn builtin_lang_mappings(lang: BuiltinLang) -> &'static [NodeMapping] {
     match lang {
         BuiltinLang::Python => PYTHON_MAPPING.types.as_slice(),
+        BuiltinLang::Javascript => JAVASCRIPT_MAPPING.types.as_slice(),
     }
 }
 
@@ -166,18 +179,12 @@ mod test {
         pretty_print::tree::TreePPrint, tree::info::raw::RawTreeInfo,
     };
     use indoc::indoc;
+    use tree_sitter::Language;
 
     use super::*;
 
     #[test]
     fn python_simple() {
-        let syntax = PYTHON_MAPPING.types.as_slice().into();
-        let runner =
-            BuiltinParserRunner::new(sylver_langs::python_language(), &syntax, &PYTHON_MAPPING);
-        let source = Source::inline("hello + world".to_string(), "BUFFER".to_string());
-        let tree = runner.run(source).tree;
-        let pprint = TreePPrint::new(RawTreeInfo::new(&tree, &syntax));
-
         let expected = indoc!(
             "
             Module {
@@ -190,6 +197,59 @@ mod test {
             . }
             }"
         );
+
+        test_builtin_parser(
+            sylver_langs::python_language(),
+            PYTHON_MAPPING.types.as_slice().into(),
+            &PYTHON_MAPPING,
+            "hello + world",
+            expected,
+        );
+    }
+
+    #[test]
+    fn javascript_simple() {
+        let expected = indoc!(
+            "
+        Program {
+        . ExpressionStatement {
+        . . CallExpression {
+        . . . ● function: MemberExpression {
+        . . . . ● object: Identifier { console }
+        . . . . ● property: Identifier { log }
+        . . . }
+        . . . ● arguments: Arguments {
+        . . . . BinaryExpression {
+        . . . . . ● left: Identifier { hello }
+        . . . . . ● operator: Add { + }
+        . . . . . ● right: Identifier { world }
+        . . . . }
+        . . . }
+        . . }
+        . }
+        }"
+        );
+
+        test_builtin_parser(
+            sylver_langs::javascript_language(),
+            JAVASCRIPT_MAPPING.types.as_slice().into(),
+            &JAVASCRIPT_MAPPING,
+            "console.log(hello + world)",
+            expected,
+        );
+    }
+
+    fn test_builtin_parser(
+        language: Language,
+        syntax: Syntax,
+        mapping_config: &MappingConfig,
+        src: &str,
+        expected: &str,
+    ) {
+        let runner = BuiltinParserRunner::new(language, &syntax, mapping_config);
+        let source = Source::inline(src.to_string(), "BUFFER".to_string());
+        let tree = runner.run(source).tree;
+        let pprint = TreePPrint::new(RawTreeInfo::new(&tree, &syntax));
 
         assert_eq!(expected, pprint.render());
     }

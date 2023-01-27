@@ -1,0 +1,1487 @@
+---
+types:
+  - name: Declaration
+    ts_name: declaration
+    is_list: false
+    is_terminal: false
+    inherits: Statement
+    fields: []
+  - name: Expression
+    ts_name: expression
+    is_list: false
+    is_terminal: false
+    fields: []
+  - name: Pattern
+    ts_name: pattern
+    is_list: false
+    is_terminal: false
+    fields: []
+  - name: PrimaryExpression
+    ts_name: primary_expression
+    is_list: false
+    is_terminal: false
+    inherits: Expression
+    fields: []
+  - name: Statement
+    ts_name: statement
+    is_list: false
+    is_terminal: false
+    fields: []
+  - name: Arguments
+    ts_name: arguments
+    is_list: true
+    is_terminal: false
+    fields: []
+  - name: Array
+    ts_name: array
+    is_list: true
+    is_terminal: false
+    inherits: PrimaryExpression
+    fields: []
+  - name: ArrayPattern
+    ts_name: array_pattern
+    is_list: true
+    is_terminal: false
+    inherits: Pattern
+    fields: []
+  - name: ArrowFunction
+    ts_name: arrow_function
+    is_list: false
+    is_terminal: false
+    inherits: PrimaryExpression
+    fields:
+      - name: body
+        types:
+          - Expression|StatementBlock
+        list: false
+      - name: parameter
+        types:
+          - Identifier
+        list: false
+      - name: parameters
+        types:
+          - FormalParameters
+        list: false
+  - name: AssignmentExpression
+    ts_name: assignment_expression
+    is_list: false
+    is_terminal: false
+    inherits: Expression
+    fields:
+      - name: left
+        types:
+          - ArrayPattern|Identifier|MemberExpression|ObjectPattern|ParenthesizedExpression|SubscriptExpression|Undefined
+        list: false
+      - name: right
+        types:
+          - Expression
+        list: false
+  - name: AssignmentPattern
+    ts_name: assignment_pattern
+    is_list: false
+    is_terminal: false
+    fields:
+      - name: left
+        types:
+          - Pattern
+        list: false
+      - name: right
+        types:
+          - Expression
+        list: false
+  - name: AugmentedAssignmentExpression
+    ts_name: augmented_assignment_expression
+    is_list: false
+    is_terminal: false
+    inherits: Expression
+    fields:
+      - name: left
+        types:
+          - Expression
+        list: false
+      - name: operator
+        types:
+          - "ModAssign|AndAssign|BitAndAssign|PowerAssign|MulAssign|AddAssign|SubAssign|DivAssign|ShiftLeftAssign|ShiftRightAssign|ShiftRightUnsignedAssign|NullCoalesceAssign|BitXorAssign|BitOrAssign|OrAssign"
+        list: false
+      - name: right
+        types:
+          - Expression
+        list: false
+  - name: ModAssign
+    is_list: false
+    is_terminal: false
+    fields: [ ]
+  - name: AndAssign
+    is_list: false
+    is_terminal: false
+    fields: [ ]
+  - name: BitAndAssign
+    is_list: false
+    is_terminal: false
+    fields: [ ]
+  - name: PowerAssign
+    is_list: false
+    is_terminal: false
+    fields: [ ]
+  - name: MulAssign
+    is_list: false
+    is_terminal: false
+    fields: [ ]
+  - name: AddAssign
+    is_list: false
+    is_terminal: false
+    fields: [ ]
+  - name: SubAssign
+    is_list: false
+    is_terminal: false
+    fields: [ ]
+  - name: DivAssign
+    is_list: false
+    is_terminal: false
+    fields: [ ]
+  - name: ShiftLeftAssign
+    is_list: false
+    is_terminal: false
+    fields: [ ]
+  - name: ShiftRightAssign
+    is_list: false
+    is_terminal: false
+    fields: [ ]
+  - name: ShiftRightUnsignedAssign
+    is_list: false
+    is_terminal: false
+    fields: [ ]
+  - name: NullCoalesceAssign
+    is_list: false
+    is_terminal: false
+    fields: [ ]
+  - name: BitXorAssign
+    is_list: false
+    is_terminal: false
+    fields: [ ]
+  - name: BitOrAssign
+    is_list: false
+    is_terminal: false
+    fields: [ ]
+  - name: OrAssign
+    is_list: false
+    is_terminal: false
+    fields: [ ]
+  - name: AwaitExpression
+    ts_name: await_expression
+    is_list: false
+    is_terminal: false
+    inherits: Expression
+    fields: []
+  - name: BinaryExpression
+    ts_name: binary_expression
+    is_list: false
+    is_terminal: false
+    inherits: Expression
+    fields:
+      - name: left
+        types:
+          - Expression
+        list: false
+      - name: operator
+        types:
+          - "NotEq|NotEqEq|Mod|BitAnd|And|Mul|Power|Add|Sub|Div|LessThan|ShiftLeft|LessEq|EqEq|EqEqEq|GreaterThan|GreaterEq|ShiftRight|ShiftRightUnsigned|NullCoalesce|BitXor|In|Instanceof|BitOr|Or"
+        list: false
+      - name: right
+        types:
+          - Expression
+        list: false
+  - name: In
+    is_list: false
+    is_terminal: false
+    fields: [ ]
+  - name: Instanceof
+    is_list: false
+    is_terminal: false
+    fields: [ ]
+  - name: NotEq
+    is_list: false
+    is_terminal: false
+    fields: []
+  - name: NotEqEq
+    is_list: false
+    is_terminal: false
+    fields: []
+  - name: EqEq
+    is_list: false
+    is_terminal: false
+    fields: []
+  - name: EqEqEq
+    is_list: false
+    is_terminal: false
+    fields: []
+  - name: Mod
+    is_list: false
+    is_terminal: false
+    fields: [ ]
+  - name: BitAnd
+    is_list: false
+    is_terminal: false
+    fields: [ ]
+  - name: BitOr
+    is_list: false
+    is_terminal: false
+    fields: [ ]
+  - name: BitXor
+    is_list: false
+    is_terminal: false
+    fields: [ ]
+  - name: And
+    is_list: false
+    is_terminal: false
+    fields: [ ]
+  - name: Or
+    is_list: false
+    is_terminal: false
+    fields: [ ]
+  - name: Mul
+    is_list: false
+    is_terminal: false
+    fields: [ ]
+  - name: Div
+    is_list: false
+    is_terminal: false
+    fields: [ ]
+  - name: Power
+    is_list: false
+    is_terminal: false
+    fields: [ ]
+  - name: Add
+    is_list: false
+    is_terminal: false
+    fields: [ ]
+  - name: Sub
+    is_list: false
+    is_terminal: false
+    fields: [ ]
+  - name: LessThan
+    is_list: false
+    is_terminal: false
+    fields: [ ]
+  - name: LessEq
+    is_list: false
+    is_terminal: false
+    fields: [ ]
+  - name: GreaterThan
+    is_list: false
+    is_terminal: false
+    fields: [ ]
+  - name: GreaterEq
+    is_list: false
+    is_terminal: false
+    fields: [ ]
+  - name: ShiftRight
+    is_list: false
+    is_terminal: false
+    fields: [ ]
+  - name: ShiftRightUnsigned
+    is_list: false
+    is_terminal: false
+    fields: [ ]
+  - name: ShiftLeft
+    is_list: false
+    is_terminal: false
+    fields: [ ]
+  - name: NullCoalesce
+    is_list: false
+    is_terminal: false
+    fields: [ ]
+  - name: BreakStatement
+    ts_name: break_statement
+    is_list: false
+    is_terminal: false
+    inherits: Statement
+    fields:
+      - name: label
+        types:
+          - StatementIdentifier
+        list: false
+  - name: CallExpression
+    ts_name: call_expression
+    is_list: false
+    is_terminal: false
+    inherits: PrimaryExpression
+    fields:
+      - name: arguments
+        types:
+          - Arguments|TemplateString
+        list: false
+      - name: function
+        types:
+          - Expression
+        list: false
+      - name: optional_chain
+        types:
+          - OptionalChain
+        list: false
+  - name: CatchClause
+    ts_name: catch_clause
+    is_list: false
+    is_terminal: false
+    fields:
+      - name: body
+        types:
+          - StatementBlock
+        list: false
+      - name: parameter
+        types:
+          - ArrayPattern|Identifier|ObjectPattern
+        list: false
+  - name: Class
+    ts_name: class
+    is_list: false
+    is_terminal: false
+    inherits: PrimaryExpression
+    fields:
+      - name: body
+        types:
+          - ClassBody
+        list: false
+      - name: decorator
+        types:
+          - List<Decorator>
+        list: true
+      - name: name
+        types:
+          - Identifier
+        list: false
+  - name: ClassBody
+    ts_name: class_body
+    is_list: false
+    is_terminal: false
+    fields:
+      - name: member
+        types:
+          - List<FieldDefinition | MethodDefinition>
+        list: true
+      - name: template
+        types:
+          - List<GlimmerTemplate>
+        list: true
+  - name: ClassDeclaration
+    ts_name: class_declaration
+    is_list: false
+    is_terminal: false
+    inherits: Declaration
+    fields:
+      - name: body
+        types:
+          - ClassBody
+        list: false
+      - name: decorator
+        types:
+          - List<Decorator>
+        list: true
+      - name: name
+        types:
+          - Identifier
+        list: false
+  - name: ClassHeritage
+    ts_name: class_heritage
+    is_list: false
+    is_terminal: false
+    fields: []
+  - name: ComputedPropertyName
+    ts_name: computed_property_name
+    is_list: false
+    is_terminal: false
+    fields: []
+  - name: ContinueStatement
+    ts_name: continue_statement
+    is_list: false
+    is_terminal: false
+    inherits: Statement
+    fields:
+      - name: label
+        types:
+          - StatementIdentifier
+        list: false
+  - name: DebuggerStatement
+    ts_name: debugger_statement
+    is_list: false
+    is_terminal: false
+    inherits: Statement
+    fields: []
+  - name: Decorator
+    ts_name: decorator
+    is_list: false
+    is_terminal: false
+    fields: []
+  - name: DoStatement
+    ts_name: do_statement
+    is_list: false
+    is_terminal: false
+    inherits: Statement
+    fields:
+      - name: body
+        types:
+          - Statement
+        list: false
+      - name: condition
+        types:
+          - ParenthesizedExpression
+        list: false
+  - name: ElseClause
+    ts_name: else_clause
+    is_list: false
+    is_terminal: false
+    fields: []
+  - name: EmptyStatement
+    ts_name: empty_statement
+    is_list: false
+    is_terminal: false
+    inherits: Statement
+    fields: []
+  - name: ExportClause
+    ts_name: export_clause
+    is_list: true
+    is_terminal: false
+    fields: []
+  - name: ExportSpecifier
+    ts_name: export_specifier
+    is_list: false
+    is_terminal: false
+    fields:
+      - name: alias
+        types:
+          - Identifier
+        list: false
+      - name: name
+        types:
+          - Identifier
+        list: false
+  - name: ExportStatement
+    ts_name: export_statement
+    is_list: false
+    is_terminal: false
+    inherits: Statement
+    fields:
+      - name: declaration
+        types:
+          - Declaration
+        list: false
+      - name: decorator
+        types:
+          - List<Decorator>
+        list: true
+      - name: source
+        types:
+          - String
+        list: false
+      - name: value
+        types:
+          - Expression
+        list: false
+  - name: ExpressionStatement
+    ts_name: expression_statement
+    is_list: false
+    is_terminal: false
+    inherits: Statement
+    fields: []
+  - name: FieldDefinition
+    ts_name: field_definition
+    is_list: false
+    is_terminal: false
+    fields:
+      - name: decorator
+        types:
+          - List<Decorator>
+        list: true
+      - name: property
+        types:
+          - ComputedPropertyName|Number|PrivatePropertyIdentifier|PropertyIdentifier|String
+        list: false
+      - name: value
+        types:
+          - Expression
+        list: false
+  - name: FinallyClause
+    ts_name: finally_clause
+    is_list: false
+    is_terminal: false
+    fields:
+      - name: body
+        types:
+          - StatementBlock
+        list: false
+  - name: ForInStatement
+    ts_name: for_in_statement
+    is_list: false
+    is_terminal: false
+    inherits: Statement
+    fields:
+      - name: body
+        types:
+          - Statement
+        list: false
+      - name: kind
+        types:
+          - Const|Let|Var
+        list: false
+      - name: left
+        types:
+          - ArrayPattern|Identifier|MemberExpression|ObjectPattern|ParenthesizedExpression|SubscriptExpression|Undefined
+        list: false
+      - name: operator
+        types:
+          - In|Of
+        list: false
+      - name: right
+        types:
+          - Expression|SequenceExpression
+        list: false
+      - name: value
+        types:
+          - Expression
+        list: false
+  - name: ForStatement
+    ts_name: for_statement
+    is_list: false
+    is_terminal: false
+    inherits: Statement
+    fields:
+      - name: body
+        types:
+          - Statement
+        list: false
+      - name: condition
+        types:
+          - Statement
+        list: false
+      - name: increment
+        types:
+          - Expression|SequenceExpression
+        list: false
+      - name: initializer
+        types:
+          - Statement
+        list: false
+  - name: FormalParameters
+    ts_name: formal_parameters
+    is_list: true
+    is_terminal: false
+    fields: []
+  - name: Function
+    ts_name: function
+    is_list: false
+    is_terminal: false
+    inherits: PrimaryExpression
+    fields:
+      - name: body
+        types:
+          - StatementBlock
+        list: false
+      - name: name
+        types:
+          - Identifier
+        list: false
+      - name: parameters
+        types:
+          - FormalParameters
+        list: false
+  - name: FunctionDeclaration
+    ts_name: function_declaration
+    is_list: false
+    is_terminal: false
+    inherits: Declaration
+    fields:
+      - name: body
+        types:
+          - StatementBlock
+        list: false
+      - name: name
+        types:
+          - Identifier
+        list: false
+      - name: parameters
+        types:
+          - FormalParameters
+        list: false
+  - name: GeneratorFunction
+    ts_name: generator_function
+    is_list: false
+    is_terminal: false
+    inherits: PrimaryExpression
+    fields:
+      - name: body
+        types:
+          - StatementBlock
+        list: false
+      - name: name
+        types:
+          - Identifier
+        list: false
+      - name: parameters
+        types:
+          - FormalParameters
+        list: false
+  - name: GeneratorFunctionDeclaration
+    ts_name: generator_function_declaration
+    is_list: false
+    is_terminal: false
+    inherits: Declaration
+    fields:
+      - name: body
+        types:
+          - StatementBlock
+        list: false
+      - name: name
+        types:
+          - Identifier
+        list: false
+      - name: parameters
+        types:
+          - FormalParameters
+        list: false
+  - name: GlimmerClosingTag
+    ts_name: glimmer_closing_tag
+    is_list: false
+    is_terminal: false
+    fields: []
+  - name: GlimmerOpeningTag
+    ts_name: glimmer_opening_tag
+    is_list: false
+    is_terminal: false
+    fields: []
+  - name: GlimmerTemplate
+    ts_name: glimmer_template
+    is_list: false
+    is_terminal: false
+    inherits: Expression
+    fields:
+      - name: close_tag
+        types:
+          - GlimmerClosingTag
+        list: false
+      - name: open_tag
+        types:
+          - GlimmerOpeningTag
+        list: false
+  - name: IfStatement
+    ts_name: if_statement
+    is_list: false
+    is_terminal: false
+    inherits: Statement
+    fields:
+      - name: alternative
+        types:
+          - ElseClause
+        list: false
+      - name: condition
+        types:
+          - ParenthesizedExpression
+        list: false
+      - name: consequence
+        types:
+          - Statement
+        list: false
+  - name: Import
+    ts_name: import
+    is_list: false
+    is_terminal: false
+    inherits: PrimaryExpression
+    fields: []
+  - name: ImportClause
+    ts_name: import_clause
+    is_list: true
+    is_terminal: false
+    fields: []
+  - name: ImportSpecifier
+    ts_name: import_specifier
+    is_list: false
+    is_terminal: false
+    fields:
+      - name: alias
+        types:
+          - Identifier
+        list: false
+      - name: name
+        types:
+          - Identifier
+        list: false
+  - name: ImportStatement
+    ts_name: import_statement
+    is_list: false
+    is_terminal: false
+    inherits: Statement
+    fields:
+      - name: source
+        types:
+          - String
+        list: false
+  - name: JsxAttribute
+    ts_name: jsx_attribute
+    is_list: true
+    is_terminal: false
+    fields: []
+  - name: JsxClosingElement
+    ts_name: jsx_closing_element
+    is_list: false
+    is_terminal: false
+    fields:
+      - name: name
+        types:
+          - Identifier|JsxNamespaceName|NestedIdentifier
+        list: false
+  - name: JsxElement
+    ts_name: jsx_element
+    is_list: false
+    is_terminal: false
+    inherits: Expression
+    fields:
+      - name: close_tag
+        types:
+          - JsxClosingElement
+        list: false
+      - name: open_tag
+        types:
+          - JsxOpeningElement
+        list: false
+  - name: JsxExpression
+    ts_name: jsx_expression
+    is_list: false
+    is_terminal: false
+    fields: []
+  - name: JsxFragment
+    ts_name: jsx_fragment
+    is_list: true
+    is_terminal: false
+    inherits: Expression
+    fields: []
+  - name: JsxNamespaceName
+    ts_name: jsx_namespace_name
+    is_list: true
+    is_terminal: false
+    fields: []
+  - name: JsxOpeningElement
+    ts_name: jsx_opening_element
+    is_list: false
+    is_terminal: false
+    fields:
+      - name: attribute
+        types:
+          - List<JsxAttribute | JsxExpression>
+        list: true
+      - name: name
+        types:
+          - Identifier|JsxNamespaceName|NestedIdentifier
+        list: false
+  - name: JsxSelfClosingElement
+    ts_name: jsx_self_closing_element
+    is_list: false
+    is_terminal: false
+    inherits: Expression
+    fields:
+      - name: attribute
+        types:
+          - List<JsxAttribute | JsxExpression>
+        list: true
+      - name: name
+        types:
+          - Identifier|JsxNamespaceName|NestedIdentifier
+        list: false
+  - name: LabeledStatement
+    ts_name: labeled_statement
+    is_list: false
+    is_terminal: false
+    inherits: Statement
+    fields:
+      - name: body
+        types:
+          - Statement
+        list: false
+      - name: label
+        types:
+          - StatementIdentifier
+        list: false
+  - name: LexicalDeclaration
+    ts_name: lexical_declaration
+    is_list: false
+    is_terminal: false
+    inherits: Declaration
+    fields:
+      - name: kind
+        types:
+          - Const|Let
+        list: false
+  - name: MemberExpression
+    ts_name: member_expression
+    is_list: false
+    is_terminal: false
+    inherits: PrimaryExpression
+    fields:
+      - name: object
+        types:
+          - Expression
+        list: false
+      - name: optional_chain
+        types:
+          - OptionalChain
+        list: false
+      - name: property
+        types:
+          - PrivatePropertyIdentifier|PropertyIdentifier
+        list: false
+  - name: MetaProperty
+    ts_name: meta_property
+    is_list: false
+    is_terminal: false
+    inherits: PrimaryExpression
+    fields: []
+  - name: MethodDefinition
+    ts_name: method_definition
+    is_list: false
+    is_terminal: false
+    fields:
+      - name: body
+        types:
+          - StatementBlock
+        list: false
+      - name: decorator
+        types:
+          - List<Decorator>
+        list: true
+      - name: name
+        types:
+          - ComputedPropertyName|Number|PrivatePropertyIdentifier|PropertyIdentifier|String
+        list: false
+      - name: parameters
+        types:
+          - FormalParameters
+        list: false
+  - name: NamedImports
+    ts_name: named_imports
+    is_list: true
+    is_terminal: false
+    fields: []
+  - name: NamespaceExport
+    ts_name: namespace_export
+    is_list: false
+    is_terminal: false
+    fields: []
+  - name: NamespaceImport
+    ts_name: namespace_import
+    is_list: false
+    is_terminal: false
+    fields: []
+  - name: NestedIdentifier
+    ts_name: nested_identifier
+    is_list: true
+    is_terminal: false
+    fields: []
+  - name: NewExpression
+    ts_name: new_expression
+    is_list: false
+    is_terminal: false
+    inherits: Expression
+    fields:
+      - name: arguments
+        types:
+          - Arguments
+        list: false
+      - name: constructor
+        types:
+          - Expression
+        list: false
+  - name: Object
+    ts_name: object
+    is_list: true
+    is_terminal: false
+    inherits: PrimaryExpression
+    fields: []
+  - name: ObjectAssignmentPattern
+    ts_name: object_assignment_pattern
+    is_list: false
+    is_terminal: false
+    fields:
+      - name: left
+        types:
+          - ArrayPattern|ObjectPattern|ShorthandPropertyIdentifierPattern
+        list: false
+      - name: right
+        types:
+          - Expression
+        list: false
+  - name: ObjectPattern
+    ts_name: object_pattern
+    is_list: true
+    is_terminal: false
+    inherits: Pattern
+    fields: []
+  - name: Pair
+    ts_name: pair
+    is_list: false
+    is_terminal: false
+    fields:
+      - name: key
+        types:
+          - ComputedPropertyName|Number|PrivatePropertyIdentifier|PropertyIdentifier|String
+        list: false
+      - name: value
+        types:
+          - Expression
+        list: false
+  - name: PairPattern
+    ts_name: pair_pattern
+    is_list: false
+    is_terminal: false
+    fields:
+      - name: key
+        types:
+          - ComputedPropertyName|Number|PrivatePropertyIdentifier|PropertyIdentifier|String
+        list: false
+      - name: value
+        types:
+          - AssignmentPattern|Pattern
+        list: false
+  - name: ParenthesizedExpression
+    ts_name: parenthesized_expression
+    is_list: false
+    is_terminal: false
+    inherits: PrimaryExpression
+    fields: []
+  - name: Program
+    ts_name: program
+    is_list: true
+    is_terminal: false
+    fields: []
+  - name: Regex
+    ts_name: regex
+    is_list: false
+    is_terminal: false
+    inherits: PrimaryExpression
+    fields:
+      - name: flags
+        types:
+          - RegexFlags
+        list: false
+      - name: pattern
+        types:
+          - RegexPattern
+        list: false
+  - name: RestPattern
+    ts_name: rest_pattern
+    is_list: false
+    is_terminal: false
+    inherits: Pattern
+    fields: []
+  - name: ReturnStatement
+    ts_name: return_statement
+    is_list: false
+    is_terminal: false
+    inherits: Statement
+    fields: []
+  - name: SequenceExpression
+    ts_name: sequence_expression
+    is_list: false
+    is_terminal: false
+    fields:
+      - name: left
+        types:
+          - Expression
+        list: false
+      - name: right
+        types:
+          - Expression|SequenceExpression
+        list: false
+  - name: SpreadElement
+    ts_name: spread_element
+    is_list: false
+    is_terminal: false
+    fields: []
+  - name: StatementBlock
+    ts_name: statement_block
+    is_list: true
+    is_terminal: false
+    inherits: Statement
+    fields: []
+  - name: String
+    ts_name: string
+    is_list: true
+    is_terminal: false
+    inherits: PrimaryExpression
+    fields: []
+  - name: SubscriptExpression
+    ts_name: subscript_expression
+    is_list: false
+    is_terminal: false
+    inherits: PrimaryExpression
+    fields:
+      - name: index
+        types:
+          - Expression|SequenceExpression
+        list: false
+      - name: object
+        types:
+          - Expression
+        list: false
+      - name: optional_chain
+        types:
+          - OptionalChain
+        list: false
+  - name: SwitchBody
+    ts_name: switch_body
+    is_list: true
+    is_terminal: false
+    fields: []
+  - name: SwitchCase
+    ts_name: switch_case
+    is_list: false
+    is_terminal: false
+    fields:
+      - name: body
+        types:
+          - List<Statement>
+        list: true
+      - name: value
+        types:
+          - Expression|SequenceExpression
+        list: false
+  - name: SwitchDefault
+    ts_name: switch_default
+    is_list: false
+    is_terminal: false
+    fields:
+      - name: body
+        types:
+          - List<Statement>
+        list: true
+  - name: SwitchStatement
+    ts_name: switch_statement
+    is_list: false
+    is_terminal: false
+    inherits: Statement
+    fields:
+      - name: body
+        types:
+          - SwitchBody
+        list: false
+      - name: value
+        types:
+          - ParenthesizedExpression
+        list: false
+  - name: TemplateString
+    ts_name: template_string
+    is_list: true
+    is_terminal: false
+    inherits: PrimaryExpression
+    fields: []
+  - name: TemplateSubstitution
+    ts_name: template_substitution
+    is_list: false
+    is_terminal: false
+    fields: []
+  - name: TernaryExpression
+    ts_name: ternary_expression
+    is_list: false
+    is_terminal: false
+    inherits: Expression
+    fields:
+      - name: alternative
+        types:
+          - Expression
+        list: false
+      - name: condition
+        types:
+          - Expression
+        list: false
+      - name: consequence
+        types:
+          - Expression
+        list: false
+  - name: ThrowStatement
+    ts_name: throw_statement
+    is_list: false
+    is_terminal: false
+    inherits: Statement
+    fields: []
+  - name: TryStatement
+    ts_name: try_statement
+    is_list: false
+    is_terminal: false
+    inherits: Statement
+    fields:
+      - name: body
+        types:
+          - StatementBlock
+        list: false
+      - name: finalizer
+        types:
+          - FinallyClause
+        list: false
+      - name: handler
+        types:
+          - CatchClause
+        list: false
+  - name: UnaryExpression
+    ts_name: unary_expression
+    is_list: false
+    is_terminal: false
+    inherits: Expression
+    fields:
+      - name: argument
+        types:
+          - Expression
+        list: false
+      - name: operator
+        types:
+          - "Not|Add|Sub|Delete|Typeof|Void|BitNot"
+        list: false
+  - name: Typeof
+    is_list: false
+    is_terminal: false
+    fields: []
+  - name: Void
+    is_list: false
+    is_terminal: false
+    fields: []
+  - name: Delete
+    is_list: false
+    is_terminal: false
+    fields: []
+  - name: Not
+    is_list: false
+    is_terminal: false
+    fields: []
+  - name: BitNot
+    is_list: false
+    is_terminal: false
+    fields: []
+  - name: UpdateExpression
+    ts_name: update_expression
+    is_list: false
+    is_terminal: false
+    inherits: Expression
+    fields:
+      - name: argument
+        types:
+          - Expression
+        list: false
+      - name: operator
+        types:
+          - "Increment|Decrement"
+        list: false
+  - name: Increment
+    is_list: false
+    is_terminal: false
+    fields: []
+  - name: Decrement
+    is_list: false
+    is_terminal: false
+    fields: []
+  - name: VariableDeclaration
+    ts_name: variable_declaration
+    is_list: true
+    is_terminal: false
+    inherits: Declaration
+    fields: []
+  - name: VariableDeclarator
+    ts_name: variable_declarator
+    is_list: false
+    is_terminal: false
+    fields:
+      - name: name
+        types:
+          - ArrayPattern|Identifier|ObjectPattern
+        list: false
+      - name: value
+        types:
+          - Expression
+        list: false
+  - name: WhileStatement
+    ts_name: while_statement
+    is_list: false
+    is_terminal: false
+    inherits: Statement
+    fields:
+      - name: body
+        types:
+          - Statement
+        list: false
+      - name: condition
+        types:
+          - ParenthesizedExpression
+        list: false
+  - name: WithStatement
+    ts_name: with_statement
+    is_list: false
+    is_terminal: false
+    inherits: Statement
+    fields:
+      - name: body
+        types:
+          - Statement
+        list: false
+      - name: object
+        types:
+          - ParenthesizedExpression
+        list: false
+  - name: YieldExpression
+    ts_name: yield_expression
+    is_list: false
+    is_terminal: false
+    inherits: Expression
+    fields: []
+  - name: Comment
+    ts_name: comment
+    is_list: false
+    is_terminal: false
+    fields: []
+  - name: EscapeSequence
+    ts_name: escape_sequence
+    is_list: false
+    is_terminal: false
+    fields: []
+  - name: 'False'
+    ts_name: 'false'
+    is_list: false
+    is_terminal: false
+    inherits: PrimaryExpression
+    fields: []
+  - name: HashBangLine
+    ts_name: hash_bang_line
+    is_list: false
+    is_terminal: false
+    fields: []
+  - name: Identifier
+    ts_name: identifier
+    is_list: false
+    is_terminal: false
+    inherits: PrimaryExpression
+    fields: []
+  - name: JsxText
+    ts_name: jsx_text
+    is_list: false
+    is_terminal: false
+    fields: []
+  - name: 'Null'
+    ts_name: 'null'
+    is_list: false
+    is_terminal: false
+    inherits: PrimaryExpression
+    fields: []
+  - name: Number
+    ts_name: number
+    is_list: false
+    is_terminal: false
+    inherits: PrimaryExpression
+    fields: []
+  - name: OptionalChain
+    ts_name: optional_chain
+    is_list: false
+    is_terminal: false
+    fields: []
+  - name: PrivatePropertyIdentifier
+    ts_name: private_property_identifier
+    is_list: false
+    is_terminal: false
+    fields: []
+  - name: PropertyIdentifier
+    ts_name: property_identifier
+    is_list: false
+    is_terminal: false
+    fields: []
+  - name: RegexFlags
+    ts_name: regex_flags
+    is_list: false
+    is_terminal: false
+    fields: []
+  - name: RegexPattern
+    ts_name: regex_pattern
+    is_list: false
+    is_terminal: false
+    fields: []
+  - name: ShorthandPropertyIdentifier
+    ts_name: shorthand_property_identifier
+    is_list: false
+    is_terminal: false
+    fields: []
+  - name: ShorthandPropertyIdentifierPattern
+    ts_name: shorthand_property_identifier_pattern
+    is_list: false
+    is_terminal: false
+    fields: []
+  - name: StatementIdentifier
+    ts_name: statement_identifier
+    is_list: false
+    is_terminal: false
+    fields: []
+  - name: StringFragment
+    ts_name: string_fragment
+    is_list: false
+    is_terminal: false
+    fields: []
+  - name: Super
+    ts_name: super
+    is_list: false
+    is_terminal: false
+    inherits: PrimaryExpression
+    fields: []
+  - name: This
+    ts_name: this
+    is_list: false
+    is_terminal: false
+    inherits: PrimaryExpression
+    fields: []
+  - name: 'True'
+    ts_name: 'true'
+    is_list: false
+    is_terminal: false
+    inherits: PrimaryExpression
+    fields: []
+  - name: Undefined
+    ts_name: undefined
+    is_list: false
+    is_terminal: false
+    inherits: PrimaryExpression
+    fields: []
+aliases:
+  - ts_name: identifier
+    alias: property_identifier
+fields:
+  - parent_kind: UpdateExpression
+    ts_kind: "++"
+    new_kind: Increment
+  - parent_kind: UpdateExpression
+    ts_kind: "--"
+    new_kind: Decrement
+  - parent_kind: UnaryExpression
+    ts_kind: "!"
+    new_kind: Not
+  - parent_kind: UnaryExpression
+    ts_kind: "~"
+    new_kind: BitNot
+  - parent_kind: UnaryExpression
+    ts_kind: "typeof"
+    new_kind: Typeof
+  - parent_kind: UnaryExpression
+    ts_kind: "void"
+    new_kind: Void
+  - parent_kind: UnaryExpression
+    ts_kind: "delete"
+    new_kind: Delete
+  - parent_kind: UnaryExpression
+    ts_kind: "+"
+    new_kind: Add
+  - parent_kind: UnaryExpression
+    ts_kind: "-"
+    new_kind: Sub
+  - parent_kind: BinaryExpression
+    ts_kind: "||"
+    new_kind: Or
+  - parent_kind: BinaryExpression
+    ts_kind: "&&"
+    new_kind: And
+  - parent_kind: BinaryExpression
+    ts_kind: "|"
+    new_kind: BitOr
+  - parent_kind: BinaryExpression
+    ts_kind: "^"
+    new_kind: BitXor
+  - parent_kind: BinaryExpression
+    ts_kind: "&"
+    new_kind: BitAnd
+  - parent_kind: BinaryExpression
+    ts_kind: "=="
+    new_kind: EqEq
+  - parent_kind: BinaryExpression
+    ts_kind: "!="
+    new_kind: NotEq
+  - parent_kind: BinaryExpression
+    ts_kind: "==="
+    new_kind: EqEqEq
+  - parent_kind: BinaryExpression
+    ts_kind: "!=="
+    new_kind: NotEqEq
+  - parent_kind: BinaryExpression
+    ts_kind: "<"
+    new_kind: LessThan
+  - parent_kind: BinaryExpression
+    ts_kind: "<="
+    new_kind: LessEq
+  - parent_kind: BinaryExpression
+    ts_kind: ">"
+    new_kind: GreaterThan
+  - parent_kind: BinaryExpression
+    ts_kind: ">="
+    new_kind: GreaterEq
+  - parent_kind: BinaryExpression
+    ts_kind: "in"
+    new_kind: In
+  - parent_kind: BinaryExpression
+    ts_kind: "instanceof"
+    new_kind: Instanceof
+  - parent_kind: BinaryExpression
+    ts_kind: "<<"
+    new_kind: ShiftLeft
+  - parent_kind: BinaryExpression
+    ts_kind: ">>"
+    new_kind: ShiftRight
+  - parent_kind: BinaryExpression
+    ts_kind: ">>>"
+    new_kind: ShiftRightUnsigned
+  - parent_kind: BinaryExpression
+    ts_kind: "+"
+    new_kind: Add
+  - parent_kind: BinaryExpression
+    ts_kind: "-"
+    new_kind: Sub
+  - parent_kind: BinaryExpression
+    ts_kind: "*"
+    new_kind: Mul
+  - parent_kind: BinaryExpression
+    ts_kind: "/"
+    new_kind: Div
+  - parent_kind: BinaryExpression
+    ts_kind: "%"
+    new_kind: Mod
+  - parent_kind: AugmentedAssignmentExpression
+    ts_kind: "%="
+    new_kind: ModAssign
+  - parent_kind: AugmentedAssignmentExpression
+    ts_kind: "*="
+    new_kind: MulAssign
+  - parent_kind: AugmentedAssignmentExpression
+    ts_kind: "**="
+    new_kind: PowerAssign
+  - parent_kind: AugmentedAssignmentExpression
+    ts_kind: "/="
+    new_kind: DivAssign
+  - parent_kind: AugmentedAssignmentExpression
+    ts_kind: "+="
+    new_kind: AddAssign
+  - parent_kind: AugmentedAssignmentExpression
+    ts_kind: "-="
+    new_kind: SubAssign
+  - parent_kind: AugmentedAssignmentExpression
+    ts_kind: "<<="
+    new_kind: ShiftLeftAssign
+  - parent_kind: AugmentedAssignmentExpression
+    ts_kind: ">>="
+    new_kind: ShiftRightAssign
+  - parent_kind: AugmentedAssignmentExpression
+    ts_kind: ">>>="
+    new_kind: ShiftRightUnsignedAssign
+  - parent_kind: AugmentedAssignmentExpression
+    ts_kind: "&="
+    new_kind: BitAndAssign
+  - parent_kind: AugmentedAssignmentExpression
+    ts_kind: "^="
+    new_kind: BitXorAssign
+  - parent_kind: AugmentedAssignmentExpression
+    ts_kind: "|="
+    new_kind: BitOrAssign
+  - parent_kind: AssignmentExpression
+    ts_kind: "??="
+    new_kind: NullCoalesceAssign
+  - parent_kind: AssignmentExpression
+    ts_kind: "&&="
+    new_kind: AndAssign
+  - parent_kind: AssignmentExpression
+    ts_kind: "||="
+    new_kind: OrAssign
