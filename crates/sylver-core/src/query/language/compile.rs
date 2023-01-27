@@ -108,10 +108,15 @@ impl<'s> Compiler<'s> {
                 field_expr,
                 Expr::const_expr(Value::String(Cow::Owned(t.to_string()))),
             ),
-            NodePatternFieldValue::Pattern(p) => self
-                .with_value(field_expr, |compiler, value_adr| {
-                    compiler.compile_query_pattern(value_adr, p)
-                })?,
+            NodePatternFieldValue::Pattern(p) => {
+                self.with_value(field_expr, |compiler, value_adr| {
+                    let field_pattern_expr = compiler.compile_query_pattern(value_adr, p)?;
+                    Ok(Expr::and(
+                        Expr::neq(Expr::read_var(value_adr), Expr::const_expr(Value::Null)),
+                        field_pattern_expr,
+                    ))
+                })?
+            }
         };
 
         Ok(field_predicate)
@@ -581,9 +586,12 @@ mod tests {
                 ),
                 Expr::in_context(
                     vec![Expr::prop_access(Expr::read_var(0), "field2".to_string())],
-                    Expr::eq_eq(
-                        Expr::kind_access(Expr::read_var(1)),
-                        Expr::Const(Value::Kind(other_kind)),
+                    Expr::and(
+                        Expr::neq(Expr::read_var(1), Expr::Const(Value::Null)),
+                        Expr::eq_eq(
+                            Expr::kind_access(Expr::read_var(1)),
+                            Expr::Const(Value::Kind(other_kind))
+                        ),
                     ),
                 ),
             )))

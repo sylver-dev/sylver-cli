@@ -1,0 +1,9 @@
+node A { }
+node B { first: A, second: A }
+node Program { field: List<B> }
+
+rule main = Program { field@sepBy1(',', b_rule) }
+
+rule a_rule = A { 'a' }
+
+rule b_rule = B { first@a_rule second@a_rule? }
