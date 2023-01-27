@@ -42,10 +42,10 @@ impl StemLocation {
 }
 
 fn format_registry_location(author: &str, name: &str, version: Option<&Version>) -> String {
-    let mut res = format!("@{}/{}", author, name);
+    let mut res = format!("@{author}/{name}");
 
     if let Some(version) = version {
-        res.push_str(&format!(":{}", version));
+        res.push_str(&format!(":{version}"));
     }
 
     res

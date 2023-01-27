@@ -39,7 +39,7 @@ fn main() -> Result<()> {
     };
 
     if let Err(e) = res {
-        logger.error(&format!("{:?}", e));
+        logger.error(&format!("{e:?}"));
         std::process::exit(1);
     }
 

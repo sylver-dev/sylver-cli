@@ -356,7 +356,7 @@ impl Index<KindId> for Syntax {
         self.declarations
             .get(index.into())
             .and_then(|n| retain_node(n, true))
-            .unwrap_or_else(|| panic!("No node with index {:?}", index))
+            .unwrap_or_else(|| panic!("No node with index {index:?}"))
     }
 }
 
@@ -367,7 +367,7 @@ impl Index<RuleId> for Syntax {
         self.declarations
             .get(index.into())
             .and_then(retain_rule)
-            .unwrap_or_else(|| panic!("No rule with index {:?}", index))
+            .unwrap_or_else(|| panic!("No rule with index {index:?}"))
     }
 }
 
@@ -378,7 +378,7 @@ impl Index<TagId> for Syntax {
         self.declarations
             .get(index.into())
             .and_then(retain_term)
-            .unwrap_or_else(|| panic!("No term rule with index: {:?}", index))
+            .unwrap_or_else(|| panic!("No term rule with index: {index:?}"))
     }
 }
 

@@ -69,7 +69,7 @@ impl<'i> PythonScriptCompiler<'i> {
         ) {
             return Err(ScriptError::Compilation(
                 path.to_string(),
-                format!("Function {} not found", fn_name),
+                format!("Function {fn_name} not found"),
             ));
         };
 

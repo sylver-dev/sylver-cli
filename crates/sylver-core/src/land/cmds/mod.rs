@@ -18,8 +18,8 @@ pub fn parsing_errors(land: &Land) -> HashMap<&Source, &[Report]> {
     land.sylvae.iter().flat_map(|(_, s)| s.reports()).collect()
 }
 
-pub fn run_task<'l>(
-    land: &'l Land,
+pub fn run_task(
+    land: &Land,
     sylva_id: SylvaId,
     task: &Task,
 ) -> Result<Vec<Value<'static>>, EvalError> {

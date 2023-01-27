@@ -185,7 +185,7 @@ impl RegistryLoader {
 
     fn load(&self, author: &str, name: &str, version: Option<&Version>) -> anyhow::Result<PathBuf> {
         let version_suffix = match version {
-            Some(v) => format!(":{}", v),
+            Some(v) => format!(":{v}"),
             None => "".to_string(),
         };
 
@@ -194,7 +194,7 @@ impl RegistryLoader {
             .locations
             .registry_artefacts
             .join(format!("@{author}"))
-            .join(format!("{}{}", name, version_suffix))
+            .join(format!("{name}{version_suffix}"))
             .join(self.item_file_name());
 
         if !path.exists() || !path.is_file() {

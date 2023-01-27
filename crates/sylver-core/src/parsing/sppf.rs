@@ -394,7 +394,7 @@ fn non_terminal_mut_childs(node: &mut TreeNode) -> &mut FxHashSet<TreeNodeId> {
             data: TreeNodeData::NonTerminal(_, ref mut childs),
             ..
         } => childs,
-        _ => panic!("Not a non terminal node: {:?}", node),
+        _ => panic!("Not a non terminal node: {node:?}"),
     }
 }
 
