@@ -439,14 +439,52 @@ impl Expr {
             Expr::Lte(l, r) => Ok(Value::Bool(l.eval(ctx)? <= r.eval(ctx)?)),
             Expr::Ht(l, r) => Ok(Value::Bool(l.eval(ctx)? > r.eval(ctx)?)),
             Expr::Hte(l, r) => Ok(Value::Bool(l.eval(ctx)? >= r.eval(ctx)?)),
-            Expr::EqEq(l, r) => Ok(Value::Bool(l.eval(ctx)? == r.eval(ctx)?)),
-            Expr::Neq(l, r) => Ok(Value::Bool(l.eval(ctx)? != r.eval(ctx)?)),
+            Expr::EqEq(l, r) => eval_eq_eq(ctx, l, r),
+            Expr::Neq(l, r) => eval_neq(ctx, l, r),
             Expr::Not(operand) => {
                 let operand_val: bool = operand.eval(ctx)?.try_into()?;
                 Ok((!operand_val).into())
             }
         }
     }
+}
+
+fn eval_neq<'b, B: 'b + TreeInfoBuilder<'b>>(
+    ctx: &mut EvalCtx<'b, B>,
+    left: &Expr,
+    right: &Expr,
+) -> Result<Value<'b>, EvalError> {
+    let left_val = left.eval(ctx)?;
+    let right_val = right.eval(ctx)?;
+
+    let not_equals = match (left_val.kind(), right_val.kind()) {
+        (ValueKind::Node, ValueKind::String) => node_value_text(ctx, left_val)? != right_val,
+        (ValueKind::String, ValueKind::Node) => left_val != node_value_text(ctx, right_val)?,
+        _ => left_val != right_val,
+    };
+
+    Ok(not_equals.into())
+}
+
+fn eval_eq_eq<'b, B: 'b + TreeInfoBuilder<'b>>(
+    ctx: &mut EvalCtx<'b, B>,
+    left: &Expr,
+    right: &Expr,
+) -> Result<Value<'b>, EvalError> {
+    let left_val = left.eval(ctx)?;
+    let right_val = right.eval(ctx)?;
+
+    if left_val == right_val {
+        return Ok(true.into());
+    }
+
+    let equals = match (left_val.kind(), right_val.kind()) {
+        (ValueKind::Node, ValueKind::String) => node_value_text(ctx, left_val)? == right_val,
+        (ValueKind::String, ValueKind::Node) => left_val == node_value_text(ctx, right_val)?,
+        _ => false,
+    };
+
+    Ok(equals.into())
 }
 
 fn eval_int_conv<'b, B: 'b + TreeInfoBuilder<'b>>(
@@ -488,7 +526,15 @@ fn eval_node_text<'b, B: 'b + TreeInfoBuilder<'b>>(
     ctx: &mut EvalCtx<'b, B>,
     op: &Expr,
 ) -> Result<Value<'b>, EvalError> {
-    let sylva_node: SylvaNode = op.eval(ctx)?.try_into()?;
+    let node_val = op.eval(ctx)?;
+    node_value_text(ctx, node_val)
+}
+
+fn node_value_text<'b, B: 'b + TreeInfoBuilder<'b>>(
+    ctx: &mut EvalCtx<'b, B>,
+    value: Value<'b>,
+) -> Result<Value<'b>, EvalError> {
+    let sylva_node: SylvaNode = value.try_into()?;
     let text = ctx
         .info_builder
         .info_for_node(sylva_node)

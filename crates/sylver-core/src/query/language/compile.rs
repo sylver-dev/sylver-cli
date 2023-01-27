@@ -105,7 +105,7 @@ impl<'s> Compiler<'s> {
 
         let field_predicate = match &field.value {
             NodePatternFieldValue::Text(t) => Expr::eq_eq(
-                Expr::node_text(field_expr),
+                field_expr,
                 Expr::const_expr(Value::String(Cow::Owned(t.to_string()))),
             ),
             NodePatternFieldValue::Pattern(p) => self
@@ -575,7 +575,7 @@ mod tests {
                         Expr::Const(Value::Kind(node_kind)),
                     ),
                     Expr::eq_eq(
-                        Expr::node_text(Expr::prop_access(Expr::read_var(0), "field1".to_string())),
+                        Expr::prop_access(Expr::read_var(0), "field1".to_string()),
                         Expr::Const(Value::String(Cow::Owned("code".to_string()))),
                     ),
                 ),

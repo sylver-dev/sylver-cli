@@ -1,0 +1,6 @@
+node A { }
+node Program { field: List<A> }
+
+rule main = Program { field@sepBy1(',', a_rule) }
+
+rule a_rule = A { `a+` }
