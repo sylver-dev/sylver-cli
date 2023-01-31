@@ -10,10 +10,7 @@ use sylver_dsl::sylq::{
 
 use crate::{
     core::spec::{strip_list_kind, KindId, Spec},
-    query::{
-        expr::{Expr, Value},
-        FilterTask, Task,
-    },
+    query::expr::{Expr, Value},
 };
 
 pub const DEFAULT_INPUT_ADDR: usize = 0;
@@ -47,10 +44,9 @@ impl<'s> Compiler<'s> {
         }
     }
 
-    fn compile(&mut self, query: &QueryPattern) -> Result<Task, CompilationErr> {
+    fn compile(&mut self, query: &QueryPattern) -> Result<Expr, CompilationErr> {
         let filter_expr = self.compile_query_pattern(DEFAULT_INPUT_ADDR, query)?;
-
-        Ok(Task::Filter(FilterTask::new(filter_expr)))
+        Ok(filter_expr)
     }
 
     fn compile_query_pattern(
@@ -343,7 +339,7 @@ impl<'s> Compiler<'s> {
     }
 }
 
-pub fn compile(spec: &Spec, query: &QueryPattern) -> Result<Task, CompilationErr> {
+pub fn compile(spec: &Spec, query: &QueryPattern) -> Result<Expr, CompilationErr> {
     Compiler::for_spec(spec).compile(query)
 }
 
@@ -478,7 +474,7 @@ mod tests {
 
         assert_eq!(
             compiled,
-            Task::Filter(FilterTask::new(Expr::and(
+            Expr::and(
                 Expr::eq_eq(
                     Expr::kind_access(Expr::read_var(DEFAULT_INPUT_ADDR)),
                     Expr::const_expr(kind_id.into()),
@@ -487,7 +483,7 @@ mod tests {
                     Expr::const_expr(Value::Int(10)),
                     Expr::const_expr(Value::Int(11)),
                 ),
-            )))
+            )
         );
     }
 
@@ -499,13 +495,13 @@ mod tests {
 
         assert_eq!(
             compiled,
-            Task::Filter(FilterTask::new(Expr::and(
+            Expr::and(
                 Expr::const_expr(true.into()),
                 Expr::eq_eq(
                     Expr::node_parent(Expr::read_var(DEFAULT_INPUT_ADDR)),
                     Expr::read_var(DEFAULT_INPUT_ADDR),
                 ),
-            )))
+            )
         );
     }
 
@@ -517,13 +513,13 @@ mod tests {
 
         assert_eq!(
             compiled,
-            Task::Filter(FilterTask::new(Expr::and(
+            Expr::and(
                 Expr::const_expr(true.into()),
                 Expr::eq_eq(
                     Expr::length(Expr::node_children(Expr::read_var(DEFAULT_INPUT_ADDR))),
                     Expr::Const(0.into()),
                 ),
-            )))
+            )
         )
     }
 
@@ -541,13 +537,13 @@ mod tests {
 
         assert_eq!(
             compiled,
-            Task::Filter(FilterTask::new(Expr::and(
+            Expr::and(
                 Expr::const_expr(true.into()),
                 Expr::eq_eq(
                     Expr::kind_access(Expr::read_var(DEFAULT_INPUT_ADDR)),
                     Expr::kind_access(Expr::read_var(DEFAULT_INPUT_ADDR)),
                 ),
-            )))
+            )
         )
     }
 
@@ -573,7 +569,7 @@ mod tests {
 
         assert_eq!(
             compiled,
-            Task::Filter(FilterTask::new(Expr::and(
+            Expr::and(
                 Expr::and(
                     Expr::eq_eq(
                         Expr::kind_access(Expr::read_var(0)),
@@ -594,7 +590,7 @@ mod tests {
                         ),
                     ),
                 ),
-            )))
+            )
         )
     }
 
@@ -606,7 +602,7 @@ mod tests {
 
         assert_eq!(
             compiled,
-            Task::Filter(FilterTask::new(Expr::and(
+            Expr::and(
                 Expr::Const(true.into()),
                 Expr::neq(
                     Expr::array_index(
@@ -615,7 +611,7 @@ mod tests {
                     ),
                     Expr::Const(Value::Null),
                 ),
-            )))
+            )
         )
     }
 
@@ -627,13 +623,13 @@ mod tests {
 
         assert_eq!(
             compiled,
-            Task::Filter(FilterTask::new(Expr::and(
+            Expr::and(
                 Expr::const_expr(true.into()),
                 Expr::neq(
                     Expr::node_prev_sibling(Expr::read_var(DEFAULT_INPUT_ADDR)),
                     Expr::const_expr(Value::Null),
                 ),
-            )))
+            )
         );
     }
 
@@ -645,13 +641,13 @@ mod tests {
 
         assert_eq!(
             compiled,
-            Task::Filter(FilterTask::new(Expr::and(
+            Expr::and(
                 Expr::const_expr(true.into()),
                 Expr::neq(
                     Expr::node_next_sibling(Expr::read_var(0)),
                     Expr::const_expr(Value::Null),
                 ),
-            )))
+            )
         );
     }
 
@@ -667,10 +663,10 @@ mod tests {
 
         assert_eq!(
             compiled,
-            Task::Filter(FilterTask::new(Expr::eq_eq(
+            Expr::eq_eq(
                 Expr::kind_access(Expr::read_var(DEFAULT_INPUT_ADDR)),
                 Expr::const_expr(kind_id.into()),
-            )))
+            )
         )
     }
 
@@ -690,7 +686,7 @@ mod tests {
 
         assert_eq!(
             compile(&spec, &query).unwrap(),
-            Task::Filter(FilterTask::new(Expr::or(
+            Expr::or(
                 Expr::eq_eq(
                     Expr::kind_access(Expr::read_var(DEFAULT_INPUT_ADDR)),
                     Expr::const_expr(parent_kind.into()),
@@ -699,7 +695,7 @@ mod tests {
                     Expr::kind_access(Expr::read_var(DEFAULT_INPUT_ADDR)),
                     Expr::const_expr(child_kind.into()),
                 ),
-            )))
+            )
         );
     }
 
@@ -713,7 +709,7 @@ mod tests {
 
         assert_eq!(
             compiled,
-            Task::Filter(FilterTask::new(Expr::and(
+            Expr::and(
                 Expr::const_expr(true.into()),
                 Expr::in_context(
                     vec![Expr::node_children(Expr::read_var(DEFAULT_INPUT_ADDR))],
@@ -726,7 +722,7 @@ mod tests {
                         ),
                     ),
                 ),
-            ))),
+            ),
         )
     }
 
@@ -740,7 +736,7 @@ mod tests {
 
         assert_eq!(
             compiled,
-            Task::Filter(FilterTask::new(Expr::and(
+            Expr::and(
                 Expr::const_expr(true.into()),
                 Expr::in_context(
                     vec![Expr::node_children(Expr::read_var(DEFAULT_INPUT_ADDR))],
@@ -753,7 +749,7 @@ mod tests {
                         ),
                     ),
                 ),
-            ))),
+            ),
         )
     }
 
@@ -767,7 +763,7 @@ mod tests {
 
         assert_eq!(
             compiled,
-            Task::Filter(FilterTask::new(Expr::and(
+            Expr::and(
                 Expr::const_expr(true.into()),
                 Expr::in_context(
                     vec![Expr::node_children(Expr::read_var(DEFAULT_INPUT_ADDR))],
@@ -780,7 +776,7 @@ mod tests {
                         ),
                     ),
                 ),
-            ))),
+            ),
         )
     }
 
@@ -798,10 +794,10 @@ mod tests {
 
         assert_eq!(
             compile(&spec, &query).unwrap(),
-            Task::Filter(FilterTask::new(Expr::eq_eq(
+            Expr::eq_eq(
                 Expr::kind_access(Expr::read_var(DEFAULT_INPUT_ADDR)),
                 Expr::const_expr(child_kind.into()),
-            )))
+            )
         );
     }
 
@@ -813,10 +809,7 @@ mod tests {
 
         let compiled = compile(&spec, &query).unwrap();
 
-        assert_eq!(
-            compiled,
-            Task::Filter(FilterTask::new(Expr::Const(Value::Bool(true))))
-        )
+        assert_eq!(compiled, Expr::Const(Value::Bool(true)))
     }
 
     #[test]
@@ -829,13 +822,13 @@ mod tests {
 
         assert_eq!(
             compiled,
-            Task::Filter(FilterTask::new(Expr::and(
+            Expr::and(
                 Expr::const_expr(Value::Bool(true)),
                 Expr::eq_eq(
                     Expr::length(Expr::node_text(Expr::read_var(0))),
                     Expr::const_expr(Value::Int(10)),
                 ),
-            )))
+            )
         );
     }
 
@@ -857,7 +850,7 @@ mod tests {
 
         assert_eq!(
             compiled,
-            Task::Filter(FilterTask::new(Expr::and(
+            Expr::and(
                 Expr::eq_eq(
                     Expr::kind_access(Expr::read_var(DEFAULT_INPUT_ADDR)),
                     Expr::const_expr(a_kind.into()),
@@ -866,7 +859,7 @@ mod tests {
                     Expr::prop_access(Expr::read_var(DEFAULT_INPUT_ADDR), "field".into()),
                     Expr::Const(Value::Null),
                 ),
-            )))
+            )
         )
     }
 
@@ -888,7 +881,7 @@ mod tests {
 
         assert_eq!(
             compiled,
-            Task::Filter(FilterTask::new(Expr::and(
+            Expr::and(
                 Expr::eq_eq(
                     Expr::kind_access(Expr::read_var(DEFAULT_INPUT_ADDR)),
                     Expr::const_expr(a_kind.into()),
@@ -904,7 +897,7 @@ mod tests {
                     ),
                     Expr::Const(Value::Null),
                 ),
-            )))
+            )
         )
     }
 
@@ -929,13 +922,13 @@ mod tests {
 
         assert_eq!(
             compiled,
-            Task::Filter(FilterTask::new(Expr::and(
+            Expr::and(
                 Expr::const_expr(Value::Bool(true)),
                 Expr::hte(
                     Expr::const_expr(Value::Int(10)),
                     Expr::const_expr(Value::Int(9)),
                 ),
-            )))
+            )
         )
     }
 
@@ -948,7 +941,7 @@ mod tests {
 
         assert_eq!(
             compiled,
-            Task::Filter(FilterTask::new(Expr::and(
+            Expr::and(
                 Expr::const_expr(Value::Bool(true)),
                 Expr::and(
                     Expr::lt(
@@ -960,7 +953,7 @@ mod tests {
                         Expr::const_expr(Value::Int(2)),
                     ),
                 ),
-            )))
+            )
         );
     }
 
@@ -974,7 +967,7 @@ mod tests {
 
         assert_eq!(
             compiled,
-            Task::Filter(FilterTask::new(Expr::and(
+            Expr::and(
                 Expr::const_expr(true.into()),
                 Expr::in_context(
                     vec![Expr::read_var(DEFAULT_INPUT_ADDR)],
@@ -986,7 +979,7 @@ mod tests {
                         ),
                     ),
                 ),
-            )))
+            )
         )
     }
 
@@ -999,7 +992,7 @@ mod tests {
 
         assert_eq!(
             compiled,
-            Task::Filter(FilterTask::new(Expr::and(
+            Expr::and(
                 Expr::const_expr(true.into()),
                 Expr::in_context(
                     vec![Expr::node_parent(Expr::read_var(DEFAULT_INPUT_ADDR))],
@@ -1017,7 +1010,7 @@ mod tests {
                         ),
                     ),
                 ),
-            )))
+            )
         );
     }
 }

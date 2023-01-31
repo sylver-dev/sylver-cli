@@ -2,11 +2,12 @@ use std::sync::Arc;
 
 use anyhow::Context;
 
+use sylver_core::land::cmds::filter_sylva;
 use sylver_core::{
     core::files_spec::FileSpec,
-    land::{builder::LandBuilder, cmds::run_task, Land},
+    land::{builder::LandBuilder, Land},
     pretty_print::tree::render_node,
-    query::{language::compile::compile, SylvaNode},
+    query::language::compile::compile,
     specs::loader::SylverLoader,
     state::SylverState,
 };
@@ -27,10 +28,9 @@ pub fn query(state: Arc<SylverState>, loader: &SylverLoader, cmd: &QueryCmd) -> 
 
     if let Some(query_str) = &cmd.query {
         let query = parse_query(query_str).context("Failed to parse query")?;
-        let query_task = compile(spec, &query).context("Failed to compile query")?;
+        let query_predicate = compile(spec, &query).context("Failed to compile query")?;
 
-        for value in run_task(&land, sylva, &query_task)? {
-            let sylva_node: SylvaNode = value.try_into()?;
+        for sylva_node in filter_sylva(&land, sylva, &query_predicate)? {
             let tree = land.sylva_node_tree(sylva_node);
             println!("{}", render_node(spec, tree, sylva_node.node));
         }

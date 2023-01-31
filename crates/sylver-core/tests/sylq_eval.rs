@@ -10,16 +10,13 @@ use sylver_core::{
     },
     land::{
         builder::LandBuilder,
+        cmds::filter_sylva,
         sylva::{Sylva, SylvaId, SylvaParser},
         Land, LandSpecId,
     },
     parsing::parser_runner::ParserRunner,
     pretty_print::tree::render_node,
-    query::{
-        expr::{EvalError, Value},
-        language::compile::compile,
-        RawTreeInfoBuilder,
-    },
+    query::{expr::EvalError, language::compile::compile, SylvaNode},
 };
 use sylver_dsl::sylq::parse_query;
 
@@ -52,14 +49,7 @@ fn test_sylq_eval(expr_input: &str) {
 
     let compiled = compile(land.spec(LandSpecId::CustomLangId(spec_id)), &expr).unwrap();
 
-    let res = compiled.run(
-        RawTreeInfoBuilder::new(
-            land.spec(LandSpecId::CustomLangId(spec_id)),
-            land.sylva(sylva_id),
-        ),
-        &land,
-        sylva_id,
-    );
+    let res = filter_sylva(&land, sylva_id, &compiled);
 
     let expected_output = std::fs::read_to_string(expr_relative.with_extension("output")).unwrap();
     let output_str = res_to_string(&land, sylva_id, res);
@@ -67,11 +57,7 @@ fn test_sylq_eval(expr_input: &str) {
     assert_eq!(output_str, expected_output);
 }
 
-fn res_to_string<'l>(
-    land: &'l Land,
-    sylva: SylvaId,
-    res: Result<Vec<Value<'l>>, EvalError>,
-) -> String {
+fn res_to_string(land: &Land, sylva: SylvaId, res: Result<Vec<SylvaNode>, EvalError>) -> String {
     match res {
         Err(e) => format!("{e}"),
         Ok(vals) => vals
@@ -81,24 +67,9 @@ fn res_to_string<'l>(
     }
 }
 
-fn val_to_string<'l>(land: &'l Land, sylva: SylvaId, val: &Value<'l>) -> String {
-    match val {
-        Value::Int(i) => i.to_string(),
-        Value::Bool(b) => b.to_string(),
-        Value::Kind(k) => land.sylva_spec(sylva).syntax.kind_name(*k).to_string(),
-        Value::String(s) => s.to_string(),
-        Value::List(vals) => format!(
-            "[{}]",
-            vals.iter()
-                .map(|v| val_to_string(land, sylva, v))
-                .join(", ")
-        ),
-        Value::Null => "null".to_string(),
-        Value::Node(n) => {
-            let tree = land.sylva_node_tree(*n);
-            render_node(land.sylva_spec(sylva), tree, n.node)
-        }
-    }
+fn val_to_string(land: &Land, sylva: SylvaId, val: &SylvaNode) -> String {
+    let tree = land.sylva_node_tree(*val);
+    render_node(land.sylva_spec(sylva), tree, val.node)
 }
 
 fn glob_existing(pattern: &str) -> PathBuf {

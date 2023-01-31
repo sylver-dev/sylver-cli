@@ -6,8 +6,9 @@ use rustyline::{
 };
 use rustyline_derive::{Completer, Helper, Highlighter, Hinter};
 
+use sylver_core::land::cmds::filter_sylva;
 use sylver_core::{
-    land::{cmds::run_task, sylva::SylvaId, Land},
+    land::{sylva::SylvaId, Land},
     pretty_print::tree::{render_node, TreePPrint},
     query::{language::compile::compile, SylvaNode},
     tree::info::{raw::RawTreeInfo, TreeInfo},
@@ -103,12 +104,11 @@ fn do_run_query(ctx: &mut ReplCtx, query_code: &str) -> anyhow::Result<()> {
     let spec = ctx.land.sylva_spec(ctx.sylva);
 
     let query = parse_query(query_code).context("Failed to parse query")?;
-    let query_task = compile(spec, &query).context("Failed to compile query")?;
+    let query_predicate = compile(spec, &query).context("Failed to compile query")?;
 
     ctx.nodes_cache.start_generation();
 
-    for value in run_task(ctx.land, ctx.sylva, &query_task)? {
-        let sylva_node: SylvaNode = value.try_into()?;
+    for sylva_node in filter_sylva(ctx.land, ctx.sylva, &query_predicate)? {
         let cache_id = ctx.nodes_cache.push(sylva_node);
         let tree = ctx.land.sylva_node_tree(sylva_node);
         println!("${cache_id} {}", render_node(spec, tree, sylva_node.node))

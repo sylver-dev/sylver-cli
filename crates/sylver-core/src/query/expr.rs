@@ -1,4 +1,4 @@
-use std::{borrow::Cow, cmp::Ordering, hash::Hash};
+use std::{borrow::Cow, cmp::Ordering};
 
 use derive_more::From;
 use sylver_dsl::sylq::ExprRegex;

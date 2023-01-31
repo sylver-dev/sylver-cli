@@ -3,8 +3,9 @@ use std::{
     collections::{BTreeMap, HashMap, HashSet},
 };
 
-use anyhow::{anyhow, Context};
+use anyhow::anyhow;
 use id_vec::Id;
+use rayon::prelude::*;
 use serde::{Deserialize, Serialize};
 use sylver_dsl::sylq::parse_query;
 
@@ -12,7 +13,12 @@ use crate::{
     core::spec::Spec,
     id_type,
     land::{sylva::SylvaId, Land},
-    query::{language::compile::compile, SylvaNode, Task, TreeInfoBuilder},
+    query::{
+        eval_predicate,
+        expr::{EvalCtx, EvalError, Expr},
+        language::compile::compile,
+        sylva_nodes, SylvaNode, TreeInfoBuilder,
+    },
     specs::stem::ruleset::{RuleSetStem, RuleStem},
 };
 
@@ -28,28 +34,13 @@ pub enum RuleCategory {
 
 #[derive(Debug, Clone, Eq, PartialEq, Hash)]
 pub struct Rule {
-    predicate: Task,
+    predicate: Expr,
     pub message: String,
     pub category: RuleCategory,
     pub note: Option<String>,
 }
 
 impl Rule {
-    fn verify<'b, B: 'b + TreeInfoBuilder<'b>>(
-        &self,
-        builder: B,
-        land: &'b Land,
-        sylva_id: SylvaId,
-    ) -> anyhow::Result<HashSet<SylvaNode>> {
-        Ok(self
-            .predicate
-            .run(builder, land, sylva_id)
-            .with_context(|| "Evaluation error")?
-            .into_iter()
-            .map(TryInto::try_into)
-            .collect::<Result<HashSet<SylvaNode>, _>>()?)
-    }
-
     fn from_stem(spec: &Spec, stem: &RuleStem) -> anyhow::Result<Rule> {
         let query_ast = parse_query(&stem.query)?;
 
@@ -74,23 +65,70 @@ impl RuleSet {
         RuleSet { rules }
     }
 
-    pub fn verify<'b, B: 'b + Clone + TreeInfoBuilder<'b>>(
+    pub fn verify<'b, B: 'b + Clone + TreeInfoBuilder<'b> + Sync>(
         &self,
         builder: B,
         land: &'b Land,
         sylva_id: SylvaId,
     ) -> anyhow::Result<HashMap<String, HashSet<SylvaNode>>> {
-        let mut result: HashMap<String, HashSet<SylvaNode>> = HashMap::new();
+        let mut rule_matches: HashMap<String, HashSet<SylvaNode>> = HashMap::new();
 
-        for (rule_id, rule) in &self.rules {
-            let flagged = rule.verify(builder.clone(), land, sylva_id)?;
+        /*let evaluation_results: Vec<Result<Vec<(String, SylvaNode)>, EvalError>> =
+        sylva_nodes(land, sylva_id)
+            .collect::<Vec<_>>()
+            .par_chunks(70000)
+            .map(|nodes| {
+                let spec = land.sylva_spec(sylva_id);
+                let mut ctx = EvalCtx::new(spec, builder.clone());
+                let mut results = Vec::new();
 
-            if !flagged.is_empty() {
-                result.entry(rule_id.clone()).or_default().extend(flagged);
-            }
-        }
+                for &sylva_node in nodes {
+                    for (rule_name, rule) in &self.rules {
+                        let is_match = eval_predicate(&mut ctx, sylva_node, &rule.predicate)?;
 
-        Ok(result)
+                        if is_match {
+                            results.push((rule_name.clone(), sylva_node));
+                        }
+                    }
+                }
+
+                Ok(results)
+            })
+            .collect::<Vec<_>>();*/
+
+        let evaluation_results: Vec<Result<Vec<(String, SylvaNode)>, EvalError>> = self
+            .rules
+            .par_iter()
+            .map(|(name, rule)| {
+                let spec = land.sylva_spec(sylva_id);
+                let mut ctx = EvalCtx::new(spec, builder.clone());
+                let mut results = Vec::new();
+
+                for sylva_node in sylva_nodes(land, sylva_id) {
+                    let is_match = eval_predicate(&mut ctx, sylva_node, &rule.predicate)?;
+
+                    if is_match {
+                        results.push((name.clone(), sylva_node));
+                    }
+                }
+
+                Ok(results)
+            })
+            .collect();
+
+        evaluation_results
+            .into_iter()
+            .collect::<Result<Vec<_>, _>>()?
+            .into_iter()
+            .flatten()
+            .for_each(|(rule_name, sylva_node)| {
+                rule_matches
+                    .entry(rule_name)
+                    .or_insert_with(HashSet::new)
+                    .insert(sylva_node);
+            });
+
+        Ok(rule_matches)
     }
 
     pub fn get_rule(&self, rule_id: &str) -> Option<&Rule> {
