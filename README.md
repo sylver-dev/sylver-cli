@@ -2,14 +2,22 @@
     <a href="https://sylver.dev"><img src="https://raw.githubusercontent.com/sylver-dev/sylver-cli/master/logo.png" height="100" alt="Sylver logo"/></a>
 </p>
 <h3 align="center">
-  Language agnostic source code exploration and analysis.
+  Multi-language programmable linter
 </h3>
 
-<div align="center" style="font-weight: bolder">
-    <a href="https://app.sylver.dev">Dashboard</a> |
-    <a href="https://discord.gg/PaVTgTSSxu">Discord</a> | 
-    <a href="https://blog.sylver.dev">Blog</a> | 
-    <a href="https://twitter.com/Geoffrey198">Twitter</a>
+<div align="center" style="margin-top: 2rem">
+    <a href="https://blog.sylver.dev">
+        <img src="https://img.shields.io/badge/Hashnode-2962FF?style=for-the-badge&logo=hashnode&logoColor=white" alt="Hashnode"/>
+    </a>
+    <a href="https://discord.gg/PaVTgTSSxu">
+        <img src="https://img.shields.io/badge/Discord-%235865F2.svg?style=for-the-badge&logo=discord&logoColor=white" alt="Discord"/>
+    </a>
+    <a href="https://twitter.com/Geoffrey198">
+        <img src="https://img.shields.io/badge/Twitter-%231DA1F2.svg?style=for-the-badge&logo=Twitter&logoColor=white" alt="Twitter"/>
+    </a>
+    <a href="https://codecov.io/gh/sylver-dev/sylver-cli">
+        <img src="https://codecov.io/gh/sylver-dev/sylver-cli/branch/main/graph/badge.svg?token=GEJ13H3DSG" alt="codecov"/>
+    </a>
 </div>
 
 # Installation
