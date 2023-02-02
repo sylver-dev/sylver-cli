@@ -49,10 +49,9 @@ pub fn read_archive(bytes: &[u8]) -> anyhow::Result<Vec<ArchiveFile>> {
             .collect::<Result<Vec<u8>, _>>()
             .with_context(|| "failed to read archive file".to_string())?;
 
-        files.push(ArchiveFile {
-            name,
-            content: String::from_utf8(file_content).context("invalid archive content")?,
-        });
+        if let Ok(content) = String::from_utf8(file_content) {
+            files.push(ArchiveFile { name, content });
+        }
     }
 
     Ok(files)
