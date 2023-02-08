@@ -249,11 +249,12 @@ fn node_pattern_val_field(mut pairs: Pairs<Rule>) -> SylqParserRes<NodePatternFi
     let desc = node_pattern_field_desc(pairs.next().unwrap());
 
     let value_pair = pairs.next().unwrap();
+
     let value = match value_pair.as_rule() {
         Rule::string_literal => NodePatternFieldValue::Text(string_literal(value_pair)?),
-        Rule::query_pattern => {
-            NodePatternFieldValue::Pattern(query_pattern(value_pair.into_inner())?)
-        }
+        Rule::query_pattern => NodePatternFieldValue::Pattern(query_pattern(
+            value_pair.into_inner().next().unwrap().into_inner(),
+        )?),
         r => panic!("Unexpected rule {r:?}, expected query pattern or string literal"),
     };
 
