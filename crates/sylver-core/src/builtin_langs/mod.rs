@@ -59,7 +59,7 @@ pub fn get_detection_script(lang: BuiltinLang) -> &'static str {
 }
 
 pub fn get_builtin_langs() -> Vec<BuiltinLang> {
-    vec![BuiltinLang::Python]
+    vec![BuiltinLang::Python, BuiltinLang::Javascript]
 }
 
 pub fn get_builtin_lang(lang: BuiltinLang) -> (&'static MappingConfig, tree_sitter::Language) {

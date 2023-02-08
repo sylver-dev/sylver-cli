@@ -24,7 +24,7 @@ def add_project_if_match(projects, detection_root, current_path):
 
     if any(matches_javascript_patterns(name) for name in childs):
         project_root = os.path.relpath(current_path, detection_root)
-        projects.append({"root": project_root, "include": ["**/*.(js|jsx)"], "exclude": ["node_modules/*"]})
+        projects.append({"root": project_root, "include": ["**/*.js", "**/*.jsx"], "exclude": ["node_modules/*"]})
         return
 
     for child in childs:
