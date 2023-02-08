@@ -664,10 +664,7 @@ fn eval_array_index<'b, B: 'b + TreeInfoBuilder<'b>>(
 
     let val_at_index = match array.eval(ctx)? {
         Value::List(vals) => vals.get(index as usize).cloned(),
-        Value::Node(n) => node_childs_if_list(ctx, n)?
-            .get(index as usize)
-            .copied()
-            .map(Into::into),
+        Value::Node(n) => ctx.childs(n).get(index as usize).copied().map(Into::into),
         _ => None,
     };
 
