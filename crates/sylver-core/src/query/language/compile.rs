@@ -4,8 +4,8 @@ use itertools::Itertools;
 use thiserror::Error;
 
 use sylver_dsl::sylq::{
-    ArrayQuantQuant, Expr as SyntaxExpr, KindPattern, NodePattern, NodePatternField,
-    NodePatternFieldValue, Op, QueryPattern,
+    ArrayQuantQuant, Expr as SyntaxExpr, KindPattern, NodePatternField, NodePatternFieldValue,
+    NodePatternsWithBinding, Op, QueryPattern,
 };
 
 use crate::{
@@ -74,22 +74,29 @@ impl<'s> Compiler<'s> {
     fn pattern(
         &mut self,
         operand_addr: usize,
-        pattern: &NodePattern,
+        patterns: &NodePatternsWithBinding,
     ) -> Result<Expr, CompilationErr> {
-        if let Some(b) = &pattern.binding {
+        if let Some(b) = &patterns.binding {
             self.bindings.insert(b.to_string(), operand_addr);
         }
 
         let operand_expr = Expr::read_var(operand_addr);
 
-        let kind = self.kind_constraint(operand_expr.clone(), &pattern.kind_pattern)?;
-
-        let mut fields = pattern
-            .fields
+        let pattern_predicates = patterns
+            .node_patterns
             .iter()
-            .map(|f| self.field_check(operand_expr.clone(), f));
+            .map(|p| {
+                let kind = self.kind_constraint(operand_expr.clone(), &p.kind_pattern)?;
+                let fields = p
+                    .fields
+                    .iter()
+                    .map(|f| self.field_check(operand_expr.clone(), f))
+                    .collect::<Result<Vec<_>, CompilationErr>>()?;
+                Ok(fields.into_iter().fold(kind, Expr::and))
+            })
+            .collect::<Result<Vec<_>, CompilationErr>>()?;
 
-        fields.fold_ok(kind, Expr::and)
+        Ok(pattern_predicates.into_iter().reduce(Expr::or).unwrap())
     }
 
     fn field_check(
@@ -666,6 +673,37 @@ mod tests {
             Expr::eq_eq(
                 Expr::kind_access(Expr::read_var(DEFAULT_INPUT_ADDR)),
                 Expr::const_expr(kind_id.into()),
+            )
+        )
+    }
+
+    #[test]
+    fn compile_or_kind_check() {
+        let spec_str = indoc!(
+            "
+            node NodeKind {}
+            node OtherNodeKind {}
+        "
+        );
+        let spec = parse_spec(spec_str);
+        let query = parse_query("match NodeKind | OtherNodeKind").unwrap();
+
+        let compiled = compile(&spec, &query).unwrap();
+
+        let node_kind_id = spec.syntax.existing_kind_id("NodeKind");
+        let other_node_kind_id = spec.syntax.existing_kind_id("OtherNodeKind");
+
+        assert_eq!(
+            compiled,
+            Expr::or(
+                Expr::eq_eq(
+                    Expr::kind_access(Expr::read_var(DEFAULT_INPUT_ADDR)),
+                    Expr::const_expr(node_kind_id.into()),
+                ),
+                Expr::eq_eq(
+                    Expr::kind_access(Expr::read_var(DEFAULT_INPUT_ADDR)),
+                    Expr::const_expr(other_node_kind_id.into()),
+                ),
             )
         )
     }

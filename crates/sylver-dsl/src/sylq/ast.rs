@@ -9,6 +9,7 @@ use pest_derive::*;
 use thiserror::Error;
 
 use derive_more::From;
+use non_empty_vec::NonEmpty;
 
 use crate::util::WalkError;
 
@@ -36,14 +37,19 @@ pub struct SylqParser {}
 
 #[derive(Debug, Clone, Eq, PartialEq, Hash)]
 pub struct QueryPattern {
-    pub node_pattern: NodePattern,
+    pub node_pattern: NodePatternsWithBinding,
     pub predicate: Option<Expr>,
+}
+
+#[derive(Debug, Clone, Eq, PartialEq, Hash)]
+pub struct NodePatternsWithBinding {
+    pub node_patterns: NonEmpty<NodePattern>,
+    pub binding: Option<String>,
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Hash)]
 pub struct NodePattern {
     pub kind_pattern: KindPattern,
-    pub binding: Option<String>,
     pub fields: Vec<NodePatternField>,
 }
 
@@ -171,7 +177,7 @@ fn query_pattern(mut pairs: Pairs<Rule>) -> SylqParserRes<QueryPattern> {
     })
 }
 
-fn node_pattern(mut pairs: Pairs<Rule>) -> SylqParserRes<NodePattern> {
+fn node_pattern(mut pairs: Pairs<Rule>) -> SylqParserRes<NodePatternsWithBinding> {
     let child = pairs.next().unwrap();
 
     match child.as_rule() {
@@ -182,36 +188,47 @@ fn node_pattern(mut pairs: Pairs<Rule>) -> SylqParserRes<NodePattern> {
     }
 }
 
-fn node_pattern_post_binding(mut pairs: Pairs<Rule>) -> SylqParserRes<NodePattern> {
-    let (kind_pattern, fields) = node_pattern_val(pairs.next().unwrap().into_inner())?;
+fn node_pattern_post_binding(mut pairs: Pairs<Rule>) -> SylqParserRes<NodePatternsWithBinding> {
+    let node_patterns = node_pattern_val(pairs.next().unwrap().into_inner())?;
     let binding = pairs.next().map(pair_text);
 
-    Ok(NodePattern {
-        kind_pattern,
+    Ok(NodePatternsWithBinding {
+        node_patterns,
         binding,
-        fields,
     })
 }
 
-fn node_pattern_pre_binding(mut pairs: Pairs<Rule>) -> SylqParserRes<NodePattern> {
+fn node_pattern_pre_binding(mut pairs: Pairs<Rule>) -> SylqParserRes<NodePatternsWithBinding> {
     let binding = pair_text(pairs.next().unwrap());
-    let (kind_pattern, fields) = node_pattern_val(pairs.next().unwrap().into_inner())?;
+    let node_patterns = node_pattern_val(pairs.next().unwrap().into_inner())?;
 
-    Ok(NodePattern {
-        kind_pattern,
+    Ok(NodePatternsWithBinding {
+        node_patterns,
         binding: Some(binding),
-        fields,
     })
 }
 
-fn node_pattern_val(mut pairs: Pairs<Rule>) -> SylqParserRes<(KindPattern, Vec<NodePatternField>)> {
-    let pattern = node_pattern_val_pattern(pairs.next().unwrap());
+fn node_pattern_val(mut pairs: Pairs<Rule>) -> SylqParserRes<NonEmpty<NodePattern>> {
+    let first = node_pattern_val_raw(pairs.next().unwrap().into_inner())?;
+
+    let rest = pairs
+        .map(|p| node_pattern_val_raw(p.into_inner()))
+        .collect::<SylqParserRes<Vec<NodePattern>>>()?;
+
+    Ok(NonEmpty::from((first, rest)))
+}
+
+fn node_pattern_val_raw(mut pairs: Pairs<Rule>) -> SylqParserRes<NodePattern> {
+    let kind_pattern = node_pattern_val_pattern(pairs.next().unwrap());
 
     let fields = pairs
         .map(|p| node_pattern_val_field(p.into_inner()))
         .collect::<SylqParserRes<Vec<NodePatternField>>>()?;
 
-    Ok((pattern, fields))
+    Ok(NodePattern {
+        kind_pattern,
+        fields,
+    })
 }
 
 fn node_pattern_val_pattern(pair: Pair<Rule>) -> KindPattern {
@@ -555,10 +572,12 @@ pub mod test {
                     "children".to_string(),
                 )),
                 Box::new(QueryPattern {
-                    node_pattern: NodePattern {
-                        kind_pattern: KindPattern::KindName("Node".to_string()),
+                    node_pattern: NodePatternsWithBinding {
                         binding: None,
-                        fields: vec![],
+                        node_patterns: NonEmpty::new(NodePattern {
+                            kind_pattern: KindPattern::KindName("Node".to_string()),
+                            fields: vec![],
+                        }),
                     },
                     predicate: None,
                 }),
@@ -579,10 +598,12 @@ pub mod test {
                     "children".to_string(),
                 )),
                 Box::new(QueryPattern {
-                    node_pattern: NodePattern {
-                        kind_pattern: KindPattern::Placeholder,
+                    node_pattern: NodePatternsWithBinding {
                         binding: Some("c".to_string()),
-                        fields: vec![],
+                        node_patterns: NonEmpty::new(NodePattern {
+                            kind_pattern: KindPattern::Placeholder,
+                            fields: vec![],
+                        }),
                     },
                     predicate: Some(Expr::Identifier("value".to_string())),
                 }),
@@ -677,10 +698,12 @@ pub mod test {
                 Box::new(Expr::Is(
                     Box::new(Expr::Identifier("n".to_string())),
                     Box::new(QueryPattern {
-                        node_pattern: NodePattern {
-                            kind_pattern: KindPattern::KindName("NodeKind".into()),
+                        node_pattern: NodePatternsWithBinding {
                             binding: None,
-                            fields: vec![],
+                            node_patterns: NonEmpty::new(NodePattern {
+                                kind_pattern: KindPattern::KindName("NodeKind".into()),
+                                fields: vec![],
+                            }),
                         },
                         predicate: None,
                     }),
@@ -704,10 +727,12 @@ pub mod test {
                 Box::new(Expr::Is(
                     Box::new(Expr::Identifier("n".to_string())),
                     Box::new(QueryPattern {
-                        node_pattern: NodePattern {
-                            kind_pattern: KindPattern::KindName("NodeKind".into()),
+                        node_pattern: NodePatternsWithBinding {
                             binding: None,
-                            fields: vec![],
+                            node_patterns: NonEmpty::new(NodePattern {
+                                kind_pattern: KindPattern::KindName("NodeKind".into()),
+                                fields: vec![],
+                            }),
                         },
                         predicate: None,
                     }),
@@ -727,10 +752,33 @@ pub mod test {
         test_parser(
             SylqParser::parse(Rule::node_pattern, "NodeKind"),
             node_pattern,
-            NodePattern {
-                kind_pattern: KindPattern::KindName("NodeKind".into()),
+            NodePatternsWithBinding {
                 binding: None,
-                fields: vec![],
+                node_patterns: NonEmpty::new(NodePattern {
+                    kind_pattern: KindPattern::KindName("NodeKind".into()),
+                    fields: vec![],
+                }),
+            },
+        )
+    }
+
+    #[test]
+    fn pattern_or_kind() {
+        test_parser(
+            SylqParser::parse(Rule::node_pattern, "NodeKind | OtherNodeKind"),
+            node_pattern,
+            NodePatternsWithBinding {
+                binding: None,
+                node_patterns: NonEmpty::from((
+                    NodePattern {
+                        kind_pattern: KindPattern::KindName("NodeKind".into()),
+                        fields: vec![],
+                    },
+                    vec![NodePattern {
+                        kind_pattern: KindPattern::KindName("OtherNodeKind".into()),
+                        fields: vec![],
+                    }],
+                )),
             },
         )
     }
@@ -741,10 +789,12 @@ pub mod test {
         assert_eq!(
             query,
             QueryPattern {
-                node_pattern: NodePattern {
-                    kind_pattern: KindPattern::KindName("NodeKind".into()),
+                node_pattern: NodePatternsWithBinding {
                     binding: None,
-                    fields: vec![],
+                    node_patterns: NonEmpty::new(NodePattern {
+                        kind_pattern: KindPattern::KindName("NodeKind".into()),
+                        fields: vec![],
+                    }),
                 },
                 predicate: None,
             }
@@ -757,10 +807,12 @@ pub mod test {
         assert_eq!(
             query,
             QueryPattern {
-                node_pattern: NodePattern {
-                    kind_pattern: KindPattern::KindName("List<NodeKind>".to_string()),
+                node_pattern: NodePatternsWithBinding {
                     binding: None,
-                    fields: vec![],
+                    node_patterns: NonEmpty::new(NodePattern {
+                        kind_pattern: KindPattern::KindName("List<NodeKind>".to_string()),
+                        fields: vec![],
+                    })
                 },
                 predicate: None,
             }
@@ -772,10 +824,12 @@ pub mod test {
         assert_eq!(
             parse_query("match _").unwrap(),
             QueryPattern {
-                node_pattern: NodePattern {
-                    kind_pattern: KindPattern::Placeholder,
+                node_pattern: NodePatternsWithBinding {
                     binding: None,
-                    fields: vec![],
+                    node_patterns: NonEmpty::new(NodePattern {
+                        kind_pattern: KindPattern::Placeholder,
+                        fields: vec![],
+                    }),
                 },
                 predicate: None,
             }
@@ -787,10 +841,12 @@ pub mod test {
         assert_eq!(
             parse_query("match NodeKind n").unwrap(),
             QueryPattern {
-                node_pattern: NodePattern {
-                    kind_pattern: KindPattern::KindName("NodeKind".to_string()),
+                node_pattern: NodePatternsWithBinding {
                     binding: Some("n".to_string()),
-                    fields: vec![],
+                    node_patterns: NonEmpty::new(NodePattern {
+                        kind_pattern: KindPattern::KindName("NodeKind".to_string()),
+                        fields: vec![],
+                    }),
                 },
                 predicate: None,
             }
@@ -802,10 +858,12 @@ pub mod test {
         assert_eq!(
             parse_query("match n@NodeKind").unwrap(),
             QueryPattern {
-                node_pattern: NodePattern {
-                    kind_pattern: KindPattern::KindName("NodeKind".to_string()),
+                node_pattern: NodePatternsWithBinding {
                     binding: Some("n".to_string()),
-                    fields: vec![],
+                    node_patterns: NonEmpty::new(NodePattern {
+                        kind_pattern: KindPattern::KindName("NodeKind".to_string()),
+                        fields: vec![],
+                    }),
                 },
                 predicate: None,
             }
@@ -817,26 +875,32 @@ pub mod test {
         assert_eq!(
             parse_query(r##"match NodeKind(field1: "hello", field2: FieldKind)"##).unwrap(),
             QueryPattern {
-                node_pattern: NodePattern {
-                    kind_pattern: KindPattern::KindName("NodeKind".to_string()),
+                node_pattern: NodePatternsWithBinding {
                     binding: None,
-                    fields: vec![
-                        NodePatternField {
-                            name: "field1".to_string(),
-                            value: NodePatternFieldValue::Text("hello".to_string()),
-                        },
-                        NodePatternField {
-                            name: "field2".to_string(),
-                            value: NodePatternFieldValue::Pattern(QueryPattern {
-                                node_pattern: NodePattern {
-                                    kind_pattern: KindPattern::KindName("FieldKind".to_string()),
-                                    binding: None,
-                                    fields: vec![],
-                                },
-                                predicate: None,
-                            }),
-                        },
-                    ],
+                    node_patterns: NonEmpty::new(NodePattern {
+                        kind_pattern: KindPattern::KindName("NodeKind".to_string()),
+                        fields: vec![
+                            NodePatternField {
+                                name: "field1".to_string(),
+                                value: NodePatternFieldValue::Text("hello".to_string()),
+                            },
+                            NodePatternField {
+                                name: "field2".to_string(),
+                                value: NodePatternFieldValue::Pattern(QueryPattern {
+                                    node_pattern: NodePatternsWithBinding {
+                                        binding: None,
+                                        node_patterns: NonEmpty::new(NodePattern {
+                                            kind_pattern: KindPattern::KindName(
+                                                "FieldKind".to_string()
+                                            ),
+                                            fields: vec![],
+                                        }),
+                                    },
+                                    predicate: None,
+                                }),
+                            },
+                        ],
+                    }),
                 },
                 predicate: None,
             }
@@ -849,10 +913,12 @@ pub mod test {
             parse_query("match _ n when n.parent is { ParentKind p when p.text.length == 0 }")
                 .unwrap(),
             QueryPattern {
-                node_pattern: NodePattern {
-                    kind_pattern: KindPattern::Placeholder,
+                node_pattern: NodePatternsWithBinding {
                     binding: Some("n".to_string()),
-                    fields: vec![],
+                    node_patterns: NonEmpty::new(NodePattern {
+                        kind_pattern: KindPattern::Placeholder,
+                        fields: vec![],
+                    }),
                 },
                 predicate: Some(Expr::Is(
                     Box::new(Expr::DotAccess(
@@ -861,10 +927,12 @@ pub mod test {
                         "parent".to_string(),
                     )),
                     Box::new(QueryPattern {
-                        node_pattern: NodePattern {
-                            kind_pattern: KindPattern::KindName("ParentKind".to_string()),
+                        node_pattern: NodePatternsWithBinding {
                             binding: Some("p".to_string()),
-                            fields: vec![],
+                            node_patterns: NonEmpty::new(NodePattern {
+                                kind_pattern: KindPattern::KindName("ParentKind".to_string()),
+                                fields: vec![],
+                            }),
                         },
                         predicate: Some(Expr::Binop(
                             Box::new(Expr::DotAccess(
@@ -890,10 +958,12 @@ pub mod test {
         assert_eq!(
             parse_query("match Identifier i when i.text.length <= 10").unwrap(),
             QueryPattern {
-                node_pattern: NodePattern {
-                    kind_pattern: KindPattern::KindName("Identifier".to_string()),
+                node_pattern: NodePatternsWithBinding {
                     binding: Some("i".to_string()),
-                    fields: vec![],
+                    node_patterns: NonEmpty::new(NodePattern {
+                        kind_pattern: KindPattern::KindName("Identifier".to_string()),
+                        fields: vec![],
+                    }),
                 },
                 predicate: Some(Expr::Binop(
                     Box::new(Expr::DotAccess(
