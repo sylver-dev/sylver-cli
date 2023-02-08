@@ -21,7 +21,9 @@ node_pattern = { node_pattern_pre_binding | node_pattern_post_binding }
     node_pattern_val_raw = { node_pattern_val_kind ~ node_pattern_val_fields? }
     node_pattern_val_kind = _{ list_kind | identifier | placeholder }
     node_pattern_val_fields = _{ "(" ~ node_pattern_val_field ~ ("," ~ node_pattern_val_field)* ~ ")"}
-    node_pattern_val_field = { identifier ~ ":" ~ (query_pattern | string_literal) }
+    node_pattern_val_field = { node_pattern_val_field_desc ~ ":" ~ (query_pattern | string_literal) }
+    node_pattern_val_field_desc = _{ identifier | node_pattern_val_field_index }
+    node_pattern_val_field_index = { "[" ~ integer ~ "]" }
 
 expr = { bin_log_op | cmp_expr }
     primary_op = { term | atomic_expr }

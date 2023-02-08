@@ -61,8 +61,14 @@ pub enum KindPattern {
 
 #[derive(Debug, Clone, Eq, PartialEq, Hash)]
 pub struct NodePatternField {
-    pub name: String,
+    pub desc: NodePatternFieldDesc,
     pub value: NodePatternFieldValue,
+}
+
+#[derive(Debug, Clone, Eq, PartialEq, Hash)]
+pub enum NodePatternFieldDesc {
+    Identifier(String),
+    Index(usize),
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Hash)]
@@ -240,7 +246,7 @@ fn node_pattern_val_pattern(pair: Pair<Rule>) -> KindPattern {
 }
 
 fn node_pattern_val_field(mut pairs: Pairs<Rule>) -> SylqParserRes<NodePatternField> {
-    let name = pair_text(pairs.next().unwrap());
+    let desc = node_pattern_field_desc(pairs.next().unwrap());
 
     let value_pair = pairs.next().unwrap();
     let value = match value_pair.as_rule() {
@@ -251,7 +257,17 @@ fn node_pattern_val_field(mut pairs: Pairs<Rule>) -> SylqParserRes<NodePatternFi
         r => panic!("Unexpected rule {r:?}, expected query pattern or string literal"),
     };
 
-    Ok(NodePatternField { name, value })
+    Ok(NodePatternField { desc, value })
+}
+
+fn node_pattern_field_desc(pair: Pair<Rule>) -> NodePatternFieldDesc {
+    match pair.as_rule() {
+        Rule::identifier => NodePatternFieldDesc::Identifier(pair_text(pair)),
+        Rule::node_pattern_val_field_index => {
+            NodePatternFieldDesc::Index(pair.into_inner().next().unwrap().as_str().parse().unwrap())
+        }
+        r => panic!("Unexpected rule {r:?}, expected identifier or placeholder"),
+    }
 }
 
 fn expr(mut pairs: Pairs<Rule>) -> SylqParserRes<Expr> {
@@ -881,11 +897,11 @@ pub mod test {
                         kind_pattern: KindPattern::KindName("NodeKind".to_string()),
                         fields: vec![
                             NodePatternField {
-                                name: "field1".to_string(),
+                                desc: NodePatternFieldDesc::Identifier("field1".to_string()),
                                 value: NodePatternFieldValue::Text("hello".to_string()),
                             },
                             NodePatternField {
-                                name: "field2".to_string(),
+                                desc: NodePatternFieldDesc::Identifier("field2".to_string()),
                                 value: NodePatternFieldValue::Pattern(QueryPattern {
                                     node_pattern: NodePatternsWithBinding {
                                         binding: None,

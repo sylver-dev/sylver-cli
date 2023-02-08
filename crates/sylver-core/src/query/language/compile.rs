@@ -4,8 +4,8 @@ use itertools::Itertools;
 use thiserror::Error;
 
 use sylver_dsl::sylq::{
-    ArrayQuantQuant, Expr as SyntaxExpr, KindPattern, NodePatternField, NodePatternFieldValue,
-    NodePatternsWithBinding, Op, QueryPattern,
+    ArrayQuantQuant, Expr as SyntaxExpr, KindPattern, NodePatternField, NodePatternFieldDesc,
+    NodePatternFieldValue, NodePatternsWithBinding, Op, QueryPattern,
 };
 
 use crate::{
@@ -104,7 +104,12 @@ impl<'s> Compiler<'s> {
         operand: Expr,
         field: &NodePatternField,
     ) -> Result<Expr, CompilationErr> {
-        let field_expr = Expr::prop_access(operand, field.name.clone());
+        let field_expr = match &field.desc {
+            NodePatternFieldDesc::Identifier(field) => Expr::prop_access(operand, field.clone()),
+            NodePatternFieldDesc::Index(i) => {
+                Expr::array_index(operand, Expr::Const(Value::Int(*i as i64)))
+            }
+        };
 
         let field_predicate = match &field.value {
             NodePatternFieldValue::Text(t) => Expr::eq_eq(
@@ -589,6 +594,47 @@ mod tests {
                 ),
                 Expr::in_context(
                     vec![Expr::prop_access(Expr::read_var(0), "field2".to_string())],
+                    Expr::and(
+                        Expr::neq(Expr::read_var(1), Expr::Const(Value::Null)),
+                        Expr::eq_eq(
+                            Expr::kind_access(Expr::read_var(1)),
+                            Expr::Const(Value::Kind(other_kind))
+                        ),
+                    ),
+                ),
+            )
+        )
+    }
+
+    #[test]
+    fn field_index_pattern() {
+        let spec = parse_spec(indoc!(
+            "
+            node NodeKind {
+                field1: NodeKind,
+                field2: OtherNodeKind
+            }
+
+            node OtherNodeKind { }
+        "
+        ));
+
+        let query = parse_query("match NodeKind([1]: OtherNodeKind)").unwrap();
+
+        let compiled = compile(&spec, &query).unwrap();
+
+        let node_kind = spec.syntax.kind_id("NodeKind").unwrap();
+        let other_kind = spec.syntax.kind_id("OtherNodeKind").unwrap();
+
+        assert_eq!(
+            compiled,
+            Expr::and(
+                Expr::eq_eq(
+                    Expr::kind_access(Expr::read_var(0)),
+                    Expr::Const(Value::Kind(node_kind)),
+                ),
+                Expr::in_context(
+                    vec![Expr::array_index(Expr::read_var(0), Expr::Const(1.into()))],
                     Expr::and(
                         Expr::neq(Expr::read_var(1), Expr::Const(Value::Null)),
                         Expr::eq_eq(
