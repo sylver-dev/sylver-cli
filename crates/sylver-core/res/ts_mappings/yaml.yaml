@@ -1,0 +1,194 @@
+types:
+  - name: Alias
+    ts_name: alias
+    is_list: false
+    is_terminal: false
+    fields: []
+  - name: Anchor
+    ts_name: anchor
+    is_list: false
+    is_terminal: false
+    fields: []
+  - name: BlockMapping
+    ts_name: block_mapping
+    is_list: true
+    is_terminal: false
+    fields: []
+  - name: BlockMappingPair
+    ts_name: block_mapping_pair
+    is_list: false
+    is_terminal: false
+    fields:
+      - name: key
+        types:
+          - BlockNode,FlowNode
+        list: false
+      - name: value
+        types:
+          - BlockNode,FlowNode
+        list: false
+  - name: BlockNode
+    ts_name: block_node
+    is_list: true
+    is_terminal: false
+    fields: []
+  - name: BlockScalar
+    ts_name: block_scalar
+    is_list: false
+    is_terminal: false
+    fields: []
+  - name: BlockSequence
+    ts_name: block_sequence
+    is_list: true
+    is_terminal: false
+    fields: []
+  - name: BlockSequenceItem
+    ts_name: block_sequence_item
+    is_list: false
+    is_terminal: false
+    fields: []
+  - name: Document
+    ts_name: document
+    is_list: true
+    is_terminal: false
+    fields: []
+  - name: DoubleQuoteScalar
+    ts_name: double_quote_scalar
+    is_list: true
+    is_terminal: false
+    fields: []
+  - name: FlowMapping
+    ts_name: flow_mapping
+    is_list: true
+    is_terminal: false
+    fields: []
+  - name: FlowNode
+    ts_name: flow_node
+    is_list: true
+    is_terminal: false
+    fields: []
+  - name: FlowPair
+    ts_name: flow_pair
+    is_list: false
+    is_terminal: false
+    fields:
+      - name: key
+        types:
+          - FlowNode
+        list: false
+      - name: value
+        types:
+          - FlowNode
+        list: false
+  - name: FlowSequence
+    ts_name: flow_sequence
+    is_list: true
+    is_terminal: false
+    fields: []
+  - name: PlainScalar
+    ts_name: plain_scalar
+    is_list: false
+    is_terminal: false
+    fields: []
+  - name: ReservedDirective
+    ts_name: reserved_directive
+    is_list: true
+    is_terminal: false
+    fields: []
+  - name: SingleQuoteScalar
+    ts_name: single_quote_scalar
+    is_list: true
+    is_terminal: false
+    fields: []
+  - name: Stream
+    ts_name: stream
+    is_list: true
+    is_terminal: false
+    fields: []
+  - name: TagDirective
+    ts_name: tag_directive
+    is_list: true
+    is_terminal: false
+    fields: []
+  - name: YamlDirective
+    ts_name: yaml_directive
+    is_list: false
+    is_terminal: false
+    fields: []
+  - name: AliasName
+    ts_name: alias_name
+    is_list: false
+    is_terminal: false
+    fields: []
+  - name: AnchorName
+    ts_name: anchor_name
+    is_list: false
+    is_terminal: false
+    fields: []
+  - name: BooleanScalar
+    ts_name: boolean_scalar
+    is_list: false
+    is_terminal: false
+    fields: []
+  - name: Comment
+    ts_name: comment
+    is_list: false
+    is_terminal: false
+    fields: []
+  - name: DirectiveName
+    ts_name: directive_name
+    is_list: false
+    is_terminal: false
+    fields: []
+  - name: DirectiveParameter
+    ts_name: directive_parameter
+    is_list: false
+    is_terminal: false
+    fields: []
+  - name: EscapeSequence
+    ts_name: escape_sequence
+    is_list: false
+    is_terminal: false
+    fields: []
+  - name: FloatScalar
+    ts_name: float_scalar
+    is_list: false
+    is_terminal: false
+    fields: []
+  - name: IntegerScalar
+    ts_name: integer_scalar
+    is_list: false
+    is_terminal: false
+    fields: []
+  - name: NullScalar
+    ts_name: null_scalar
+    is_list: false
+    is_terminal: false
+    fields: []
+  - name: StringScalar
+    ts_name: string_scalar
+    is_list: false
+    is_terminal: false
+    fields: []
+  - name: Tag
+    ts_name: tag
+    is_list: false
+    is_terminal: false
+    fields: []
+  - name: TagHandle
+    ts_name: tag_handle
+    is_list: false
+    is_terminal: false
+    fields: []
+  - name: TagPrefix
+    ts_name: tag_prefix
+    is_list: false
+    is_terminal: false
+    fields: []
+  - name: YamlVersion
+    ts_name: yaml_version
+    is_list: false
+    is_terminal: false
+    fields: []
+aliases:
+fields:

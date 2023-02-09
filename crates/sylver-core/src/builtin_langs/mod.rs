@@ -21,11 +21,15 @@ static JAVASCRIPT_MAPPING: Lazy<MappingConfig> = Lazy::new(|| {
     serde_yaml::from_str(include_str!("../../res/ts_mappings/javascript.yaml")).unwrap()
 });
 
+static YAML_MAPPING: Lazy<MappingConfig> =
+    Lazy::new(|| serde_yaml::from_str(include_str!("../../res/ts_mappings/yaml.yaml")).unwrap());
+
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize)]
 #[serde(tag = "name", rename_all = "snake_case")]
 pub enum BuiltinLang {
     Python,
     Javascript,
+    Yaml,
 }
 
 impl Display for BuiltinLang {
@@ -33,6 +37,7 @@ impl Display for BuiltinLang {
         let lang_name = match self {
             BuiltinLang::Python => "python",
             BuiltinLang::Javascript => "javascript",
+            BuiltinLang::Yaml => "yaml",
         };
 
         lang_name.fmt(f)
@@ -46,6 +51,7 @@ impl TryFrom<&str> for BuiltinLang {
         match value {
             "python" => Ok(BuiltinLang::Python),
             "javascript" => Ok(BuiltinLang::Javascript),
+            "yaml" => Ok(BuiltinLang::Yaml),
             _ => Err(anyhow!("Unsupported language: {}", value)),
         }
     }
@@ -55,11 +61,16 @@ pub fn get_detection_script(lang: BuiltinLang) -> &'static str {
     match lang {
         BuiltinLang::Python => include_str!("../../res/detection_scripts/python.py"),
         BuiltinLang::Javascript => include_str!("../../res/detection_scripts/javascript.py"),
+        BuiltinLang::Yaml => include_str!("../../res/detection_scripts/yaml.py"),
     }
 }
 
 pub fn get_builtin_langs() -> Vec<BuiltinLang> {
-    vec![BuiltinLang::Python, BuiltinLang::Javascript]
+    vec![
+        BuiltinLang::Python,
+        BuiltinLang::Javascript,
+        BuiltinLang::Yaml,
+    ]
 }
 
 pub fn get_builtin_lang(lang: BuiltinLang) -> (&'static MappingConfig, tree_sitter::Language) {
@@ -69,6 +80,7 @@ pub fn get_builtin_lang(lang: BuiltinLang) -> (&'static MappingConfig, tree_sitt
             JAVASCRIPT_MAPPING.deref(),
             sylver_langs::javascript_language(),
         ),
+        BuiltinLang::Yaml => (YAML_MAPPING.deref(), sylver_langs::yaml_language()),
     }
 }
 
@@ -76,6 +88,7 @@ pub fn builtin_lang_mappings(lang: BuiltinLang) -> &'static [NodeMapping] {
     match lang {
         BuiltinLang::Python => PYTHON_MAPPING.types.as_slice(),
         BuiltinLang::Javascript => JAVASCRIPT_MAPPING.types.as_slice(),
+        BuiltinLang::Yaml => YAML_MAPPING.types.as_slice(),
     }
 }
 
@@ -235,6 +248,41 @@ mod test {
             JAVASCRIPT_MAPPING.types.as_slice().into(),
             &JAVASCRIPT_MAPPING,
             "console.log(hello + world)",
+            expected,
+        );
+    }
+
+    #[test]
+    fn yaml_simple() {
+        let expected = indoc!(
+            "
+        Stream {
+        . Document {
+        . . BlockNode {
+        . . . BlockMapping {
+        . . . . BlockMappingPair {
+        . . . . . ● key: FlowNode {
+        . . . . . . PlainScalar {
+        . . . . . . . StringScalar { hello }
+        . . . . . . }
+        . . . . . }
+        . . . . . FlowNode {
+        . . . . . . PlainScalar {
+        . . . . . . . StringScalar { world }
+        . . . . . . }
+        . . . . . }
+        . . . . }
+        . . . }
+        . . }
+        . }
+        }"
+        );
+
+        test_builtin_parser(
+            sylver_langs::yaml_language(),
+            YAML_MAPPING.types.as_slice().into(),
+            &YAML_MAPPING,
+            "hello: world",
             expected,
         );
     }

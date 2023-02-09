@@ -7,3 +7,7 @@ pub fn python_language() -> Language {
 pub fn javascript_language() -> Language {
     tree_sitter_javascript::language()
 }
+
+pub fn yaml_language() -> Language {
+    tree_sitter_yaml::language()
+}
