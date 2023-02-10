@@ -10,6 +10,8 @@ use rustpython_vm::{
 
 use crate::{ScriptEngine, ScriptError, ScriptValue};
 
+mod stdlib;
+
 #[derive(Debug, Clone)]
 pub struct PythonScript {
     invokable: PyObjectRef,
@@ -152,12 +154,17 @@ impl ScriptEngine for PythonScriptEngine {
 impl Default for PythonScriptEngine {
     fn default() -> Self {
         Self {
-            interpreter: Interpreter::with_init(Default::default(), |vm| {
-                vm.add_frozen(rustpython_pylib::frozen_stdlib());
-                vm.add_native_modules(rustpython_vm::stdlib::get_module_inits());
-            }),
+            interpreter: interpreter_with_stdlib(),
         }
     }
+}
+
+fn interpreter_with_stdlib() -> Interpreter {
+    Interpreter::with_init(Default::default(), |vm| {
+        vm.add_native_module("yaml".to_string(), Box::new(stdlib::yaml::make_module));
+        vm.add_native_module("os".to_string(), Box::new(stdlib::os::make_module));
+        vm.add_native_module("re".to_string(), Box::new(stdlib::re::make_module));
+    })
 }
 
 impl ToPyObject for ScriptValue {
@@ -254,18 +261,21 @@ fn pydict_to_value(pydict: PyRef<PyDict>) -> Result<ScriptValue, ScriptError> {
 #[cfg(test)]
 mod test {
     use super::*;
+    use maplit::btreemap;
 
     #[test]
     fn script_from_fun() {
         let python_module = r#"
-def value():
-    return 42
+import os
 
-def hello(n: int):
-    return value() + n
+def value():
+    return 'directory'
+
+def hello(file_name: str):
+    return os.path.join(value(), file_name)
 "#;
 
-        let interpreter = Interpreter::without_stdlib(Default::default());
+        let interpreter = interpreter_with_stdlib();
         let compiler = PythonScriptCompiler::new(&interpreter);
 
         let script = compiler
@@ -275,10 +285,75 @@ def hello(n: int):
         let engine = PythonScriptEngine { interpreter };
 
         let value = engine
-            .eval(&script, vec![ScriptValue::Integer(10)])
+            .eval(&script, vec![ScriptValue::Str("file".to_string())])
             .unwrap();
 
-        assert_eq!(value, ScriptValue::Integer(52));
+        assert_eq!(value, ScriptValue::Str("directory/file".to_string()));
+    }
+
+    #[test]
+    fn yaml_loads_string() {
+        test_yaml_loads("hello", ScriptValue::Str("hello".to_string()));
+    }
+
+    #[test]
+    fn yaml_loads_int() {
+        test_yaml_loads("42", ScriptValue::Integer(42));
+    }
+
+    #[test]
+    fn yaml_loads_bool() {
+        test_yaml_loads("true", ScriptValue::Bool(true));
+    }
+
+    #[test]
+    fn yaml_loads_seq() {
+        test_yaml_loads(
+            "['hello', false]",
+            ScriptValue::List(vec![
+                ScriptValue::Str("hello".to_string()),
+                ScriptValue::Bool(false),
+            ]),
+        )
+    }
+
+    #[test]
+    fn yaml_loads_mapping() {
+        let doc = r#"
+apiVersion: v1
+metaData:
+  name: test
+"#;
+
+        test_yaml_loads(
+            doc,
+            ScriptValue::Dict(btreemap! {
+                "apiVersion".to_string() => ScriptValue::Str("v1".to_string()),
+                "metaData".to_string() => ScriptValue::Dict(btreemap! {
+                    "name".to_string() => ScriptValue::Str("test".to_string())
+                })
+            }),
+        );
+    }
+
+    fn test_yaml_loads(document: &str, expected: ScriptValue) {
+        let python_module = r"
+import yaml
+
+def value(doc):
+    return yaml.loads(doc)
+#";
+
+        let engine = PythonScriptEngine::default();
+        let script = PythonScriptCompiler::new(&engine.interpreter)
+            .compile_function(python_module, "test.py", "value")
+            .unwrap();
+
+        let value = engine
+            .eval(&script, vec![ScriptValue::Str(document.to_string())])
+            .unwrap();
+
+        assert_eq!(value, expected);
     }
 
     #[test]

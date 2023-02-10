@@ -9,8 +9,10 @@ edition = "2021"
 rustpython-vm = { git = "https://github.com/RustPython/RustPython", rev = "59b191c" }
 rustpython-codegen = { git = "https://github.com/RustPython/RustPython", rev = "59b191c" }
 rustpython-parser = { git = "https://github.com/RustPython/RustPython", rev = "59b191c" }
-rustpython-pylib = { git = "https://github.com/RustPython/RustPython", rev = "59b191c", features = ["freeze-stdlib"] }
 
 thiserror = "1.0.38"
 num-bigint = "0.4.3"
 derive_more = "0.99.17"
+serde_yaml = "0.9.17"
+maplit = "1.0.2"
+fancy-regex = "0.11.0"

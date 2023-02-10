@@ -763,6 +763,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "fancy-regex"
+version = "0.11.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b95f7c0680e4142284cf8b22c14a476e87d61b004a3a0861872b32ef7ead40a2"
+dependencies = [
+ "bit-set",
+ "regex",
+]
+
+[[package]]
 name = "fd-lock"
 version = "3.0.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2263,16 +2273,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "rustpython-pylib"
-version = "0.2.0"
-source = "git+https://github.com/RustPython/RustPython?rev=59b191c#59b191c789c891a500659d2c3b29a645883f780a"
-dependencies = [
- "glob",
- "rustpython-compiler-core",
- "rustpython-derive",
-]
-
-[[package]]
 name = "rustpython-vm"
 version = "0.2.0"
 source = "git+https://github.com/RustPython/RustPython?rev=59b191c#59b191c789c891a500659d2c3b29a645883f780a"
@@ -2484,9 +2484,9 @@ dependencies = [
 
 [[package]]
 name = "serde_yaml"
-version = "0.9.16"
+version = "0.9.17"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "92b5b431e8907b50339b51223b97d102db8d987ced36f6e4d03621db9316c834"
+checksum = "8fb06d4b6cdaef0e0c51fa881acb721bed3c924cfaa71d9c94a3b771dfdf6567"
 dependencies = [
  "indexmap",
  "itoa",
@@ -2651,7 +2651,7 @@ dependencies = [
  "codespan-reporting",
  "criterion",
  "derive_more",
- "fancy-regex",
+ "fancy-regex 0.10.0",
  "glob",
  "id-vec",
  "indoc",
@@ -2683,7 +2683,7 @@ name = "sylver-dsl"
 version = "0.1.0"
 dependencies = [
  "derive_more",
- "fancy-regex",
+ "fancy-regex 0.10.0",
  "indoc",
  "itertools",
  "maplit",
@@ -2709,11 +2709,13 @@ name = "sylver-script"
 version = "0.1.0"
 dependencies = [
  "derive_more",
+ "fancy-regex 0.11.0",
+ "maplit",
  "num-bigint",
  "rustpython-codegen",
  "rustpython-parser",
- "rustpython-pylib",
  "rustpython-vm",
+ "serde_yaml",
  "thiserror",
 ]
 
