@@ -1,6 +1,8 @@
-use std::{borrow::Cow, cmp::Ordering};
+use std::{borrow::Cow, cmp::Ordering, collections::VecDeque};
 
+use derivative::Derivative;
 use derive_more::From;
+use rustc_hash::FxHashSet;
 use sylver_dsl::sylq::ExprRegex;
 use thiserror::Error;
 
@@ -74,6 +76,147 @@ impl<'b, B: TreeInfoBuilder<'b>> EvalCtx<'b, B> {
     }
 }
 
+#[derive(Debug, Clone, Derivative)]
+#[derivative(PartialEq, Eq, Hash)]
+pub enum DepthNodeGeneratorFn {
+    Parents,
+    Descendants,
+    Siblings {
+        #[derivative(PartialEq = "ignore", Hash = "ignore")]
+        seen: FxHashSet<SylvaNode>,
+    },
+    PreviousSiblings,
+    NextSiblings,
+}
+
+impl DepthNodeGeneratorFn {
+    pub fn siblings() -> Self {
+        DepthNodeGeneratorFn::Siblings {
+            seen: FxHashSet::default(),
+        }
+    }
+
+    pub fn gen_from_current<'b, B: 'b + TreeInfoBuilder<'b>>(
+        &mut self,
+        ctx: &EvalCtx<'b, B>,
+        current: DepthNode,
+    ) -> Box<dyn 'b + Iterator<Item = DepthNode>> {
+        let make_depth_node = move |node| DepthNode {
+            node,
+            depth: current.depth + 1,
+        };
+
+        match self {
+            DepthNodeGeneratorFn::Parents => {
+                Box::new(ctx.parent(current.node).map(make_depth_node).into_iter())
+            }
+            DepthNodeGeneratorFn::Descendants => {
+                Box::new(ctx.childs(current.node).into_iter().map(make_depth_node))
+            }
+            DepthNodeGeneratorFn::PreviousSiblings => Box::new(
+                ctx.previous_sibling(current.node)
+                    .map(make_depth_node)
+                    .into_iter(),
+            ),
+            DepthNodeGeneratorFn::NextSiblings => Box::new(
+                ctx.next_sibling(current.node)
+                    .map(make_depth_node)
+                    .into_iter(),
+            ),
+            DepthNodeGeneratorFn::Siblings { seen } => {
+                let siblings = ctx
+                    .next_sibling(current.node)
+                    .into_iter()
+                    .chain(ctx.previous_sibling(current.node).into_iter())
+                    .filter(|s| {
+                        let is_seen = seen.contains(s);
+
+                        if !is_seen {
+                            seen.insert(*s);
+                        }
+
+                        !is_seen
+                    })
+                    .collect::<Vec<_>>();
+
+                Box::new(siblings.into_iter().map(make_depth_node))
+            }
+        }
+    }
+}
+
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
+pub struct DepthNode {
+    node: SylvaNode,
+    depth: usize,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct DepthNodeGenerator {
+    gen_fn: DepthNodeGeneratorFn,
+    min_depth: Option<usize>,
+    max_depth: Option<usize>,
+    next: VecDeque<DepthNode>,
+}
+
+impl DepthNodeGenerator {
+    fn iter(&self) -> DepthNodeGeneratorIter {
+        DepthNodeGeneratorIter { gen: self.clone() }
+    }
+}
+
+struct DepthNodeGeneratorIter {
+    gen: DepthNodeGenerator,
+}
+
+trait EvalIterator<'b, B: 'b + TreeInfoBuilder<'b>> {
+    type Item;
+
+    fn next_value(&mut self, ctx: &EvalCtx<'b, B>) -> Option<Self::Item>;
+
+    fn count(&mut self, ctx: &EvalCtx<'b, B>) -> usize {
+        let mut count = 0;
+        while self.next_value(ctx).is_some() {
+            count += 1;
+        }
+        count
+    }
+}
+
+impl<'b, B: 'b + TreeInfoBuilder<'b>> EvalIterator<'b, B> for DepthNodeGeneratorIter {
+    type Item = Value<'b>;
+
+    fn next_value(&mut self, ctx: &EvalCtx<'b, B>) -> Option<Self::Item> {
+        let current = self.gen.next.pop_front()?;
+
+        if let Some(max) = self.gen.max_depth {
+            if current.depth > max {
+                return None;
+            }
+        }
+
+        for upcoming in self.gen.gen_fn.gen_from_current(ctx, current) {
+            self.gen.next.push_back(upcoming);
+        }
+
+        if let Some(min) = self.gen.min_depth {
+            if current.depth < min {
+                return self.next_value(ctx);
+            }
+        }
+
+        Some(Value::Node(current.node))
+    }
+}
+
+impl<'b, B: 'b + TreeInfoBuilder<'b>, I: Iterator<Item = Value<'b>>> EvalIterator<'b, B> for I {
+    type Item = Value<'b>;
+
+    fn next_value(&mut self, _ctx: &EvalCtx<'b, B>) -> Option<Self::Item> {
+        self.next()
+    }
+}
+
 #[derive(Debug, Clone, Eq, PartialEq, Hash, From)]
 pub enum Value<'t> {
     Node(SylvaNode),
@@ -82,6 +225,7 @@ pub enum Value<'t> {
     Kind(KindId),
     String(Cow<'t, str>),
     List(Vec<Value<'t>>),
+    Generator(DepthNodeGenerator),
     Null,
 }
 
@@ -93,7 +237,7 @@ impl<'t> Value<'t> {
             Value::String(_) => ValueKind::String,
             Value::Kind(_) => ValueKind::Kind,
             Value::Int(_) => ValueKind::Int,
-            Value::List(_) => ValueKind::List,
+            Value::List(_) | Value::Generator(_) => ValueKind::List,
             Value::Null => ValueKind::Null,
         }
     }
@@ -106,23 +250,24 @@ impl<'t> Value<'t> {
             Value::Int(i) => Value::Int(*i),
             Value::Kind(k) => Value::Kind(*k),
             Value::List(l) => Value::List(l.iter().map(|v| v.to_static()).collect()),
+            Value::Generator(g) => Value::Generator(g.clone()),
             Value::Null => Value::Null,
         }
     }
 
-    fn try_get_children<'b, B: 'b + TreeInfoBuilder<'b>>(
+    fn try_get_children<'c, 'b, B: 'b + TreeInfoBuilder<'b>>(
         self,
-        ctx: &EvalCtx<'b, B>,
-    ) -> Result<Vec<Value<'b>>, EvalError>
+        ctx: &'c EvalCtx<'b, B>,
+    ) -> Result<Box<dyn 'b + EvalIterator<'b, B, Item = Value<'b>>>, EvalError>
     where
         't: 'b,
     {
         let res = match self {
-            Value::List(vs) => vs,
-            Value::Node(n) => node_childs_if_list(ctx, n)?
-                .into_iter()
-                .map(Into::into)
-                .collect(),
+            Value::List(vs) => {
+                Box::new(vs.into_iter()) as Box<dyn EvalIterator<'b, B, Item = Value<'b>>>
+            }
+            Value::Node(n) => Box::new(node_childs_if_list(ctx, n)?.into_iter().map(Into::into)),
+            Value::Generator(g) => Box::new(g.iter()),
             _ => return Err(EvalError::InvalidKind(vec![ValueKind::List], self.kind())),
         };
 
@@ -264,6 +409,11 @@ pub enum Expr {
     Hte(Box<Expr>, Box<Expr>),
     EqEq(Box<Expr>, Box<Expr>),
     Neq(Box<Expr>, Box<Expr>),
+    BuildGen(
+        Box<Expr>,
+        (Option<usize>, Option<usize>),
+        DepthNodeGeneratorFn,
+    ),
 }
 
 impl Expr {
@@ -391,6 +541,14 @@ impl Expr {
         )
     }
 
+    pub fn build_gen(
+        operand: Expr,
+        depths: (Option<usize>, Option<usize>),
+        gen_fn: DepthNodeGeneratorFn,
+    ) -> Expr {
+        Expr::BuildGen(Box::new(operand), depths, gen_fn)
+    }
+
     pub fn eval<'b, B: 'b + TreeInfoBuilder<'b>>(
         &self,
         ctx: &mut EvalCtx<'b, B>,
@@ -445,8 +603,26 @@ impl Expr {
                 let operand_val: bool = operand.eval(ctx)?.try_into()?;
                 Ok((!operand_val).into())
             }
+            Expr::BuildGen(operand, depts, gen_fn) => eval_build_gen(ctx, operand, depts, gen_fn),
         }
     }
+}
+
+fn eval_build_gen<'b, B: 'b + TreeInfoBuilder<'b>>(
+    ctx: &mut EvalCtx<'b, B>,
+    operand: &Expr,
+    (min_depth, matx_depth): &(Option<usize>, Option<usize>),
+    gen_fn: &DepthNodeGeneratorFn,
+) -> Result<Value<'b>, EvalError> {
+    let node: SylvaNode = operand.eval(ctx)?.try_into()?;
+    let mut gen_fn = gen_fn.clone();
+    let init_next = VecDeque::from_iter(gen_fn.gen_from_current(ctx, DepthNode { depth: 0, node }));
+    Ok(Value::Generator(DepthNodeGenerator {
+        gen_fn,
+        min_depth: *min_depth,
+        max_depth: *matx_depth,
+        next: init_next,
+    }))
 }
 
 fn eval_neq<'b, B: 'b + TreeInfoBuilder<'b>>(
@@ -584,6 +760,7 @@ fn eval_length<'b, B: 'b + TreeInfoBuilder<'b>>(
         Value::String(s) => s.len(),
         Value::List(l) => l.len(),
         Value::Node(n) => node_childs_if_list(ctx, n)?.len(),
+        Value::Generator(g) => g.iter().count(ctx),
         _ => {
             return Err(EvalError::InvalidKind(
                 vec![ValueKind::String, ValueKind::List],
@@ -679,19 +856,14 @@ fn eval_count_check<'b, B: 'b + TreeInfoBuilder<'b>>(
     predicate: &Expr,
 ) -> Result<Value<'b>, EvalError> {
     let target_count: i64 = target_count.eval(ctx)?.try_into()?;
-    let source: Vec<Value<'b>> = source.eval(ctx)?.try_get_children(ctx)?;
+    let mut nodes = source.eval(ctx)?.try_get_children(ctx)?;
 
-    if source.len() < target_count as usize {
-        return Ok(false.into());
-    }
-
-    let max_index = source.len();
-    let mut nodes = source.into_iter();
     let mut current_count = 0;
-    let mut index = 0;
 
-    while index < max_index && continue_condition(current_count, target_count) {
-        let n = nodes.next().unwrap();
+    while let Some(n) = nodes.next_value(ctx) {
+        if !continue_condition(current_count, target_count) {
+            break;
+        }
 
         ctx.push_var(n);
         let predicate_value: bool = predicate.eval(ctx)?.try_into()?;
@@ -700,8 +872,6 @@ fn eval_count_check<'b, B: 'b + TreeInfoBuilder<'b>>(
         if predicate_value {
             current_count += 1;
         }
-
-        index += 1;
     }
 
     Ok((current_count == target_count).into())

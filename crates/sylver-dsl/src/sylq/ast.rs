@@ -85,12 +85,18 @@ pub enum Expr {
     StringLit(String),
     RegexLit(ExprRegex),
     DotAccess(bool, Box<Expr>, String),
-    DotCall(bool, Box<Expr>, String, Vec<Expr>),
+    DotCall(bool, Box<Expr>, String, Vec<Arg>),
     Not(Box<Expr>),
     Binop(Box<Expr>, Op, Box<Expr>),
     Is(Box<Expr>, Box<QueryPattern>),
     ArrayIndex(Box<Expr>, Box<Expr>),
     ArrayQuant(ArrayQuantQuant, Box<Expr>, Box<QueryPattern>),
+}
+
+#[derive(Debug, Clone, Eq, PartialEq, Hash)]
+pub enum Arg {
+    Named(String, Expr),
+    Unnamed(Expr),
 }
 
 #[derive(Debug, Clone, From)]
@@ -372,9 +378,16 @@ fn term(mut pairs: Pairs<Rule>) -> SylqParserRes<Expr> {
 
                 let mut call_childs = childs.next().unwrap().into_inner();
                 let callee_name = call_childs.next().unwrap().as_str().to_string();
-                let args = call_childs
-                    .map(|c| expr(c.into_inner()))
-                    .collect::<SylqParserRes<Vec<Expr>>>()?;
+
+                let args = if let Some(arg_pairs) = call_childs.next() {
+                    arg_pairs
+                        .into_inner()
+                        .map(arg)
+                        .collect::<SylqParserRes<Vec<Arg>>>()?
+                } else {
+                    vec![]
+                };
+
                 current_expr = Expr::DotCall(safe, Box::new(current_expr), callee_name, args);
             }
             r => {
@@ -386,6 +399,21 @@ fn term(mut pairs: Pairs<Rule>) -> SylqParserRes<Expr> {
     }
 
     Ok(current_expr)
+}
+
+fn arg(arg: Pair<Rule>) -> SylqParserRes<Arg> {
+    match arg.as_rule() {
+        Rule::unnamed_arg => Ok(Arg::Unnamed(expr(arg.into_inner())?)),
+        Rule::named_arg => {
+            let mut childs = arg.into_inner();
+            let name = childs.next().unwrap().as_str().to_string();
+            let value = expr(childs.next().unwrap().into_inner())?;
+            Ok(Arg::Named(name, value))
+        }
+        r => {
+            panic!("Invalid rule: {r:?}, expected one of: named_arg, unnamed_arg");
+        }
+    }
 }
 
 fn dot_access_suffix(current_expr: Expr, mut pairs: Pairs<Rule>) -> Expr {
@@ -537,7 +565,7 @@ pub mod test {
                 false,
                 Box::new(Expr::Identifier("node".to_string())),
                 "call".to_string(),
-                vec![Expr::Integer(1)],
+                vec![Arg::Unnamed(Expr::Integer(1))],
             ),
         )
     }
@@ -551,7 +579,7 @@ pub mod test {
                 true,
                 Box::new(Expr::Identifier("node".to_string())),
                 "call".to_string(),
-                vec![Expr::Integer(1)],
+                vec![Arg::Unnamed(Expr::Integer(1))],
             ),
         )
     }

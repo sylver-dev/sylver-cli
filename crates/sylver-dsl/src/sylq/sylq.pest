@@ -37,7 +37,10 @@ expr = { bin_log_op | cmp_expr }
         dot_op_safe = { "?." }
 
     call = { identifier ~ "(" ~ call_args? ~ ")" }
-      call_args = { expr ~ ("," ~ expr)* }
+      call_args = { arg ~ ("," ~ arg)* }
+      arg = _{ named_arg | unnamed_arg }
+      named_arg = { identifier ~ "=" ~ expr }
+      unnamed_arg = { expr }
 
     atomic_expr = {
         not_expr

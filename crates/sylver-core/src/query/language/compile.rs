@@ -4,13 +4,13 @@ use itertools::Itertools;
 use thiserror::Error;
 
 use sylver_dsl::sylq::{
-    ArrayQuantQuant, Expr as SyntaxExpr, KindPattern, NodePatternField, NodePatternFieldDesc,
+    Arg, ArrayQuantQuant, Expr as SyntaxExpr, KindPattern, NodePatternField, NodePatternFieldDesc,
     NodePatternFieldValue, NodePatternsWithBinding, Op, QueryPattern,
 };
 
 use crate::{
     core::spec::{strip_list_kind, KindId, Spec},
-    query::expr::{Expr, Value},
+    query::expr::{DepthNodeGeneratorFn, Expr, Value},
 };
 
 pub const DEFAULT_INPUT_ADDR: usize = 0;
@@ -200,11 +200,19 @@ impl<'s> Compiler<'s> {
         safe: bool,
         expr: &SyntaxExpr,
         callee: &str,
-        args: &[SyntaxExpr],
+        args: &[Arg],
     ) -> Result<Expr, CompilationErr> {
         let operand = self.expr(expr)?;
 
+        let make_build_gen =
+            |gen_fn| Compiler::make_build_gen(callee, operand.clone(), gen_fn, args);
+
         let call_expr = match callee {
+            "parents" => make_build_gen(DepthNodeGeneratorFn::Parents)?,
+            "descendants" => make_build_gen(DepthNodeGeneratorFn::Descendants)?,
+            "siblings" => make_build_gen(DepthNodeGeneratorFn::siblings())?,
+            "previous_siblings" => make_build_gen(DepthNodeGeneratorFn::PreviousSiblings)?,
+            "next_siblings" => make_build_gen(DepthNodeGeneratorFn::NextSiblings)?,
             "matches" => {
                 if args.len() != 1 {
                     return Err(CompilationErr::UnexpectedArity(
@@ -214,7 +222,9 @@ impl<'s> Compiler<'s> {
                 }
 
                 match &args[0] {
-                    SyntaxExpr::RegexLit(r) => Expr::regex_match(operand.clone(), r.clone()),
+                    Arg::Unnamed(SyntaxExpr::RegexLit(r)) => {
+                        Expr::regex_match(operand.clone(), r.clone())
+                    }
                     _ => {
                         return Err(CompilationErr::UnexpectedArg(
                             callee.to_string(),
@@ -237,6 +247,54 @@ impl<'s> Compiler<'s> {
         };
 
         Ok(make_safe(safe, operand, call_expr))
+    }
+
+    fn make_build_gen(
+        prop_name: &str,
+        operand: Expr,
+        gen_fn: DepthNodeGeneratorFn,
+        args: &[Arg],
+    ) -> Result<Expr, CompilationErr> {
+        let depths = Compiler::gen_prop_min_max_depth(prop_name, args)?;
+        Ok(Expr::build_gen(operand, depths, gen_fn))
+    }
+
+    fn gen_prop_min_max_depth(
+        prop_name: &str,
+        args: &[Arg],
+    ) -> Result<(Option<usize>, Option<usize>), CompilationErr> {
+        let args = match args {
+            [] => (None, None),
+            [Arg::Named(n, SyntaxExpr::Integer(i))] => match n.as_str() {
+                "depth" => {
+                    let depth = *i as usize;
+                    (Some(depth), Some(depth))
+                }
+                "min_depth" => (Some(*i as usize), None),
+                "max_depth" => (None, Some(*i as usize)),
+                _ => {
+                    return Err(CompilationErr::UnexpectedArg(
+                        prop_name.to_string(),
+                        format!("{args:?}"),
+                    ))
+                }
+            },
+            [Arg::Named(n, SyntaxExpr::Integer(i)), Arg::Named(_, SyntaxExpr::Integer(i2))] => {
+                if n == "min_depth" {
+                    (Some(*i as usize), Some(*i2 as usize))
+                } else {
+                    (Some(*i2 as usize), Some(*i as usize))
+                }
+            }
+            _ => {
+                return Err(CompilationErr::UnexpectedArg(
+                    prop_name.to_string(),
+                    format!("{args:?}"),
+                ))
+            }
+        };
+
+        Ok(args)
     }
 
     fn expr_is(
@@ -1064,6 +1122,97 @@ mod tests {
                     ),
                 ),
             )
+        )
+    }
+
+    #[test]
+    fn compile_next_siblings_without_args() {
+        let spec = parse_spec("node NodeKind { }");
+        let query = parse_query("match n@_ when n.next_siblings().length == 2");
+        let compiled = compile(&spec, &query.unwrap()).unwrap();
+
+        assert_eq!(
+            compiled,
+            Expr::and(
+                Expr::const_expr(true.into()),
+                Expr::eq_eq(
+                    Expr::length(Expr::build_gen(
+                        Expr::read_var(0),
+                        (None, None),
+                        DepthNodeGeneratorFn::NextSiblings,
+                    ),),
+                    Expr::const_expr(Value::Int(2)),
+                ),
+            ),
+        )
+    }
+
+    #[test]
+    fn compile_prev_siblings_min_depth() {
+        let spec = parse_spec("node NodeKind { }");
+        let query =
+            parse_query("match n@_ when n.previous_siblings(min_depth = 3).length == 2").unwrap();
+        let compiled = compile(&spec, &query).unwrap();
+
+        assert_eq!(
+            compiled,
+            Expr::and(
+                Expr::const_expr(true.into()),
+                Expr::eq_eq(
+                    Expr::length(Expr::build_gen(
+                        Expr::read_var(0),
+                        (Some(3), None),
+                        DepthNodeGeneratorFn::PreviousSiblings,
+                    ),),
+                    Expr::const_expr(Value::Int(2)),
+                ),
+            ),
+        )
+    }
+
+    #[test]
+    fn compile_prev_siblings_min_max_depth() {
+        let spec = parse_spec("node NodeKind { }");
+        let query =
+            parse_query("match n@_ when n.siblings(min_depth = 3, max_depth = 5).length == 2")
+                .unwrap();
+        let compiled = compile(&spec, &query).unwrap();
+
+        assert_eq!(
+            compiled,
+            Expr::and(
+                Expr::const_expr(true.into()),
+                Expr::eq_eq(
+                    Expr::length(Expr::build_gen(
+                        Expr::read_var(0),
+                        (Some(3), Some(5)),
+                        DepthNodeGeneratorFn::siblings(),
+                    ),),
+                    Expr::const_expr(Value::Int(2)),
+                ),
+            ),
+        )
+    }
+
+    #[test]
+    fn compile_descendants_depth() {
+        let spec = parse_spec("node NodeKind { }");
+        let query = parse_query("match n@_ when n.descendants(depth = 3).length == 2").unwrap();
+        let compiled = compile(&spec, &query).unwrap();
+
+        assert_eq!(
+            compiled,
+            Expr::and(
+                Expr::const_expr(true.into()),
+                Expr::eq_eq(
+                    Expr::length(Expr::build_gen(
+                        Expr::read_var(0),
+                        (Some(3), Some(3)),
+                        DepthNodeGeneratorFn::Descendants,
+                    ),),
+                    Expr::const_expr(Value::Int(2)),
+                ),
+            ),
         )
     }
 
