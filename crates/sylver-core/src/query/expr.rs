@@ -45,6 +45,34 @@ impl<'b, B: 'b + TreeInfoBuilder<'b>> EvalCtx<'b, B> {
             .map(|next_sibling| node.with_node_id(next_sibling))
     }
 
+    pub fn node_text(&self, node: SylvaNode) -> &'b str {
+        self.info_builder.info_for_node(node).node_text(node.node)
+    }
+
+    pub fn node_field(&self, sylva_node: SylvaNode, field: &str) -> Result<Value<'b>, EvalError> {
+        let tree_info = self.info_builder.info_for_node(sylva_node);
+        let node = tree_info.node(sylva_node.node);
+
+        dbg!(self.spec.syntax.kind_name(node.kind));
+
+        let field_pos = self
+            .spec
+            .syntax
+            .field_position(node.kind, field)
+            .ok_or_else(|| {
+                EvalError::InvalidField(
+                    field.to_string(),
+                    self.spec.syntax.kind_name(node.kind).to_string(),
+                )
+            })?;
+
+        let field_node = tree_info
+            .field_value(sylva_node.node, field_pos)
+            .map(|field_node| sylva_node.with_node_id(field_node));
+
+        Ok(field_node.into())
+    }
+
     fn info<F, O>(&self, node: SylvaNode, accessor: F) -> O
     where
         F: Fn(&B::Tree, NodeId) -> O,
@@ -711,10 +739,7 @@ fn node_value_text<'b, B: 'b + TreeInfoBuilder<'b>>(
     value: Value<'b>,
 ) -> Result<Value<'b>, EvalError> {
     let sylva_node: SylvaNode = value.try_into()?;
-    let text = ctx
-        .info_builder
-        .info_for_node(sylva_node)
-        .node_text(sylva_node.node);
+    let text = ctx.node_text(sylva_node);
     Ok(Value::String(Cow::Borrowed(text)))
 }
 
@@ -807,25 +832,7 @@ fn eval_prop_access<'b, B: 'b + TreeInfoBuilder<'b>>(
     prop: &str,
 ) -> Result<Value<'b>, EvalError> {
     let sylva_node: SylvaNode = operand.eval(ctx)?.try_into()?;
-    let tree_info = ctx.info_builder.info_for_node(sylva_node);
-    let node = tree_info.node(sylva_node.node);
-
-    let field_pos = ctx
-        .spec
-        .syntax
-        .field_position(node.kind, prop)
-        .ok_or_else(|| {
-            EvalError::InvalidField(
-                prop.to_string(),
-                ctx.spec.syntax.kind_name(node.kind).to_string(),
-            )
-        })?;
-
-    let field_node = tree_info
-        .field_value(sylva_node.node, field_pos)
-        .map(|field_id| sylva_node.with_node_id(field_id));
-
-    Ok(field_node.into())
+    ctx.node_field(sylva_node, prop)
 }
 
 fn eval_array_index<'b, B: 'b + TreeInfoBuilder<'b>>(

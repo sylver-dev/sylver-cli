@@ -3,6 +3,8 @@ use std::collections::BTreeMap;
 use derive_more::From;
 use thiserror::Error;
 
+use sylver_core::query::{expr::EvalCtx, RawTreeInfoBuilder, SylvaNode};
+
 pub mod python;
 
 #[derive(Debug, Error)]
@@ -81,6 +83,12 @@ impl TryInto<Vec<ScriptValue>> for ScriptValue {
     }
 }
 
+#[derive(Debug, Clone, Eq, PartialEq, Hash, From)]
+pub enum ScriptQueryValue {
+    Simple(ScriptValue),
+    Node(SylvaNode),
+}
+
 pub trait ScriptEngine {
     type Script;
 
@@ -89,6 +97,13 @@ pub trait ScriptEngine {
         script: &Self::Script,
         args: Vec<ScriptValue>,
     ) -> Result<ScriptValue, ScriptError>;
+
+    fn eval_in_query<'c>(
+        &self,
+        script: &Self::Script,
+        args: Vec<ScriptQueryValue>,
+        ctx: &mut EvalCtx<'c, RawTreeInfoBuilder<'c>>,
+    ) -> Result<ScriptQueryValue, ScriptError>;
 
     fn compile_function(
         &self,

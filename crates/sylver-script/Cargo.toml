@@ -6,9 +6,18 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-rustpython-vm = { git = "https://github.com/RustPython/RustPython", rev = "59b191c" }
-rustpython-codegen = { git = "https://github.com/RustPython/RustPython", rev = "59b191c" }
-rustpython-parser = { git = "https://github.com/RustPython/RustPython", rev = "59b191c" }
+rustpython-vm = { git = "https://github.com/RustPython/RustPython", rev = "5ec6235" }
+rustpython-codegen = { git = "https://github.com/RustPython/RustPython", rev = "5ec6235" }
+rustpython-parser = { git = "https://github.com/RustPython/RustPython", rev = "5ec6235" }
+sylver-core = { path = "../sylver-core" }
+derive_more = "0.99.17"
+thiserror = "1.0.38"
+serde_yaml = "0.9.17"
+fancy-regex = "0.11.0"
+
+[dev-dependencies]
+sylver-langs = { path = "../sylver-langs" }
+indoc = "2.0.0"
 
 thiserror = "1.0.38"
 num-bigint = "0.4.3"

@@ -4,12 +4,18 @@ use rustpython_parser::ast;
 use rustpython_vm::{
     builtins::{PyBaseExceptionRef, PyDict, PyInt, PyList, PyStr},
     bytecode::CodeObject,
+    class::PyClassImpl,
     convert::ToPyObject,
     AsObject, Interpreter, PyObjectRef, PyRef, VirtualMachine,
 };
 
-use crate::{ScriptEngine, ScriptError, ScriptValue};
+use sylver_core::query::{expr::EvalCtx, RawTreeInfoBuilder};
 
+use crate::{
+    python::script_node::ScriptNode, ScriptEngine, ScriptError, ScriptQueryValue, ScriptValue,
+};
+
+mod script_node;
 mod stdlib;
 
 #[derive(Debug, Clone)]
@@ -141,6 +147,24 @@ impl ScriptEngine for PythonScriptEngine {
         value.try_into()
     }
 
+    fn eval_in_query<'c>(
+        &self,
+        script: &Self::Script,
+        args: Vec<ScriptQueryValue>,
+        ctx: &mut EvalCtx<'c, RawTreeInfoBuilder<'c>>,
+    ) -> Result<ScriptQueryValue, ScriptError> {
+        let value = self.interpreter.enter(|vm| {
+            let args: Vec<PyObjectRef> = args
+                .into_iter()
+                .map(|arg| script_query_val_to_pyobj(arg, ctx, vm))
+                .collect();
+            vm.invoke(&script.invokable, args)
+                .map_err(|e| to_script_error(vm, e))
+        })?;
+
+        value.try_into()
+    }
+
     fn compile_function(
         &self,
         script: &str,
@@ -164,7 +188,19 @@ fn interpreter_with_stdlib() -> Interpreter {
         vm.add_native_module("yaml".to_string(), Box::new(stdlib::yaml::make_module));
         vm.add_native_module("os".to_string(), Box::new(stdlib::os::make_module));
         vm.add_native_module("re".to_string(), Box::new(stdlib::re::make_module));
+        ScriptNode::make_class(&vm.ctx);
     })
+}
+
+fn script_query_val_to_pyobj<'c>(
+    val: ScriptQueryValue,
+    ctx: &mut EvalCtx<'c, RawTreeInfoBuilder<'c>>,
+    vm: &VirtualMachine,
+) -> PyObjectRef {
+    match val {
+        ScriptQueryValue::Simple(v) => v.to_pyobject(vm),
+        ScriptQueryValue::Node(n) => ScriptNode::new(ctx, n).to_pyobject(vm),
+    }
 }
 
 impl ToPyObject for ScriptValue {
@@ -188,6 +224,18 @@ impl ToPyObject for ScriptValue {
                 }
                 dict.to_pyobject(vm)
             }
+        }
+    }
+}
+
+impl TryInto<ScriptQueryValue> for PyObjectRef {
+    type Error = ScriptError;
+
+    fn try_into(self) -> Result<ScriptQueryValue, Self::Error> {
+        if let Some(node) = self.payload::<ScriptNode>() {
+            Ok(ScriptQueryValue::Node(node.node))
+        } else {
+            Ok(ScriptQueryValue::Simple(self.try_into()?))
         }
     }
 }
@@ -261,7 +309,18 @@ fn pydict_to_value(pydict: PyRef<PyDict>) -> Result<ScriptValue, ScriptError> {
 #[cfg(test)]
 mod test {
     use super::*;
-    use maplit::btreemap;
+    use indoc::indoc;
+    use maplit::{btreemap, hashmap};
+
+    use sylver_core::{
+        builtin_langs::{get_builtin_lang, parser::BuiltinParserRunner, BuiltinLang},
+        core::{
+            source::Source,
+            spec::{Spec, Syntax},
+        },
+        land::sylva::Sylva,
+        query::SylvaNode,
+    };
 
     #[test]
     fn script_from_fun() {
@@ -421,5 +480,54 @@ def value(doc):
             .unwrap()
             .try_into()
             .unwrap()
+    }
+
+    #[test]
+    fn test_node_fn_javascript() {
+        let script_scr = indoc! {"
+            def append_suffix(node):
+                return node.function.text + ' from Python'
+            "
+        };
+
+        let (lang_mappings, lang) = get_builtin_lang(BuiltinLang::Javascript);
+
+        let syntax: Syntax = lang_mappings.types.as_slice().into();
+
+        let runner = BuiltinParserRunner::new(lang, &syntax, &lang_mappings);
+
+        let source = Source::inline(
+            "console.log(hello).to_string()".to_string(),
+            "BUFFER".to_string(),
+        );
+
+        let tree = runner.run(source);
+        let sylva = Sylva::new(hashmap! {"buffer".into() => tree });
+
+        let spec = Spec::from_syntax(syntax);
+
+        let mut eval_ctx = EvalCtx::new(&spec, RawTreeInfoBuilder::new(&spec, &sylva));
+
+        let engine = PythonScriptEngine::default();
+        let script = PythonScriptCompiler::new(&engine.interpreter)
+            .compile_function(script_scr, "test.py", "append_suffix")
+            .unwrap();
+
+        let script_result = engine
+            .eval_in_query(
+                &script,
+                vec![ScriptQueryValue::Node(SylvaNode {
+                    node: 5.into(),
+                    tree: 0.into(),
+                    sylva: 0.into(),
+                })],
+                &mut eval_ctx,
+            )
+            .unwrap();
+
+        assert_eq!(
+            script_result,
+            ScriptQueryValue::Simple(ScriptValue::Str("console.log from Python".to_string()))
+        );
     }
 }
