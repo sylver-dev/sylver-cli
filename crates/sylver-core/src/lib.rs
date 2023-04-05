@@ -7,6 +7,7 @@ pub mod parsing;
 pub mod pretty_print;
 pub mod query;
 pub mod report;
+pub mod semantic;
 pub mod specs;
 pub mod state;
 pub mod tree;
