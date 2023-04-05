@@ -28,9 +28,7 @@ pub mod path {
 
 #[pymodule]
 pub mod os {
-    use std::path::Path;
-
-    use rustpython_vm::{pyclass, PyObjectRef, PyPayload, PyResult, VirtualMachine};
+    use rustpython_vm::{PyObjectRef, PyResult, VirtualMachine};
 
     #[pyfunction]
     fn listdir(path: String, vm: &VirtualMachine) -> PyResult<PyObjectRef> {
