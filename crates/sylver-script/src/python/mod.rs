@@ -326,13 +326,13 @@ mod test {
     #[test]
     fn script_from_fun() {
         let python_module = r#"
-import os
+import path
 
 def value():
     return 'directory'
 
 def hello(file_name: str):
-    return os.path.join(value(), file_name)
+    return path.join(value(), file_name)
 "#;
 
         let interpreter = interpreter_with_stdlib();
