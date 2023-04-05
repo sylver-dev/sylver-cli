@@ -135,7 +135,7 @@ impl<E: ScriptEngine> ProjectDetector<E> {
         }
     }
 
-    pub fn detect_builtin_lang_projects(&self, root: &Path) -> anyhow::Result<Vec<ProjectStem>> {
+    pub fn detect_builtin_lang_projects(&self, root: &Path) -> Vec<ProjectStem> {
         let langs = builtin_detectable_lang(&self.engine);
         self.detect_projects(root, &langs)
     }
@@ -144,27 +144,36 @@ impl<E: ScriptEngine> ProjectDetector<E> {
         &self,
         root: &Path,
         languages: &[DetectableLanguage<E::Script>],
-    ) -> anyhow::Result<Vec<ProjectStem>> {
+    ) -> Vec<ProjectStem> {
         self.logger.important("Detecting projects...");
 
         let mut projects = vec![];
 
         for language in languages {
             let language_name = language.name();
-            for p in self.projects_for_lang(root, language)? {
-                let dir_name = p
-                    .root
-                    .clone()
-                    .unwrap_or_else(|| "current_directory".to_string());
 
-                self.logger
-                    .info(&format!("Detected {language_name} project in {dir_name}"));
+            match self.projects_for_lang(root, language) {
+                Ok(ps) => {
+                    for p in ps {
+                        let dir_name = p
+                            .root
+                            .clone()
+                            .unwrap_or_else(|| "current_directory".to_string());
 
-                projects.push(p);
+                        self.logger
+                            .info(&format!("Detected {language_name} project in {dir_name}"));
+
+                        projects.push(p);
+                    }
+                }
+                Err(e) => {
+                    self.logger
+                        .error(&format!("Failed to detect {language_name} projects: {e}"));
+                }
             }
         }
 
-        Ok(projects)
+        projects
     }
 
     fn projects_for_lang(

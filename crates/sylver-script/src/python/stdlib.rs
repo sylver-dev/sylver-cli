@@ -1,13 +1,39 @@
 use rustpython_vm::pymodule;
 
 #[pymodule]
+pub mod path {
+    use std::path::Path;
+
+    use rustpython_vm::{PyObjectRef, PyResult, VirtualMachine};
+
+    #[pyfunction]
+    fn isdir(path: String, vm: &VirtualMachine) -> PyResult<PyObjectRef> {
+        Ok(vm.new_pyobj(Path::new(&path).is_dir()))
+    }
+
+    #[pyfunction]
+    fn relpath(path: String, start: String, vm: &VirtualMachine) -> PyResult<PyObjectRef> {
+        Path::new(&path)
+            .strip_prefix(&start)
+            .map(|stripped| vm.new_pyobj(stripped.to_string_lossy().to_string()))
+            .map_err(|e| vm.new_value_error(format!("Could not strip prefix: {e}")))
+    }
+
+    #[pyfunction]
+    fn join(path: String, suffix: String, vm: &VirtualMachine) -> PyObjectRef {
+        let joined = Path::new(&path).join(suffix).to_string_lossy().to_string();
+        vm.new_pyobj(joined)
+    }
+}
+
+#[pymodule]
 pub mod os {
     use std::path::Path;
 
     use rustpython_vm::{pyclass, PyObjectRef, PyPayload, PyResult, VirtualMachine};
 
     #[pyfunction]
-    fn list_dir(path: String, vm: &VirtualMachine) -> PyResult<PyObjectRef> {
+    fn listdir(path: String, vm: &VirtualMachine) -> PyResult<PyObjectRef> {
         let Ok(entries) = std::fs::read_dir(&path) else {
             return Err(vm.new_value_error(format!("Could not read directory: {path}")));
         };
@@ -22,29 +48,6 @@ pub mod os {
             .map_err(|e| vm.new_value_error(format!("Could not read directory: {e}")))?;
 
         Ok(vm.new_pyobj(file_names))
-    }
-
-    // NOTE: maybe there is a way to declare nested modules in RustPython?
-    #[pyattr]
-    #[pyclass(module = "os", name = "path")]
-    #[derive(Debug, PyPayload)]
-    struct OsPath {}
-
-    #[pyclass]
-    impl OsPath {
-        #[pymethod]
-        fn relpath(path: String, start: String, vm: &VirtualMachine) -> PyResult<PyObjectRef> {
-            Path::new(&path)
-                .strip_prefix(&start)
-                .map(|stripped| vm.new_pyobj(stripped.to_string_lossy().to_string()))
-                .map_err(|e| vm.new_value_error(format!("Could not strip prefix: {e}")))
-        }
-
-        #[pymethod]
-        fn join(path: String, suffix: String, vm: &VirtualMachine) -> PyObjectRef {
-            let joined = Path::new(&path).join(suffix).to_string_lossy().to_string();
-            vm.new_pyobj(joined)
-        }
     }
 }
 

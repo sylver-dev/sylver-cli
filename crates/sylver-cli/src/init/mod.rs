@@ -20,7 +20,7 @@ pub fn init(state: Arc<SylverState>, cmd: &InitCmd) -> anyhow::Result<()> {
         PythonScriptEngine::default(),
     );
 
-    let project_stems = detector.detect_builtin_lang_projects(&detection_root)?;
+    let project_stems = detector.detect_builtin_lang_projects(&detection_root);
 
     create_dir_and_config(state, cmd, project_stems)?;
 

@@ -1,3 +1,4 @@
+import path
 import os
 import re
 
@@ -21,18 +22,18 @@ def detect_projects(root):
 
 
 def add_project_if_match(projects, detection_root, current_path):
-    if not os.path.isdir(current_path):
+    if not path.isdir(current_path):
         return
 
     childs = os.listdir(current_path)
 
     if any(matches_python_patterns(name) for name in childs):
-        project_root = os.path.relpath(current_path, detection_root)
+        project_root = path.relpath(current_path, detection_root)
         projects.append({"root": project_root, "include": ["**/*.py"], "exclude": ["venv/*"]})
         return
 
     for child in childs:
-        add_project_if_match(projects, detection_root, os.path.join(current_path, child))
+        add_project_if_match(projects, detection_root, path.join(current_path, child))
 
 
 def matches_python_patterns(name):

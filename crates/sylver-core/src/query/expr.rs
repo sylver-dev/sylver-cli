@@ -53,8 +53,6 @@ impl<'b, B: 'b + TreeInfoBuilder<'b>> EvalCtx<'b, B> {
         let tree_info = self.info_builder.info_for_node(sylva_node);
         let node = tree_info.node(sylva_node.node);
 
-        dbg!(self.spec.syntax.kind_name(node.kind));
-
         let field_pos = self
             .spec
             .syntax

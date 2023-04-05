@@ -187,6 +187,7 @@ fn interpreter_with_stdlib() -> Interpreter {
     Interpreter::with_init(Default::default(), |vm| {
         vm.add_native_module("yaml".to_string(), Box::new(stdlib::yaml::make_module));
         vm.add_native_module("os".to_string(), Box::new(stdlib::os::make_module));
+        vm.add_native_module("path".to_string(), Box::new(stdlib::path::make_module));
         vm.add_native_module("re".to_string(), Box::new(stdlib::re::make_module));
         ScriptNode::make_class(&vm.ctx);
     })
