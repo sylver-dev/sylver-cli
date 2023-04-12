@@ -54,7 +54,7 @@ The ruleset definitions available at [https://github.com/sylver-dev/rulesets](ht
 
 # Writing your own rulesets
 
-* Tutorial for a Python: [blog.sylver.dev](https://blog.sylver.dev/build-a-custom-python-linter-in-5-minutes)
-* Tutorial for a Javascript: [blog.sylver.dev](https://blog.sylver.dev/build-a-custom-javascript-linter-in-5-minutes)
+* Tutorial for a Python linter: [blog.sylver.dev](https://blog.sylver.dev/build-a-custom-python-linter-in-5-minutes)
+* Tutorial for a Javascript linter: [blog.sylver.dev](https://blog.sylver.dev/build-a-custom-javascript-linter-in-5-minutes)
 * Tutorial for a Go linter: [blog.sylver.dev](https://blog.sylver.dev/build-a-custom-go-linter-in-5-minutes)
-* Tutorial for a JSON: [blog.sylver.dev](https://blog.sylver.dev/building-a-json-validator-with-sylver-part13-writing-a-json-parser-in-49-lines-of-code)
+* Tutorial for a JSON validator: [blog.sylver.dev](https://blog.sylver.dev/building-a-json-validator-with-sylver-part13-writing-a-json-parser-in-49-lines-of-code)
