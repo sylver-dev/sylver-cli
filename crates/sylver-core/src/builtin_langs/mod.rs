@@ -197,6 +197,31 @@ mod test {
     use super::*;
 
     #[test]
+    fn python_error() {
+        let expected = indoc!(
+            "
+            Module {
+            . FunctionDefinition {
+            . . ● name: Error {
+            . . . Error { $ }
+            . . }
+            . . ● parameters: Identifier { _hello }
+            . . Parameters { () }
+            . . Block {  }
+            . }
+            }"
+        );
+
+        test_builtin_parser(
+            sylver_langs::python_language(),
+            PYTHON_MAPPING.types.as_slice().into(),
+            &PYTHON_MAPPING,
+            "def $_hello():",
+            expected,
+        );
+    }
+
+    #[test]
     fn python_simple() {
         let expected = indoc!(
             "

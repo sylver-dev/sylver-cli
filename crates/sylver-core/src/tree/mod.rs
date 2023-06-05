@@ -1,6 +1,5 @@
-use std::cmp::{max, min};
 use std::{
-    cmp::Ordering,
+    cmp::{max, min, Ordering},
     hash::{Hash, Hasher},
     ops::Index,
 };
@@ -8,11 +7,11 @@ use std::{
 use anyhow::{anyhow, Result};
 use id_vec::{Id, IdVec};
 
-use crate::util::iter::first_and_last;
 use crate::{
     core::spec::{FieldPos, KindId, Syntax},
     id_type,
     parsing::{scanner::Token, sppf::Span},
+    util::iter::first_and_last,
 };
 
 pub mod info;

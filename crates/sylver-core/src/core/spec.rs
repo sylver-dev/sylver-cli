@@ -22,6 +22,12 @@ pub const COMMENT_NODE_KIND: usize = 0;
 pub const BUILTIN_LIST_KIND_NAME: &str = "List";
 pub const BUILTIN_LIST_KIND: usize = 1;
 
+pub const ERROR_KIND_NAME: &str = "Error";
+pub const ERROR_KIND: usize = 2;
+
+pub const UNKNOWN_TAG_NAME: &str = "Unknown";
+pub const UNKNOWN_TAG: usize = 3;
+
 #[derive(Debug, Error, Eq, PartialEq, Clone, Hash)]
 pub enum SpecErr {
     #[error("Multiple uses of name {0}")]
@@ -393,23 +399,23 @@ impl SyntaxBuilder {
     pub fn new() -> SyntaxBuilder {
         let mut declarations = StrIdMap::new();
 
-        declarations.insert(
-            COMMENT_NODE_KIND_NAME.into(),
-            SyntaxDecl::Synthetic(Decl::Node(NodeDecl {
-                name: COMMENT_NODE_KIND_NAME.into(),
-                parent_type: None,
-                fields: Default::default(),
-            })),
-        );
+        let builtin_kinds: [&str; 4] = [
+            COMMENT_NODE_KIND_NAME,
+            BUILTIN_LIST_KIND_NAME,
+            ERROR_KIND_NAME,
+            UNKNOWN_TAG_NAME,
+        ];
 
-        declarations.insert(
-            BUILTIN_LIST_KIND_NAME.into(),
-            SyntaxDecl::Synthetic(Decl::Node(NodeDecl {
-                name: BUILTIN_LIST_KIND_NAME.into(),
-                parent_type: None,
-                fields: Default::default(),
-            })),
-        );
+        for kind_name in builtin_kinds {
+            declarations.insert(
+                kind_name.into(),
+                SyntaxDecl::Synthetic(Decl::Node(NodeDecl {
+                    name: kind_name.into(),
+                    parent_type: None,
+                    fields: Default::default(),
+                })),
+            );
+        }
 
         SyntaxBuilder {
             declarations,
@@ -1045,7 +1051,7 @@ pub mod test {
 
         let syntax = get_syntax(spec_str);
 
-        assert_eq!(KindId(Id::from_index(2)), syntax.existing_kind_id("Binop"));
+        assert_eq!(KindId(Id::from_index(4)), syntax.existing_kind_id("Binop"));
     }
 
     #[test]
@@ -1083,7 +1089,7 @@ pub mod test {
         );
 
         let syntax = get_syntax(spec_str);
-        assert_eq!(TagId(Id::from_index(2)), syntax.tag_id("FUN"));
+        assert_eq!(TagId(Id::from_index(4)), syntax.tag_id("FUN"));
     }
 
     #[test]
@@ -1122,7 +1128,7 @@ pub mod test {
         );
 
         let syntax = get_syntax(spec_str);
-        assert_eq!(RuleId(Id::from_index(3)), syntax.rule_id("r"));
+        assert_eq!(RuleId(Id::from_index(5)), syntax.rule_id("r"));
     }
 
     #[test]
@@ -1148,7 +1154,7 @@ pub mod test {
         );
 
         let syntax = get_syntax(spec_str);
-        assert_eq!(Some(RuleId(Id::from_index(3))), syntax.get_rule_id("r"));
+        assert_eq!(Some(RuleId(Id::from_index(5))), syntax.get_rule_id("r"));
     }
 
     #[test]

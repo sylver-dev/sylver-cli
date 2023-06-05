@@ -7,11 +7,13 @@ use crate::{
     core::{
         pos::{InclPosRange, Pos},
         source::{Source, SourceTree},
-        spec::{FieldPos, KindId, Syntax, TagId},
+        spec::{FieldPos, KindId, Syntax, TagId, ERROR_KIND},
     },
     parsing::{parser_runner::ParsingResult, scanner::Token},
     tree::{NodeId, Tree, TreeBuilder},
 };
+
+static TS_ERROR_KIND: &str = "ERROR";
 
 type NodeWithField = (Option<FieldPos>, NodeId);
 
@@ -46,7 +48,11 @@ impl<'t> TsTreeConverter<'t> {
     }
 
     fn convert_from(&mut self, node: tree_sitter::Node) -> anyhow::Result<(NodeId, Vec<usize>)> {
-        let kind_id = *self.mappings.kinds.get(&node.kind_id()).unwrap();
+        let kind_id = if node.kind() == TS_ERROR_KIND {
+            ERROR_KIND.into()
+        } else {
+            *self.mappings.kinds.get(&node.kind_id()).unwrap()
+        };
 
         let (node_childs, mut node_tokens) = self.convert_childs(kind_id, node)?;
 
