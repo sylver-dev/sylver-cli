@@ -16,6 +16,7 @@ use crate::{
 };
 
 mod script_node;
+mod script_sg;
 mod stdlib;
 
 #[derive(Debug, Clone)]
@@ -86,7 +87,8 @@ impl<'i> PythonScriptCompiler<'i> {
         .map_err(|e| ScriptError::Compilation(path.to_string(), e.to_string()))
     }
 
-    /// Given an aspect name and a module AST, return a list of (kind_id, aspect_fn_name) pairs.
+    /// Given an aspect name and a module AST, strip the aspect's annotations and
+    /// return a list of (kind_id, aspect_fn_name) pairs.
     fn collect_aspect_function_ids(
         &self,
         path: &str,
