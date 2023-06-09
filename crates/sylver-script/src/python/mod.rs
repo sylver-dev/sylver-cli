@@ -1,4 +1,4 @@
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, HashMap};
 
 use rustpython_parser::ast;
 use rustpython_vm::{
@@ -32,6 +32,28 @@ impl<'i> PythonScriptCompiler<'i> {
         Self { interpreter }
     }
 
+    pub fn compile_aspect(
+        &self,
+        code: &str,
+        path: &str,
+        aspect_name: &str,
+    ) -> Result<HashMap<String, PythonScript>, ScriptError> {
+        let mut ast = Self::parse_module(code, path)?;
+
+        let mut invokables = HashMap::new();
+
+        for (kind_name, aspect_fn_name) in
+            self.collect_aspect_function_ids(path, &mut ast, aspect_name)?
+        {
+            let mut ast = ast.clone();
+            Self::append_func_ref(path, &aspect_fn_name, &mut ast)?;
+            let invokable = self.run_code_obj(Self::compile_ast(path, &mut ast)?)?;
+            invokables.insert(kind_name, PythonScript { invokable });
+        }
+
+        Ok(invokables)
+    }
+
     pub fn compile_function(
         &self,
         code: &str,
@@ -62,6 +84,25 @@ impl<'i> PythonScriptCompiler<'i> {
             rustpython_codegen::CompileOpts { optimize: 1 },
         )
         .map_err(|e| ScriptError::Compilation(path.to_string(), e.to_string()))
+    }
+
+    /// Given an aspect name and a module AST, return a list of (kind_id, aspect_fn_name) pairs.
+    fn collect_aspect_function_ids(
+        &self,
+        path: &str,
+        ast: &mut ast::Mod,
+        aspect_name: &str,
+    ) -> Result<Vec<(String, String)>, ScriptError> {
+        let ast::Mod::Interactive { ref mut body , ..} = ast else {
+            return Err(ScriptError::Compilation(path.to_string(), "Not a module".to_string()));
+        };
+
+        let aspect_fns = body
+            .iter_mut()
+            .filter_map(|s| extract_aspect_fn_ids(aspect_name, s))
+            .collect();
+
+        Ok(aspect_fns)
     }
 
     /// Given the AST of a module defining a top-level `fn_name` function, append a reference to
@@ -118,6 +159,40 @@ impl<'i> PythonScriptCompiler<'i> {
         rustpython_parser::parser::parse(code, rustpython_parser::parser::Mode::Interactive, path)
             .map_err(|e| ScriptError::Compilation(path.to_string(), e.to_string()))
     }
+}
+
+fn extract_aspect_fn_ids(aspect_name: &str, statement: &mut ast::Stmt) -> Option<(String, String)> {
+    if let ast::StmtKind::FunctionDef {
+        name: function_name,
+        ref mut decorator_list,
+        ..
+    } = &mut statement.node
+    {
+        if let Some(kind_name) = find_aspect_target_kind_name(aspect_name, decorator_list) {
+            decorator_list.clear();
+            return Some((kind_name, function_name.clone()));
+        }
+    }
+
+    None
+}
+
+fn find_aspect_target_kind_name(aspect_name: &str, decorator_list: &[ast::Expr]) -> Option<String> {
+    for decorator in decorator_list {
+        if let ast::ExprKind::Call { func, args, .. } = &decorator.node {
+            if let ast::ExprKind::Name { id: func_name, .. } = &func.node {
+                if func_name == aspect_name {
+                    if let Some(ast::ExprKind::Name { id: kind_name, .. }) =
+                        args.first().map(|a| &a.node)
+                    {
+                        return Some(kind_name.clone());
+                    }
+                }
+            }
+        }
+    }
+
+    None
 }
 
 fn to_script_error(vm: &VirtualMachine, err: PyBaseExceptionRef) -> ScriptError {
@@ -309,9 +384,8 @@ fn pydict_to_value(pydict: PyRef<PyDict>) -> Result<ScriptValue, ScriptError> {
 
 #[cfg(test)]
 mod test {
-    use super::*;
     use indoc::indoc;
-    use maplit::{btreemap, hashmap};
+    use maplit::{btreemap, hashmap, hashset};
 
     use sylver_core::{
         builtin_langs::{get_builtin_lang, parser::BuiltinParserRunner, BuiltinLang},
@@ -322,6 +396,8 @@ mod test {
         land::sylva::Sylva,
         query::SylvaNode,
     };
+
+    use super::*;
 
     #[test]
     fn script_from_fun() {
@@ -349,6 +425,31 @@ def hello(file_name: str):
             .unwrap();
 
         assert_eq!(value, ScriptValue::Str("directory/file".to_string()));
+    }
+
+    #[test]
+    fn collect_aspect() {
+        let python_module = r#"
+@my_aspect(Expr)
+def my_aspect_expr():
+    return 'Expr'
+
+@my_aspect(Statement)
+def my_aspect_statement():
+    return 'Statement'
+"#;
+
+        let interpreter = interpreter_with_stdlib();
+        let compiler = PythonScriptCompiler::new(&interpreter);
+
+        let invokables = compiler
+            .compile_aspect(python_module, "aspect_test.py", "my_aspect")
+            .unwrap();
+
+        assert_eq!(
+            hashset! {"Expr".to_string(), "Statement".to_string()},
+            invokables.keys().cloned().collect()
+        );
     }
 
     #[test]
