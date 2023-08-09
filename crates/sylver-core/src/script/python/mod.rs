@@ -33,9 +33,9 @@ struct PythonMsg {
 }
 
 enum PythonMsgData {
-    RunModule(ast::Mod, String),
-    RunScript(PythonScript, Vec<ScriptValue>),
-    RunScriptInQuery(PythonScript, Vec<PythonScriptQueryArg>),
+    Module(ast::Mod, String),
+    Script(PythonScript, Vec<ScriptValue>),
+    ScriptInQuery(PythonScript, Vec<PythonScriptQueryArg>),
 }
 
 enum PythonScriptQueryArg {
@@ -180,9 +180,9 @@ fn start_python_thread() -> Mutex<Sender<PythonMsg>> {
 
         for msg in receiver {
             let resp = match msg.data {
-                PythonMsgData::RunModule(ast, path) => ctx.run_module(&ast, path).into(),
-                PythonMsgData::RunScript(script, args) => ctx.run_script(script, args).into(),
-                PythonMsgData::RunScriptInQuery(script, args) => {
+                PythonMsgData::Module(ast, path) => ctx.run_module(&ast, path).into(),
+                PythonMsgData::Script(script, args) => ctx.run_script(script, args).into(),
+                PythonMsgData::ScriptInQuery(script, args) => {
                     ctx.run_script_in_query(script, args).into()
                 }
             };
@@ -227,7 +227,7 @@ pub fn compile_aspects(
     for (aspect_name, aspect_impls) in collect_aspect_function_ids(path, &mut ast)? {
         for (kind_name, impl_fn) in aspect_impls {
             append_func_ref(path, &impl_fn, &mut ast)?;
-            let msg = PythonMsgData::RunModule(ast.clone(), path.to_string());
+            let msg = PythonMsgData::Module(ast.clone(), path.to_string());
             let script: PythonScript = send_python_msg_sync(msg)?.try_into()?;
             invokables
                 .entry(aspect_name.clone())
@@ -248,7 +248,7 @@ pub fn compile_function(
     append_func_ref(path, fn_name, &mut ast)?;
 
     let invokable =
-        send_python_msg_sync(PythonMsgData::RunModule(ast, path.to_string()))?.try_into()?;
+        send_python_msg_sync(PythonMsgData::Module(ast, path.to_string()))?.try_into()?;
 
     Ok(invokable)
 }
@@ -393,7 +393,7 @@ impl ScriptEngine for PythonScriptEngine {
         script: &Self::Script,
         args: Vec<ScriptValue>,
     ) -> Result<ScriptValue, ScriptError> {
-        send_python_msg_sync(PythonMsgData::RunScript(*script, args))?.try_into()
+        send_python_msg_sync(PythonMsgData::Script(*script, args))?.try_into()
     }
 
     fn eval_in_query<'c>(
@@ -411,7 +411,7 @@ impl ScriptEngine for PythonScriptEngine {
             script_args.push(b);
         }
 
-        let resp = send_python_msg_sync(PythonMsgData::RunScriptInQuery(*script, script_args))?;
+        let resp = send_python_msg_sync(PythonMsgData::ScriptInQuery(*script, script_args))?;
         let value: ScriptValue = resp.try_into()?;
         Ok(ScriptQueryValue::Simple(value))
     }
@@ -579,14 +579,9 @@ def hello(file_name: str):
     return path.join(value(), file_name)
 "#;
 
-        let interpreter = interpreter_with_stdlib();
-        let compiler = PythonScriptCompiler::new(&interpreter);
+        let script = compile_function(python_module, "test.py", "hello").unwrap();
 
-        let script = compiler
-            .compile_function(python_module, "test.py", "hello")
-            .unwrap();
-
-        let engine = PythonScriptEngine { interpreter };
+        let engine = PythonScriptEngine {};
 
         let value = engine
             .eval(&script, vec![ScriptValue::Str("file".to_string())])
@@ -611,12 +606,7 @@ def my_aspect_statement():
     return 'Statement'
 "#;
 
-        let interpreter = interpreter_with_stdlib();
-        let compiler = PythonScriptCompiler::new(&interpreter);
-
-        let invokables = compiler
-            .compile_aspects(python_module, "aspect_test.py")
-            .unwrap();
+        let invokables = compile_aspects(python_module, "aspect_test.py").unwrap();
 
         assert_eq!(
             hashset! {"aspect1".to_string(), "aspect2".to_string()},
@@ -688,9 +678,7 @@ def value(doc):
 #";
 
         let engine = PythonScriptEngine::default();
-        let script = PythonScriptCompiler::new(&engine.interpreter)
-            .compile_function(python_module, "test.py", "value")
-            .unwrap();
+        let script = compile_function(python_module, "test.py", "value").unwrap();
 
         let value = engine
             .eval(&script, vec![ScriptValue::Str(document.to_string())])
@@ -793,9 +781,7 @@ def value(doc):
         let mut eval_ctx = EvalCtx::new(&spec, RawTreeInfoBuilder::new(&spec, &sylva));
 
         let engine = PythonScriptEngine::default();
-        let script = PythonScriptCompiler::new(&engine.interpreter)
-            .compile_function(script_scr, "test.py", "append_suffix")
-            .unwrap();
+        let script = compile_function(script_scr, "test.py", "append_suffix").unwrap();
 
         let script_result = engine
             .eval_in_query(

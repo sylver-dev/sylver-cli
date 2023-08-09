@@ -99,7 +99,7 @@ pub struct DefaultPathLoader<T> {
 impl<T: DeserializeOwned> DefaultPathLoader<T> {
     pub fn new(artefact_type: String) -> DefaultPathLoader<T> {
         DefaultPathLoader {
-            _ph: std::marker::PhantomData::default(),
+            _ph: std::marker::PhantomData,
             artefact_type,
         }
     }
