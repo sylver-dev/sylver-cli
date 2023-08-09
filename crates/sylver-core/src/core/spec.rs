@@ -1,4 +1,5 @@
-use std::{cmp::Ordering, fs::read_to_string, ops::Index, path::Path};
+use std::path::PathBuf;
+use std::{cmp::Ordering, collections::HashMap, fs::read_to_string, ops::Index, path::Path};
 
 use anyhow::Context;
 use derive_more::{From, Into};
@@ -11,6 +12,10 @@ use sylver_dsl::meta::*;
 
 use crate::{
     id_type,
+    script::{
+        python::{PythonScript, PythonScriptEngine},
+        ScriptEngine,
+    },
     util::{intern_map::StrIdMap, once::OnceQueue},
 };
 
@@ -53,18 +58,23 @@ pub struct FieldPos(usize);
 pub struct Spec {
     /// Syntax related structures.
     pub syntax: Syntax,
+    // Named aspects.
+    pub aspects: HashMap<String, Aspect>,
 }
 
 impl Spec {
     /// Build a spec with the given language syntax.
-    pub fn from_syntax(syntax: Syntax) -> Spec {
-        Spec { syntax }
+    pub fn new(aspects: HashMap<String, Aspect>, syntax: Syntax) -> Spec {
+        Spec { aspects, syntax }
     }
 
     /// Create a `Spec` from a slice of rule declarations.
-    pub fn from_decls(decls: impl IntoIterator<Item = Decl>) -> SpecRes<Spec> {
+    pub fn from_decls(
+        aspects: HashMap<String, Aspect>,
+        decls: impl IntoIterator<Item = Decl>,
+    ) -> SpecRes<Spec> {
         let syntax = SyntaxBuilder::new().build(decls)?;
-        Ok(Spec { syntax })
+        Ok(Spec { aspects, syntax })
     }
 
     /// Return the kind ids of all child kinds.
@@ -110,11 +120,55 @@ impl Spec {
     }
 }
 
-pub fn spec_from_file(spec_file: &Path) -> anyhow::Result<Spec> {
+pub fn spec_from_files(
+    engine: &PythonScriptEngine,
+    aspects_file: Option<&PathBuf>,
+    spec_file: &Path,
+) -> anyhow::Result<Spec> {
     let spec_str = read_to_string(spec_file)
         .with_context(|| format!("Could not read spec file: {}", spec_file.display()))?;
 
-    Ok(Spec::from_decls(parse(&spec_str)?)?)
+    let syntax = SyntaxBuilder::new().build(parse(&spec_str)?)?;
+
+    let mut aspects: HashMap<String, Aspect> = HashMap::new();
+
+    for (name, impls) in raw_aspect_from_file(engine, aspects_file)? {
+        for (kind_name, script) in impls {
+            let kind = syntax
+                .kind_id(&kind_name)
+                .with_context(|| format!("Aspect {} refers to unknown kind {}", name, kind_name))?;
+
+            aspects
+                .entry(name.clone())
+                .or_default()
+                .scripts
+                .insert(kind, script);
+        }
+    }
+
+    Ok(Spec::new(aspects, syntax))
+}
+
+fn raw_aspect_from_file(
+    engine: &PythonScriptEngine,
+    aspects: Option<&PathBuf>,
+) -> anyhow::Result<HashMap<String, HashMap<String, PythonScript>>> {
+    Ok(aspects
+        .map(|f| {
+            let aspects_script = read_to_string(f)
+                .with_context(|| format!("Could not read aspects file: {}", f.display()))?;
+
+            engine
+                .compile_aspects(&aspects_script, &f.display().to_string())
+                .with_context(|| format!("Could not compile aspects file: {}", f.display()))
+        })
+        .transpose()?
+        .unwrap_or_default())
+}
+
+#[derive(Debug, Clone, Default, PartialEq)]
+pub struct Aspect {
+    scripts: HashMap<KindId, PythonScript>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -994,7 +1048,7 @@ pub mod test {
         "
         );
 
-        let res = Spec::from_decls(parse_decls(spec_str));
+        let res = SyntaxBuilder::new().build(parse_decls(spec_str));
 
         assert_eq!(Err(SpecErr::MultipleDecl("Binop".into())), res);
     }
@@ -1008,7 +1062,7 @@ pub mod test {
         "
         );
 
-        let res = Spec::from_decls(parse_decls(spec_str));
+        let res = SyntaxBuilder::new().build(parse_decls(spec_str));
 
         assert_eq!(Err(SpecErr::MultipleDecl("LPAR".into())), res);
     }
@@ -1021,7 +1075,7 @@ pub mod test {
         "
         );
 
-        let res = Spec::from_decls(parse_decls(spec_str));
+        let res = SyntaxBuilder::new().build(parse_decls(spec_str));
 
         assert_eq!(Err(SpecErr::MissingDecl("HelloNode".into())), res);
     }
@@ -1036,7 +1090,7 @@ pub mod test {
         "
         );
 
-        let res = Spec::from_decls(parse_decls(spec_str));
+        let res = SyntaxBuilder::new().build(parse_decls(spec_str));
 
         assert_eq!(Err(SpecErr::MissingDecl("tok1".into())), res);
     }
@@ -1207,7 +1261,7 @@ pub mod test {
         "
         );
 
-        let spec_res = Spec::from_decls(parse_decls(spec_str));
+        let spec_res = SyntaxBuilder::new().build(parse_decls(spec_str));
 
         assert_eq!(
             spec_res,
@@ -1299,11 +1353,15 @@ pub mod test {
     }
 
     pub fn parse_spec(spec: &str) -> Spec {
-        Spec::from_decls(parse_decls(spec)).unwrap()
+        Spec::from_decls(Default::default(), parse_decls(spec)).unwrap()
     }
 
     fn parse_decls(spec: &str) -> Vec<Decl> {
         parse(spec).expect("Invalid spec")
+    }
+
+    fn spec_from_str(spec: &str) -> Spec {
+        Spec::new(Default::default(), get_syntax(spec))
     }
 
     fn get_syntax(spec: &str) -> Syntax {

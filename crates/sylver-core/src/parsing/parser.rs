@@ -1769,7 +1769,7 @@ pub mod tests {
 
     fn test_parser_ok(spec_code: &str, input: &str, expected: &str) {
         let spec_ast = sylver_dsl::meta::parse(spec_code.as_ref()).expect("Invalid spec str");
-        let spec = Spec::from_decls(spec_ast).expect("Invalid spec");
+        let spec = Spec::from_decls(Default::default(), spec_ast).expect("Invalid spec");
 
         let rules = spec
             .syntax

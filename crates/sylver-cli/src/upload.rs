@@ -43,16 +43,12 @@ impl<'s> ReportUploader<'s> {
                 self.check_data.land.sylva_spec_id(r.node.sylva)
             });
 
-        std::thread::scope(|s| {
-            for (spec_id, results) in res_per_lang {
-                s.spawn(
-                    move || match self.upload_report_for_lang(spec_id, results) {
-                        Ok(_) => (),
-                        Err(e) => eprintln!("failed to upload report: {e:?}"),
-                    },
-                );
+        for (spec_id, results) in res_per_lang {
+            match self.upload_report_for_lang(spec_id, results) {
+                Ok(_) => (),
+                Err(e) => eprintln!("failed to upload report: {e:?}"),
             }
-        });
+        }
     }
 
     pub fn upload_report_for_lang(

@@ -71,6 +71,7 @@ mod test {
                 data: StemData::Language(LanguageStem {
                     id: "myLanguage".to_string(),
                     spec: "dir/language.syl".into(),
+                    aspecs: None,
                 }),
             }
         );

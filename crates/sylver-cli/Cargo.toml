@@ -19,7 +19,6 @@ serde_json = "1.0.89"
 
 sylver-core = { path = '../sylver-core' }
 sylver-dsl = { path = '../sylver-dsl' }
-sylver-script = { path = '../sylver-script' }
 serde_yaml = "0.9.16"
 semver = "1.0.16"
 

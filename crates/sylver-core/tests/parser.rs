@@ -5,8 +5,9 @@ use std::{
 
 use thiserror::__private::PathAsDisplay;
 
+use sylver_core::script::python::PythonScriptEngine;
 use sylver_core::{
-    core::{source::Source, spec::spec_from_file},
+    core::{source::Source, spec::spec_from_files},
     parsing::parser_runner::ParserRunner,
     pretty_print::{render_report, tree::TreePPrint},
     tree::info::raw::RawTreeInfo,
@@ -77,7 +78,7 @@ fn test_case_from_output(output_path: PathBuf) -> ParserTestCase {
 }
 
 fn eval_parser_test_spec(test_spec: ParserTestSpec) {
-    let spec = spec_from_file(&test_spec.spec).unwrap();
+    let spec = spec_from_files(&PythonScriptEngine::default(), None, &test_spec.spec).unwrap();
     let parser_runner =
         ParserRunner::new("main", &spec.syntax).expect("Failed to build parser runner");
 

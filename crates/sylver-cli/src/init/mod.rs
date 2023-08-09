@@ -1,11 +1,14 @@
+use std::sync::Arc;
+
 use anyhow::Context;
 use log::Logger;
 use rustyline::hint::Hint;
-use std::sync::Arc;
 
-use sylver_core::specs::stem::project::ProjectStem;
-use sylver_core::{specs::stem::project::ProjectConfigStem, state::SylverState};
-use sylver_script::python::PythonScriptEngine;
+use sylver_core::{
+    script::python::PythonScriptEngine,
+    specs::{stem::project::ProjectConfigStem, stem::project::ProjectStem},
+    state::SylverState,
+};
 
 use crate::{cli::InitCmd, init::detect::ProjectDetector};
 

@@ -1,26 +1,54 @@
 use derive_more::From;
-use rustc_hash::FxHashMap;
+use std::collections::HashMap;
 
 use crate::query::SylvaNode;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, From)]
 pub struct ScopeId(petgraph::graph::NodeIndex);
 
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+enum SGraphValue {
+    Decl(SylvaNode, String),
+    Ref(SylvaNode, String),
+}
+
 #[derive(Debug, Clone, Default)]
 struct SGraphNode {
-    declarations: FxHashMap<String, SylvaNode>,
+    values: Vec<SGraphValue>,
+}
+
+impl SGraphNode {
+    fn get_decl(&self, name: &str) -> Option<SylvaNode> {
+        self.values.iter().find_map(|v| match v {
+            SGraphValue::Decl(node, n) if n == name => Some(*node),
+            _ => None,
+        })
+    }
+
+    fn refs(&self) -> impl Iterator<Item = (SylvaNode, &str)> {
+        self.values.iter().filter_map(|v| match v {
+            SGraphValue::Ref(node, n) => Some((*node, n.as_str())),
+            _ => None,
+        })
+    }
 }
 
 #[derive(Debug, Clone, Default)]
 pub struct SGraph {
     graph: petgraph::Graph<SGraphNode, ()>,
+    decl_to_refs: HashMap<SylvaNode, Vec<SylvaNode>>,
+    ref_to_decl: HashMap<SylvaNode, SylvaNode>,
 }
 
 impl SGraph {
     pub fn new() -> SGraph {
         let mut graph = petgraph::Graph::new();
         graph.add_node(SGraphNode::default());
-        SGraph { graph }
+        SGraph {
+            graph,
+            decl_to_refs: HashMap::default(),
+            ref_to_decl: HashMap::default(),
+        }
     }
 
     pub fn root(&self) -> ScopeId {
@@ -28,8 +56,16 @@ impl SGraph {
     }
 
     pub fn add_decl(&mut self, scope: ScopeId, name: String, node: SylvaNode) {
+        self.add_value(scope, SGraphValue::Decl(node, name));
+    }
+
+    pub fn add_ref(&mut self, scope: ScopeId, name: String, node: SylvaNode) {
+        self.add_value(scope, SGraphValue::Ref(node, name));
+    }
+
+    fn add_value(&mut self, scope: ScopeId, value: SGraphValue) {
         let scope = self.graph.node_weight_mut(scope.0).unwrap();
-        scope.declarations.insert(name, node);
+        scope.values.push(value);
     }
 
     pub fn add_scope(&mut self, scope: ScopeId) -> ScopeId {
@@ -50,7 +86,7 @@ impl SGraph {
             for scope_id in std::mem::take(&mut to_visit) {
                 let current_scope = self.graph.node_weight(scope_id).unwrap();
 
-                if let Some(&n) = current_scope.declarations.get(name) {
+                if let Some(n) = current_scope.get_decl(name) {
                     nodes.push(n);
                 } else {
                     to_visit.extend(
@@ -62,6 +98,31 @@ impl SGraph {
         }
 
         nodes
+    }
+
+    pub fn solve(&mut self) {
+        for scope_id in self.graph.node_indices() {
+            let scope = &self.graph[scope_id];
+
+            for (ref_node, name) in scope.refs() {
+                if let Some(&referenced_decl) = self.lookup(scope_id.into(), name).first() {
+                    self.ref_to_decl.insert(ref_node, referenced_decl);
+
+                    self.decl_to_refs
+                        .entry(referenced_decl)
+                        .or_default()
+                        .push(ref_node);
+                }
+            }
+        }
+    }
+
+    pub fn referenced_decls(&self, node: SylvaNode) -> Option<&SylvaNode> {
+        self.ref_to_decl.get(&node)
+    }
+
+    pub fn node_refs(&self, node: SylvaNode) -> Option<&[SylvaNode]> {
+        self.decl_to_refs.get(&node).map(|v| v.as_slice())
     }
 }
 
@@ -164,5 +225,31 @@ mod test {
                 .into_iter()
                 .collect::<std::collections::HashSet<_>>()
         );
+    }
+
+    #[test]
+    pub fn solve() {
+        let node1 = SylvaNode {
+            sylva: 0.into(),
+            tree: 0.into(),
+            node: 0.into(),
+        };
+
+        let node2 = SylvaNode {
+            sylva: 0.into(),
+            tree: 0.into(),
+            node: 1.into(),
+        };
+
+        let mut graph = SGraph::new();
+        let scope1 = graph.add_scope(graph.root());
+        graph.add_decl(scope1, "foo".to_string(), node1);
+        let scope2 = graph.add_scope(scope1);
+        graph.add_ref(scope2, "foo".to_string(), node2);
+
+        graph.solve();
+
+        assert_eq!(Some(&node1), graph.referenced_decls(node2));
+        assert_eq!(Some([node2].as_slice()), graph.node_refs(node1));
     }
 }

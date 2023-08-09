@@ -1,10 +1,12 @@
 use anyhow::{bail, Context};
+use std::sync::Arc;
 use std::{
     ffi::OsStr,
     fmt::Debug,
     path::{Path, PathBuf},
 };
 
+use crate::script::python::PythonScriptEngine;
 use log::{FancyLogger, Logger};
 
 use crate::util::fs::find_upward_path;
@@ -38,6 +40,7 @@ impl Default for SylverSettings {
 pub struct SylverState<L: Logger = FancyLogger> {
     pub settings: SylverSettings,
     pub locations: Locations,
+    pub script_engine: Arc<PythonScriptEngine>,
     pub logger: L,
 }
 
@@ -57,6 +60,7 @@ impl<L: Logger> SylverState<L> {
             settings,
             logger,
             locations,
+            script_engine: Arc::new(PythonScriptEngine::default()),
         })
     }
 }

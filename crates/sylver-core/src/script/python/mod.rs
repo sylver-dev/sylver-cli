@@ -1,200 +1,379 @@
-use std::collections::{BTreeMap, HashMap};
+use std::{
+    cell::RefCell,
+    collections::{BTreeMap, HashMap},
+    sync::mpsc::Sender,
+    sync::{Mutex, OnceLock},
+};
 
+use id_vec::{Id, IdVec};
 use rustpython_parser::ast;
 use rustpython_vm::{
     builtins::{PyBaseExceptionRef, PyDict, PyInt, PyList, PyStr},
-    bytecode::CodeObject,
     class::PyClassImpl,
     convert::ToPyObject,
     AsObject, Interpreter, PyObjectRef, PyRef, VirtualMachine,
 };
 
-use sylver_core::query::{expr::EvalCtx, RawTreeInfoBuilder};
+use crate::query::{expr::EvalCtx, RawTreeInfoBuilder};
 
-use crate::{
-    python::script_node::ScriptNode, ScriptEngine, ScriptError, ScriptQueryValue, ScriptValue,
-};
+use super::{ScriptEngine, ScriptError, ScriptQueryValue, ScriptValue};
+
+use script_node::ScriptNode;
+use script_sg::ScriptSG;
 
 mod script_node;
 mod script_sg;
 mod stdlib;
 
+static PYTHON_CTX: OnceLock<Mutex<Sender<PythonMsg>>> = OnceLock::new();
+
+struct PythonMsg {
+    data: PythonMsgData,
+    sender: Sender<PythonResp>,
+}
+
+enum PythonMsgData {
+    RunModule(ast::Mod, String),
+    RunScript(PythonScript, Vec<ScriptValue>),
+    RunScriptInQuery(PythonScript, Vec<PythonScriptQueryArg>),
+}
+
+enum PythonScriptQueryArg {
+    Value(ScriptValue),
+    Node(ScriptNode),
+}
+
 #[derive(Debug, Clone)]
-pub struct PythonScript {
-    invokable: PyObjectRef,
+enum PythonResp {
+    Script(PythonScript),
+    Value(ScriptValue),
+    Error(ScriptError),
 }
 
-pub struct PythonScriptCompiler<'i> {
-    interpreter: &'i Interpreter,
-}
-
-impl<'i> PythonScriptCompiler<'i> {
-    pub fn new(interpreter: &'i Interpreter) -> Self {
-        Self { interpreter }
+impl From<ScriptValue> for PythonResp {
+    fn from(value: ScriptValue) -> Self {
+        PythonResp::Value(value)
     }
+}
 
-    pub fn compile_aspect(
-        &self,
-        code: &str,
-        path: &str,
-        aspect_name: &str,
-    ) -> Result<HashMap<String, PythonScript>, ScriptError> {
-        let mut ast = Self::parse_module(code, path)?;
+impl From<PythonScript> for PythonResp {
+    fn from(invokable: PythonScript) -> Self {
+        PythonResp::Script(invokable)
+    }
+}
 
-        let mut invokables = HashMap::new();
-
-        for (kind_name, aspect_fn_name) in
-            self.collect_aspect_function_ids(path, &mut ast, aspect_name)?
-        {
-            let mut ast = ast.clone();
-            Self::append_func_ref(path, &aspect_fn_name, &mut ast)?;
-            let invokable = self.run_code_obj(Self::compile_ast(path, &mut ast)?)?;
-            invokables.insert(kind_name, PythonScript { invokable });
+impl<V: Into<PythonResp>> From<Result<V, ScriptError>> for PythonResp {
+    fn from(result: Result<V, ScriptError>) -> Self {
+        match result {
+            Ok(value) => value.into(),
+            Err(error) => PythonResp::Error(error),
         }
-
-        Ok(invokables)
     }
+}
 
-    pub fn compile_function(
-        &self,
-        code: &str,
-        path: &str,
-        fn_name: &str,
-    ) -> Result<PythonScript, ScriptError> {
-        let mut ast = Self::parse_module(code, path)?;
-        Self::append_func_ref(path, fn_name, &mut ast)?;
+impl TryInto<PythonScript> for PythonResp {
+    type Error = ScriptError;
 
-        let invokable = self.run_code_obj(Self::compile_ast(path, &mut ast)?)?;
-
-        Ok(PythonScript { invokable })
+    fn try_into(self) -> Result<PythonScript, ScriptError> {
+        match self {
+            PythonResp::Script(script) => Ok(script),
+            _ => Err(ScriptError::RuntimeError("script id".to_string())),
+        }
     }
+}
 
-    fn run_code_obj(&self, module_obj: CodeObject) -> Result<PyObjectRef, ScriptError> {
-        self.interpreter.enter(|vm| {
-            let module_code = vm.ctx.new_code(module_obj);
-            vm.run_code_obj(module_code, vm.new_scope_with_builtins())
-                .map_err(|e| to_script_error(vm, e))
-        })
+impl TryInto<ScriptValue> for PythonResp {
+    type Error = ScriptError;
+
+    fn try_into(self) -> Result<ScriptValue, ScriptError> {
+        match self {
+            PythonResp::Value(value) => Ok(value),
+            _ => Err(ScriptError::RuntimeError("script value".to_string())),
+        }
     }
+}
 
-    fn compile_ast(path: &str, ast: &mut ast::Mod) -> Result<CodeObject, ScriptError> {
-        rustpython_codegen::compile::compile_top(
+pub struct PythonCtx {
+    interpreter: Interpreter,
+    scripts: IdVec<PyObjectRef>,
+}
+
+impl PythonCtx {
+    fn run_module(&mut self, ast: &ast::Mod, path: String) -> Result<PythonScript, ScriptError> {
+        let code = rustpython_codegen::compile::compile_top(
             ast,
             path.to_string(),
             rustpython_vm::compiler::Mode::BlockExpr,
             rustpython_codegen::CompileOpts { optimize: 1 },
         )
-        .map_err(|e| ScriptError::Compilation(path.to_string(), e.to_string()))
+        .map_err(|e| ScriptError::Compilation(path.to_string(), e.to_string()))?;
+
+        let script = self.interpreter.enter(|vm| {
+            let module_code = vm.ctx.new_code(code);
+            vm.run_code_obj(module_code, vm.new_scope_with_builtins())
+                .map_err(|e| to_script_error(vm, e))
+        });
+
+        let id = self.scripts.insert(script?);
+
+        Ok(PythonScript {
+            invokable: id.index_value(),
+        })
     }
 
-    /// Given an aspect name and a module AST, strip the aspect's annotations and
-    /// return a list of (kind_id, aspect_fn_name) pairs.
-    fn collect_aspect_function_ids(
+    fn run_script(
         &self,
-        path: &str,
-        ast: &mut ast::Mod,
-        aspect_name: &str,
-    ) -> Result<Vec<(String, String)>, ScriptError> {
-        let ast::Mod::Interactive { ref mut body , ..} = ast else {
-            return Err(ScriptError::Compilation(path.to_string(), "Not a module".to_string()));
-        };
+        script: PythonScript,
+        args: Vec<ScriptValue>,
+    ) -> Result<ScriptValue, ScriptError> {
+        let value = self.interpreter.enter(|vm| {
+            let mut script_args = vec![];
+            for a in args {
+                script_args.push(a.to_pyobject(vm));
+            }
 
-        let aspect_fns = body
-            .iter_mut()
-            .filter_map(|s| extract_aspect_fn_ids(aspect_name, s))
-            .collect();
+            let invokable = self.scripts.get(Id::from_index(script.invokable)).ok_or(
+                ScriptError::RuntimeError(format!("invalid script id: {}", script.invokable)),
+            )?;
+            vm.invoke(invokable, script_args)
+                .map_err(|e| to_script_error(vm, e))
+        })?;
 
-        Ok(aspect_fns)
+        value.try_into()
     }
 
-    /// Given the AST of a module defining a top-level `fn_name` function, append a reference to
-    /// that function at the end of the module's body (so that evaluating the module as a block
-    /// expression returns a reference to the given function).
-    fn append_func_ref(path: &str, fn_name: &str, ast: &mut ast::Mod) -> Result<(), ScriptError> {
-        let ast::Mod::Interactive { ref mut body , ..} = ast else {
+    fn run_script_in_query(
+        &self,
+        script: PythonScript,
+        args: Vec<PythonScriptQueryArg>,
+    ) -> Result<ScriptValue, ScriptError> {
+        let value = self.interpreter.enter(|vm| {
+            let mut script_args = vec![];
+            for a in args {
+                let script_arg = match a {
+                    PythonScriptQueryArg::Value(val) => val.to_pyobject(vm),
+                    PythonScriptQueryArg::Node(node) => node.to_pyobject(vm),
+                };
+                script_args.push(script_arg);
+            }
+
+            let invokable = self.scripts.get(Id::from_index(script.invokable)).ok_or(
+                ScriptError::RuntimeError(format!("invalid script id: {}", script.invokable)),
+            )?;
+
+            vm.invoke(invokable, script_args)
+                .map_err(|e| to_script_error(vm, e))
+        })?;
+
+        value.try_into()
+    }
+}
+
+fn start_python_thread() -> Mutex<Sender<PythonMsg>> {
+    let (sender, receiver) = std::sync::mpsc::channel::<PythonMsg>();
+
+    std::thread::spawn(move || {
+        let mut ctx = PythonCtx {
+            interpreter: interpreter_with_stdlib(),
+            scripts: IdVec::new(),
+        };
+
+        for msg in receiver {
+            let resp = match msg.data {
+                PythonMsgData::RunModule(ast, path) => ctx.run_module(&ast, path).into(),
+                PythonMsgData::RunScript(script, args) => ctx.run_script(script, args).into(),
+                PythonMsgData::RunScriptInQuery(script, args) => {
+                    ctx.run_script_in_query(script, args).into()
+                }
+            };
+
+            msg.sender
+                .send(resp)
+                .expect("failed to send Python response");
+        }
+    });
+
+    Mutex::new(sender)
+}
+
+fn send_python_msg_sync(msg: PythonMsgData) -> Result<PythonResp, ScriptError> {
+    let (sender, receiver) = std::sync::mpsc::channel();
+
+    PYTHON_CTX
+        .get_or_init(start_python_thread)
+        .lock()
+        .map_err(|e| ScriptError::RuntimeError(format!("failed to lock Python runtime: {}", e)))?
+        .send(PythonMsg { data: msg, sender })
+        .map_err(|_| ScriptError::RuntimeError("failed to reach Python runtime".to_string()))?;
+
+    receiver
+        .recv()
+        .map_err(|e| ScriptError::RuntimeError(format!("failed to receive Python response: {}", e)))
+}
+
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
+pub struct PythonScript {
+    invokable: usize, // usize instead of id because it must be Send
+}
+
+pub fn compile_aspects(
+    code: &str,
+    path: &str,
+) -> Result<HashMap<String, HashMap<String, PythonScript>>, ScriptError> {
+    let mut ast = parse_module(code, path)?;
+
+    let mut invokables: HashMap<String, HashMap<String, PythonScript>> = HashMap::new();
+
+    for (aspect_name, aspect_impls) in collect_aspect_function_ids(path, &mut ast)? {
+        for (kind_name, impl_fn) in aspect_impls {
+            append_func_ref(path, &impl_fn, &mut ast)?;
+            let msg = PythonMsgData::RunModule(ast.clone(), path.to_string());
+            let script: PythonScript = send_python_msg_sync(msg)?.try_into()?;
+            invokables
+                .entry(aspect_name.clone())
+                .or_default()
+                .insert(kind_name, script);
+        }
+    }
+
+    Ok(invokables)
+}
+
+pub fn compile_function(
+    code: &str,
+    path: &str,
+    fn_name: &str,
+) -> Result<PythonScript, ScriptError> {
+    let mut ast = parse_module(code, path)?;
+    append_func_ref(path, fn_name, &mut ast)?;
+
+    let invokable =
+        send_python_msg_sync(PythonMsgData::RunModule(ast, path.to_string()))?.try_into()?;
+
+    Ok(invokable)
+}
+
+/// Given an aspect name and a module AST, strip the aspect's annotations and
+/// return a list of (kind_name, aspect_fn_name) pairs.
+fn collect_aspect_function_ids(
+    path: &str,
+    ast: &mut ast::Mod,
+) -> Result<HashMap<String, Vec<(String, String)>>, ScriptError> {
+    let ast::Mod::Interactive { ref mut body , ..} = ast else {
             return Err(ScriptError::Compilation(path.to_string(), "Not a module".to_string()));
         };
 
-        if !body.iter().any(
-            |stmt| matches!(&stmt.node, ast::StmtKind::FunctionDef { name, ..} if name == fn_name),
-        ) {
-            return Err(ScriptError::Compilation(
-                path.to_string(),
-                format!("Function {fn_name} not found"),
-            ));
+    let mut aspect_fns: HashMap<String, Vec<(String, String)>> = HashMap::new();
+
+    for statement in body.iter_mut() {
+        if let Some((aspect_name, kind_name, aspect_fn_name)) = extract_aspect_fn_ids(statement)? {
+            aspect_fns
+                .entry(aspect_name)
+                .or_default()
+                .push((kind_name, aspect_fn_name));
+        }
+    }
+
+    Ok(aspect_fns)
+}
+
+/// Given the AST of a module defining a top-level `fn_name` function, append a reference to
+/// that function at the end of the module's body (so that evaluating the module as a block
+/// expression returns a reference to the given function).
+fn append_func_ref(path: &str, fn_name: &str, ast: &mut ast::Mod) -> Result<(), ScriptError> {
+    let ast::Mod::Interactive { ref mut body , ..} = ast else {
+            return Err(ScriptError::Compilation(path.to_string(), "Not a module".to_string()));
         };
 
-        let Some(last_statement) = body.last() else {
+    if !body
+        .iter()
+        .any(|stmt| matches!(&stmt.node, ast::StmtKind::FunctionDef { name, ..} if name == fn_name))
+    {
+        return Err(ScriptError::Compilation(
+            path.to_string(),
+            format!("Function {fn_name} not found"),
+        ));
+    };
+
+    let Some(last_statement) = body.last() else {
             return Err(ScriptError::Compilation(
                 path.to_string(),
                 "Empty script".to_string(),
             ));
         };
 
-        let end_pos = last_statement
-            .end_location
-            .unwrap_or(last_statement.location);
+    let end_pos = last_statement
+        .end_location
+        .unwrap_or(last_statement.location);
 
-        body.push(Self::build_name_stmt(end_pos, fn_name));
+    body.push(build_name_stmt(end_pos, fn_name));
 
-        Ok(())
-    }
-
-    fn build_name_stmt(location: ast::Location, name: &str) -> ast::Located<ast::StmtKind> {
-        ast::Located::new(
-            location,
-            location,
-            ast::StmtKind::Expr {
-                value: Box::new(ast::Located::new(
-                    location,
-                    location,
-                    ast::ExprKind::Name {
-                        id: name.to_string(),
-                        ctx: ast::ExprContext::Load,
-                    },
-                )),
-            },
-        )
-    }
-
-    fn parse_module(code: &str, path: &str) -> Result<ast::Mod, ScriptError> {
-        rustpython_parser::parser::parse(code, rustpython_parser::parser::Mode::Interactive, path)
-            .map_err(|e| ScriptError::Compilation(path.to_string(), e.to_string()))
-    }
+    Ok(())
 }
 
-fn extract_aspect_fn_ids(aspect_name: &str, statement: &mut ast::Stmt) -> Option<(String, String)> {
+fn build_name_stmt(location: ast::Location, name: &str) -> ast::Located<ast::StmtKind> {
+    ast::Located::new(
+        location,
+        location,
+        ast::StmtKind::Expr {
+            value: Box::new(ast::Located::new(
+                location,
+                location,
+                ast::ExprKind::Name {
+                    id: name.to_string(),
+                    ctx: ast::ExprContext::Load,
+                },
+            )),
+        },
+    )
+}
+
+fn parse_module(code: &str, path: &str) -> Result<ast::Mod, ScriptError> {
+    rustpython_parser::parser::parse(code, rustpython_parser::parser::Mode::Interactive, path)
+        .map_err(|e| ScriptError::Compilation(path.to_string(), e.to_string()))
+}
+
+/// If the given statement is an aspect function definition, return a tuple
+/// of the form (aspect_name, kind_name, function_name).
+fn extract_aspect_fn_ids(
+    statement: &mut ast::Stmt,
+) -> Result<Option<(String, String, String)>, ScriptError> {
     if let ast::StmtKind::FunctionDef {
         name: function_name,
         ref mut decorator_list,
         ..
     } = &mut statement.node
     {
-        if let Some(kind_name) = find_aspect_target_kind_name(aspect_name, decorator_list) {
+        if let Some((aspect_name, kind_name)) = find_aspect_target_kind_name(decorator_list)? {
             decorator_list.clear();
-            return Some((kind_name, function_name.clone()));
+            return Ok(Some((aspect_name, kind_name, function_name.clone())));
         }
     }
 
-    None
+    Ok(None)
 }
 
-fn find_aspect_target_kind_name(aspect_name: &str, decorator_list: &[ast::Expr]) -> Option<String> {
-    for decorator in decorator_list {
-        if let ast::ExprKind::Call { func, args, .. } = &decorator.node {
-            if let ast::ExprKind::Name { id: func_name, .. } = &func.node {
-                if func_name == aspect_name {
+/// If the given decorator list is a valid aspect declaration,
+/// return a tuple of the form (aspect_name, kind_name).
+fn find_aspect_target_kind_name(
+    decorator_list: &[ast::Expr],
+) -> Result<Option<(String, String)>, ScriptError> {
+    match decorator_list {
+        [] => Ok(None),
+        [_, _, ..] => Err(ScriptError::InvalidAspectDeclaration),
+        [decorator] => {
+            if let ast::ExprKind::Call { func, args, .. } = &decorator.node {
+                if let ast::ExprKind::Name { id: func_name, .. } = &func.node {
                     if let Some(ast::ExprKind::Name { id: kind_name, .. }) =
                         args.first().map(|a| &a.node)
                     {
-                        return Some(kind_name.clone());
+                        return Ok(Some((func_name.to_string(), kind_name.clone())));
                     }
                 }
             }
+            Ok(None)
         }
     }
-
-    None
 }
 
 fn to_script_error(vm: &VirtualMachine, err: PyBaseExceptionRef) -> ScriptError {
@@ -203,9 +382,8 @@ fn to_script_error(vm: &VirtualMachine, err: PyBaseExceptionRef) -> ScriptError 
     ScriptError::RuntimeError(msg)
 }
 
-pub struct PythonScriptEngine {
-    interpreter: Interpreter,
-}
+#[derive(Debug, Default)]
+pub struct PythonScriptEngine {}
 
 impl ScriptEngine for PythonScriptEngine {
     type Script = PythonScript;
@@ -215,13 +393,7 @@ impl ScriptEngine for PythonScriptEngine {
         script: &Self::Script,
         args: Vec<ScriptValue>,
     ) -> Result<ScriptValue, ScriptError> {
-        let value = self.interpreter.enter(|vm| {
-            let args: Vec<PyObjectRef> = args.into_iter().map(|arg| arg.to_pyobject(vm)).collect();
-            vm.invoke(&script.invokable, args)
-                .map_err(|e| to_script_error(vm, e))
-        })?;
-
-        value.try_into()
+        send_python_msg_sync(PythonMsgData::RunScript(*script, args))?.try_into()
     }
 
     fn eval_in_query<'c>(
@@ -230,16 +402,18 @@ impl ScriptEngine for PythonScriptEngine {
         args: Vec<ScriptQueryValue>,
         ctx: &mut EvalCtx<'c, RawTreeInfoBuilder<'c>>,
     ) -> Result<ScriptQueryValue, ScriptError> {
-        let value = self.interpreter.enter(|vm| {
-            let args: Vec<PyObjectRef> = args
-                .into_iter()
-                .map(|arg| script_query_val_to_pyobj(arg, ctx, vm))
-                .collect();
-            vm.invoke(&script.invokable, args)
-                .map_err(|e| to_script_error(vm, e))
-        })?;
+        let mut script_args: Vec<PythonScriptQueryArg> = vec![];
+        for a in args {
+            let b = match a {
+                ScriptQueryValue::Simple(v) => PythonScriptQueryArg::Value(v),
+                ScriptQueryValue::Node(n) => PythonScriptQueryArg::Node(ScriptNode::new(ctx, n)),
+            };
+            script_args.push(b);
+        }
 
-        value.try_into()
+        let resp = send_python_msg_sync(PythonMsgData::RunScriptInQuery(*script, script_args))?;
+        let value: ScriptValue = resp.try_into()?;
+        Ok(ScriptQueryValue::Simple(value))
     }
 
     fn compile_function(
@@ -248,15 +422,15 @@ impl ScriptEngine for PythonScriptEngine {
         file_name: &str,
         fun_name: &str,
     ) -> Result<Self::Script, ScriptError> {
-        PythonScriptCompiler::new(&self.interpreter).compile_function(script, file_name, fun_name)
+        compile_function(script, file_name, fun_name)
     }
-}
 
-impl Default for PythonScriptEngine {
-    fn default() -> Self {
-        Self {
-            interpreter: interpreter_with_stdlib(),
-        }
+    fn compile_aspects(
+        &self,
+        script: &str,
+        file_name: &str,
+    ) -> Result<HashMap<String, HashMap<String, Self::Script>>, ScriptError> {
+        compile_aspects(script, file_name)
     }
 }
 
@@ -268,17 +442,6 @@ fn interpreter_with_stdlib() -> Interpreter {
         vm.add_native_module("re".to_string(), Box::new(stdlib::re::make_module));
         ScriptNode::make_class(&vm.ctx);
     })
-}
-
-fn script_query_val_to_pyobj<'c>(
-    val: ScriptQueryValue,
-    ctx: &mut EvalCtx<'c, RawTreeInfoBuilder<'c>>,
-    vm: &VirtualMachine,
-) -> PyObjectRef {
-    match val {
-        ScriptQueryValue::Simple(v) => v.to_pyobject(vm),
-        ScriptQueryValue::Node(n) => ScriptNode::new(ctx, n).to_pyobject(vm),
-    }
 }
 
 impl ToPyObject for ScriptValue {
@@ -301,6 +464,9 @@ impl ToPyObject for ScriptValue {
                         .expect("Conversion to PyObject failed");
                 }
                 dict.to_pyobject(vm)
+            }
+            ScriptValue::Scope(scope_id, scope_graph) => {
+                ScriptSG::new(RefCell::new(scope_graph), scope_id).to_pyobject(vm)
             }
         }
     }
@@ -389,7 +555,7 @@ mod test {
     use indoc::indoc;
     use maplit::{btreemap, hashmap, hashset};
 
-    use sylver_core::{
+    use crate::{
         builtin_langs::{get_builtin_lang, parser::BuiltinParserRunner, BuiltinLang},
         core::{
             source::Source,
@@ -432,11 +598,15 @@ def hello(file_name: str):
     #[test]
     fn collect_aspect() {
         let python_module = r#"
-@my_aspect(Expr)
+@aspect1(Expr)
 def my_aspect_expr():
     return 'Expr'
+    
+@aspect2(Expr)
+def my_aspect2_expr2():
+    return 'Expr2'
 
-@my_aspect(Statement)
+@aspect1(Statement)
 def my_aspect_statement():
     return 'Statement'
 "#;
@@ -445,12 +615,22 @@ def my_aspect_statement():
         let compiler = PythonScriptCompiler::new(&interpreter);
 
         let invokables = compiler
-            .compile_aspect(python_module, "aspect_test.py", "my_aspect")
+            .compile_aspects(python_module, "aspect_test.py")
             .unwrap();
 
         assert_eq!(
-            hashset! {"Expr".to_string(), "Statement".to_string()},
+            hashset! {"aspect1".to_string(), "aspect2".to_string()},
             invokables.keys().cloned().collect()
+        );
+
+        assert_eq!(
+            hashset! {"Expr".to_string(), "Statement".to_string()},
+            invokables["aspect1"].keys().cloned().collect()
+        );
+
+        assert_eq!(
+            hashset! {"Expr".to_string()},
+            invokables["aspect2"].keys().cloned().collect()
         );
     }
 
@@ -608,7 +788,7 @@ def value(doc):
         let tree = runner.run(source);
         let sylva = Sylva::new(hashmap! {"buffer".into() => tree });
 
-        let spec = Spec::from_syntax(syntax);
+        let spec = Spec::new(Default::default(), syntax);
 
         let mut eval_ctx = EvalCtx::new(&spec, RawTreeInfoBuilder::new(&spec, &sylva));
 

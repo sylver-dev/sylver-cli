@@ -27,6 +27,7 @@ fn test_sylq_eval(expr_input: &str) {
     let spec_file = glob_existing(&format!("{}/*.syl", dir.display()));
 
     let spec = Spec::from_decls(
+        Default::default(),
         sylver_dsl::meta::parse(&std::fs::read_to_string(spec_file).unwrap()).unwrap(),
     )
     .unwrap();

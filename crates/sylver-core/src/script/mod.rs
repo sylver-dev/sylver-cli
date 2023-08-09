@@ -1,13 +1,17 @@
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, HashMap};
 
+use derivative::Derivative;
 use derive_more::From;
 use thiserror::Error;
 
-use sylver_core::query::{expr::EvalCtx, RawTreeInfoBuilder, SylvaNode};
+use crate::{
+    query::{expr::EvalCtx, RawTreeInfoBuilder, SylvaNode},
+    semantic::names::{SGraph, ScopeId},
+};
 
 pub mod python;
 
-#[derive(Debug, Error)]
+#[derive(Debug, Clone, Error)]
 pub enum ScriptError {
     #[error("Runtime error: {0}")]
     RuntimeError(String),
@@ -17,15 +21,24 @@ pub enum ScriptError {
     InvalidType(String, ScriptValue),
     #[error("Failed to compile script {0}: {1}")]
     Compilation(String, String),
+    #[error("Invalid aspect declaration")]
+    InvalidAspectDeclaration,
+    #[error("Invalid message type: {0}")]
+    InvalidMessageType(String),
 }
 
-#[derive(Debug, Clone, Eq, PartialEq, Hash, From)]
+#[derive(Debug, Clone, From, Derivative)]
+#[derivative(Eq, PartialEq, Hash)]
 pub enum ScriptValue {
     Bool(bool),
     Integer(i64),
     Str(String),
     Dict(BTreeMap<String, ScriptValue>),
     List(Vec<ScriptValue>),
+    Scope(
+        ScopeId,
+        #[derivative(PartialEq = "ignore", Hash = "ignore")] SGraph,
+    ),
 }
 
 impl TryInto<bool> for ScriptValue {
@@ -111,4 +124,10 @@ pub trait ScriptEngine {
         file_name: &str,
         fun_name: &str,
     ) -> Result<Self::Script, ScriptError>;
+
+    fn compile_aspects(
+        &self,
+        script: &str,
+        file_name: &str,
+    ) -> Result<HashMap<String, HashMap<String, Self::Script>>, ScriptError>;
 }

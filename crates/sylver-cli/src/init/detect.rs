@@ -6,15 +6,18 @@ use std::{
 use anyhow::{anyhow, bail, Context};
 use log::Logger;
 use semver::Version;
-use sylver_core::dashboard::api::ReportLanguage;
-use sylver_core::specs::stem::location::{stem_location_from_str, StemLocation};
-use sylver_core::util::archive::{read_archive, ArchiveFile};
+
 use sylver_core::{
     builtin_langs::{get_builtin_langs, get_detection_script, BuiltinLang},
     core::files_spec::FileSpec,
-    specs::stem::project::{ProjectLang, ProjectStem},
+    dashboard::api::ReportLanguage,
+    script::{ScriptEngine, ScriptError, ScriptValue},
+    specs::{
+        stem::location::{stem_location_from_str, StemLocation},
+        stem::project::{ProjectLang, ProjectStem},
+    },
+    util::archive::{read_archive, ArchiveFile},
 };
-use sylver_script::{ScriptEngine, ScriptError, ScriptValue};
 
 static SYLVER_VERSION: &str = env!("CARGO_PKG_VERSION");
 

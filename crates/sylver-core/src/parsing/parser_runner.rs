@@ -91,7 +91,7 @@ mod tests {
         let declarations =
             parse(include_str!("../../test_res/specs/binop.syl")).expect("Invalid spec");
 
-        let spec = Spec::from_decls(declarations).expect("Invalid spec");
+        let spec = Spec::from_decls(Default::default(), declarations).expect("Invalid spec");
 
         spec
     }

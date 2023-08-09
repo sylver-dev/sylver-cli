@@ -1,23 +1,23 @@
-use std::{cell::RefCell, rc::Rc};
+use std::cell::RefCell;
 
 use rustpython_vm::{
     builtins::PyStr, convert::ToPyObject, function::FuncArgs, pyclass, PyObjectRef, PyPayload,
     PyResult, VirtualMachine,
 };
 
-use sylver_core::semantic::names::{SGraph, ScopeId};
+use crate::semantic::names::{SGraph, ScopeId};
 
-use crate::python::script_node::ScriptNode;
+use super::script_node::ScriptNode;
 
 #[pyclass(name = "ScriptSG", module = "sylver")]
 #[derive(Debug, PyPayload)]
 pub struct ScriptSG {
-    scope_graph: Rc<RefCell<SGraph>>,
+    scope_graph: RefCell<SGraph>,
     scope: ScopeId,
 }
 
 impl ScriptSG {
-    fn new(scope_graph: Rc<RefCell<SGraph>>, scope: ScopeId) -> Self {
+    pub fn new(scope_graph: RefCell<SGraph>, scope: ScopeId) -> Self {
         Self { scope_graph, scope }
     }
 }

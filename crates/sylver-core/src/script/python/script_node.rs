@@ -1,4 +1,4 @@
-use sylver_core::query::{
+use crate::query::{
     expr::{EvalCtx, Value},
     RawTreeInfoBuilder, SylvaNode,
 };
@@ -27,6 +27,8 @@ impl ScriptNode {
         }
     }
 }
+
+unsafe impl Send for ScriptNode {}
 
 #[pyclass]
 impl ScriptNode {

@@ -12,7 +12,7 @@ use crate::{
     tree::{info::TreeInfo, Node, NodeId},
 };
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone)]
 pub struct EvalCtx<'v, B: TreeInfoBuilder<'v>> {
     memory: Vec<Value<'v>>,
     spec: &'v Spec,
@@ -1204,7 +1204,7 @@ pub mod test {
             }
             .into()),
             expr.eval(&mut EvalCtx::new(
-                &Spec::from_decls(vec![]).unwrap(),
+                &Spec::from_decls(Default::default(), vec![]).unwrap(),
                 builder,
             ),)
         );
@@ -1239,7 +1239,7 @@ pub mod test {
         assert_eq!(
             Ok(Value::Null),
             expr.eval(&mut EvalCtx::new(
-                &Spec::from_decls(vec![]).unwrap(),
+                &Spec::from_decls(Default::default(), vec![]).unwrap(),
                 builder,
             ),)
         );
@@ -1277,7 +1277,7 @@ pub mod test {
 
         let expr = Expr::node_text(Expr::Const(Value::Node(sylva_node)));
 
-        let spec = Spec::from_decls(vec![]).unwrap();
+        let spec = Spec::from_decls(Default::default(), vec![]).unwrap();
         let mut ctx = EvalCtx::new(&spec, builder);
 
         assert_eq!(
@@ -1382,7 +1382,7 @@ pub mod test {
 
         builder.infos.insert(sylva_node, tree_info);
 
-        let spec = Spec::from_decls(vec![]).unwrap();
+        let spec = Spec::from_decls(Default::default(), vec![]).unwrap();
 
         let mut ctx = EvalCtx::new(&spec, builder);
         ctx.push_var(Value::Node(sylva_node));
@@ -1391,7 +1391,7 @@ pub mod test {
     }
 
     fn eval_in_default_ctx(expr: Expr) -> Result<Value<'static>, EvalError> {
-        let spec = Spec::from_decls(vec![]).unwrap();
+        let spec = Spec::from_decls(Default::default(), vec![]).unwrap();
         let mut ctx = EvalCtx::new(&spec, TestTreeInfoBuilder::default());
 
         expr.eval(&mut ctx).map(|val| val.to_static())

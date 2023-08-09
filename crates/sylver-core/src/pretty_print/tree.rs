@@ -317,7 +317,7 @@ mod tests {
 
     fn test_pprint_ok(spec_str: &str, code: &str, expected: &str) {
         let spec_ast = sylver_dsl::meta::parse(spec_str).expect("Invalid spec str");
-        let spec = Spec::from_decls(spec_ast).expect("Invalid spec");
+        let spec: Spec = Spec::from_decls(Default::default(), spec_ast).expect("Invalid spec");
         let parser_runner = ParserRunner::new("main", &spec.syntax).unwrap();
 
         let source = Source::inline(code.to_string(), "".to_string());

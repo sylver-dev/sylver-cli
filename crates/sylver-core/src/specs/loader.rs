@@ -10,8 +10,9 @@ use crate::{
     core::{
         files_spec::{FileSpec, FileSpecLoader, FsFileSpecLoader},
         source::Source,
-        spec::{spec_from_file, Spec},
+        spec::{spec_from_files, Spec},
     },
+    script::python::PythonScriptEngine,
     specs::stem::{
         language::LanguageStem, location::StemLocation, project::ProjectConfigStem,
         ruleset::RuleSetStem,
@@ -72,7 +73,12 @@ impl SylverLoader {
             FsFileSpecLoader::default(),
             FullLocationLoader::from_state(state.clone()),
             DefaultPathLoader::new("config".to_string()),
-            FullLocationLoader::from_state(state),
+            FullLocationLoader::new(
+                state.clone(),
+                RegistryLoader::new(state.clone(), ApiClient::from_state(state.clone())),
+                GitClient::default(),
+                LanguageStemLoader::new(state.script_engine.clone()),
+            ),
         )
     }
 }
@@ -302,9 +308,17 @@ impl<L: PathLoader> LocationLoader<L::Output> for FullLocationLoader<L> {}
 #[derive(Debug)]
 pub struct LanguageStemLoader {
     default_loader: DefaultPathLoader<LanguageStem>,
+    script_engine: Arc<PythonScriptEngine>,
 }
 
 impl LanguageStemLoader {
+    pub fn new(script_engine: Arc<PythonScriptEngine>) -> LanguageStemLoader {
+        LanguageStemLoader {
+            default_loader: DefaultPathLoader::new("language spec".to_string()),
+            script_engine,
+        }
+    }
+
     pub fn is_syl_fil(&self, path: &Path) -> bool {
         matches!(path.extension(), Some(ext) if ext == OsStr::new("syl"))
     }
@@ -318,24 +332,17 @@ impl LanguageStemLoader {
     }
 }
 
-impl Default for LanguageStemLoader {
-    fn default() -> Self {
-        LanguageStemLoader {
-            default_loader: DefaultPathLoader::new("language spec".to_string()),
-        }
-    }
-}
-
 impl PathLoader for LanguageStemLoader {
     type Output = Spec;
 
     fn load(&self, path: &Path) -> anyhow::Result<Spec> {
         if self.is_syl_fil(path) {
-            spec_from_file(path)
+            spec_from_files(&self.script_engine, None, path)
         } else {
             self.default_loader.load(path).and_then(|stem| {
                 let spec_path = path.with_file_name(stem.spec);
-                spec_from_file(&spec_path)
+                let aspects_path = stem.aspecs.map(|p| path.with_file_name(p));
+                spec_from_files(&self.script_engine, aspects_path.as_ref(), &spec_path)
             })
         }
     }
@@ -383,9 +390,8 @@ mod tests {
     use indoc::indoc;
     use temp_dir::TempDir;
 
-    use crate::util::test::create_tmp_child;
-
     use super::*;
+    use crate::util::test::create_tmp_child;
 
     #[test]
     fn spec_from_syl() {
@@ -393,9 +399,16 @@ mod tests {
         let dir = TempDir::new().unwrap();
         let spec_path = create_tmp_child(&dir, "spec.syl", spec_str).unwrap();
 
-        let loaded = LanguageStemLoader::default().load(&spec_path).unwrap();
+        let script_engine = Arc::new(PythonScriptEngine::default());
 
-        assert_eq!(loaded, spec_from_file(&spec_path).unwrap());
+        let loaded = LanguageStemLoader::new(script_engine.clone())
+            .load(&spec_path)
+            .unwrap();
+
+        assert_eq!(
+            loaded,
+            spec_from_files(&script_engine, None, &spec_path).unwrap()
+        );
     }
 
     #[test]
@@ -412,8 +425,15 @@ mod tests {
 
         let stem_path = create_tmp_child(&dir, "spec.yml", stem_str).unwrap();
 
-        let loaded = LanguageStemLoader::default().load(&stem_path).unwrap();
+        let script_engine = Arc::new(PythonScriptEngine::default());
 
-        assert_eq!(loaded, spec_from_file(&spec_path).unwrap());
+        let loaded = LanguageStemLoader::new(script_engine.clone())
+            .load(&stem_path)
+            .unwrap();
+
+        assert_eq!(
+            loaded,
+            spec_from_files(&script_engine, None, &spec_path).unwrap()
+        );
     }
 }

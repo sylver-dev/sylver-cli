@@ -5,7 +5,7 @@ use anyhow::Result;
 use sylver_core::{
     core::{
         source::{source_from_file, Source, SourceTree},
-        spec::{spec_from_file, Syntax},
+        spec::{spec_from_files, Syntax},
     },
     parsing::parser_runner::ParserRunner,
     pretty_print::{render_report, tree::TreePPrint},
@@ -17,7 +17,7 @@ use sylver_core::{
 use crate::ParseCmd;
 
 pub fn parse(state: Arc<SylverState>, cmd: &ParseCmd) -> Result<()> {
-    let spec = spec_from_file(&cmd.spec)?;
+    let spec = spec_from_files(&state.script_engine, None, &cmd.spec)?;
     let parser_runner = ParserRunner::new(
         &cmd.rule.clone().unwrap_or_else(|| "main".to_string()),
         &spec.syntax,

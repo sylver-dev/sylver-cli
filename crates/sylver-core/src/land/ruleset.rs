@@ -124,7 +124,7 @@ impl RuleSet {
             .for_each(|(rule_name, sylva_node)| {
                 rule_matches
                     .entry(rule_name)
-                    .or_insert_with(HashSet::new)
+                    .or_default()
                     .insert(sylva_node);
             });
 

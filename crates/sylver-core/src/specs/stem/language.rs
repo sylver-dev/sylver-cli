@@ -6,4 +6,5 @@ use serde::{Deserialize, Serialize};
 pub struct LanguageStem {
     pub id: String,
     pub spec: PathBuf,
+    pub aspecs: Option<PathBuf>,
 }

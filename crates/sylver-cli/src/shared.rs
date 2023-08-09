@@ -76,7 +76,7 @@ pub fn build_sylva(
             let syntax = mappings.types.as_slice().into();
             let parser = BuiltinParserRunner::new(lang, &syntax, mappings);
             let sylva = Sylva::build_concurrently(SylvaParser::Builtin(parser), sources)?;
-            let spec = Spec::from_syntax(syntax);
+            let spec = Spec::new(Default::default(), syntax);
             let spec_id = LandSpecId::BuiltinLangId(builder.add_spec(spec));
             builder.add_sylva(sylva, spec_id)
         }
