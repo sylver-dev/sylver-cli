@@ -1,5 +1,7 @@
-use std::path::PathBuf;
-use std::{cmp::Ordering, collections::HashMap, fs::read_to_string, ops::Index, path::Path};
+use std::{
+    cmp::Ordering, collections::HashMap, fs::read_to_string, hash::Hash, ops::Index, path::Path,
+    path::PathBuf,
+};
 
 use anyhow::Context;
 use derive_more::{From, Into};
@@ -59,20 +61,17 @@ pub struct Spec {
     /// Syntax related structures.
     pub syntax: Syntax,
     // Named aspects.
-    pub aspects: HashMap<String, Aspect>,
+    pub aspects: Aspects,
 }
 
 impl Spec {
     /// Build a spec with the given language syntax.
-    pub fn new(aspects: HashMap<String, Aspect>, syntax: Syntax) -> Spec {
+    pub fn new(aspects: Aspects, syntax: Syntax) -> Spec {
         Spec { aspects, syntax }
     }
 
     /// Create a `Spec` from a slice of rule declarations.
-    pub fn from_decls(
-        aspects: HashMap<String, Aspect>,
-        decls: impl IntoIterator<Item = Decl>,
-    ) -> SpecRes<Spec> {
+    pub fn from_decls(aspects: Aspects, decls: impl IntoIterator<Item = Decl>) -> SpecRes<Spec> {
         let syntax = SyntaxBuilder::new().build(decls)?;
         Ok(Spec { aspects, syntax })
     }
@@ -130,21 +129,7 @@ pub fn spec_from_files(
 
     let syntax = SyntaxBuilder::new().build(parse(&spec_str)?)?;
 
-    let mut aspects: HashMap<String, Aspect> = HashMap::new();
-
-    for (name, impls) in raw_aspect_from_file(engine, aspects_file)? {
-        for (kind_name, script) in impls {
-            let kind = syntax
-                .kind_id(&kind_name)
-                .with_context(|| format!("Aspect {} refers to unknown kind {}", name, kind_name))?;
-
-            aspects
-                .entry(name.clone())
-                .or_default()
-                .scripts
-                .insert(kind, script);
-        }
-    }
+    let aspects = Aspects::build(&syntax, raw_aspect_from_file(engine, aspects_file)?)?;
 
     Ok(Spec::new(aspects, syntax))
 }
@@ -167,8 +152,30 @@ fn raw_aspect_from_file(
 }
 
 #[derive(Debug, Clone, Default, PartialEq)]
-pub struct Aspect {
-    scripts: HashMap<KindId, PythonScript>,
+pub struct Aspects {
+    scripts: HashMap<(String, KindId), PythonScript>,
+}
+
+impl Aspects {
+    pub fn build(
+        syntax: &Syntax,
+        invokables: HashMap<String, HashMap<String, PythonScript>>,
+    ) -> anyhow::Result<Self> {
+        let mut aspect_scripts = HashMap::new();
+
+        for (aspect_name, scripts) in invokables {
+            for (kind_name, script) in scripts {
+                let kind = syntax.kind_id(&kind_name).with_context(|| {
+                    format!("can't add aspect {aspect_name} to non_existing kind {kind_name}")
+                })?;
+                aspect_scripts.insert((aspect_name.clone(), kind), script);
+            }
+        }
+
+        Ok(Aspects {
+            scripts: aspect_scripts,
+        })
+    }
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -1358,10 +1365,6 @@ pub mod test {
 
     fn parse_decls(spec: &str) -> Vec<Decl> {
         parse(spec).expect("Invalid spec")
-    }
-
-    fn spec_from_str(spec: &str) -> Spec {
-        Spec::new(Default::default(), get_syntax(spec))
     }
 
     fn get_syntax(spec: &str) -> Syntax {
