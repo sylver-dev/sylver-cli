@@ -6,7 +6,7 @@ use std::{
 };
 
 use id_vec::{Id, IdVec};
-use rustpython_parser::ast;
+use rustpython_parser::ast::{self, ExprKind};
 use rustpython_vm::{
     builtins::{PyBaseExceptionRef, PyDict, PyInt, PyList, PyStr},
     class::PyClassImpl,
@@ -362,12 +362,10 @@ fn find_aspect_target_kind_name(
         [] => Ok(None),
         [_, _, ..] => Err(ScriptError::InvalidAspectDeclaration),
         [decorator] => {
-            if let ast::ExprKind::Call { func, args, .. } = &decorator.node {
-                if let ast::ExprKind::Name { id: func_name, .. } = &func.node {
-                    if let Some(ast::ExprKind::Name { id: kind_name, .. }) =
-                        args.first().map(|a| &a.node)
-                    {
-                        return Ok(Some((func_name.to_string(), kind_name.clone())));
+            if let ExprKind::Call { func, .. } = &decorator.node {
+                if let ExprKind::Attribute { value, attr, .. } = &func.node {
+                    if let ExprKind::Name { id: kind_name, .. } = &value.node {
+                        return Ok(Some((attr.clone(), kind_name.clone())));
                     }
                 }
             }
@@ -593,15 +591,15 @@ def hello(file_name: str):
     #[test]
     fn collect_aspect() {
         let python_module = r#"
-@aspect1(Expr)
+@Expr.aspect1()
 def my_aspect_expr():
     return 'Expr'
     
-@aspect2(Expr)
+@Expr.aspect2()
 def my_aspect2_expr2():
     return 'Expr2'
 
-@aspect1(Statement)
+@Statement.aspect1()
 def my_aspect_statement():
     return 'Statement'
 "#;
