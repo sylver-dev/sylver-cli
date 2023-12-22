@@ -153,7 +153,7 @@ impl DepthNodeGeneratorFn {
                 let siblings = ctx
                     .next_sibling(current.node)
                     .into_iter()
-                    .chain(ctx.previous_sibling(current.node).into_iter())
+                    .chain(ctx.previous_sibling(current.node))
                     .filter(|s| {
                         let is_seen = seen.contains(s);
 

@@ -67,7 +67,7 @@ impl<T: Hash + Clone + Eq> FromIterator<T> for OnceQueue<T> {
 impl<T: Hash + Clone + Eq, C: IntoIterator<Item = T>> From<C> for OnceQueue<T> {
     fn from(elems: C) -> Self {
         let mut queue = OnceQueue::new();
-        queue.extend(elems.into_iter());
+        queue.extend(elems);
         queue
     }
 }
