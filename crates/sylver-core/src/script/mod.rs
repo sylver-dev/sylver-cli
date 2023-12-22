@@ -149,13 +149,13 @@ pub trait ScriptEngine {
     fn compile_function(
         &self,
         script: &str,
-        file_name: &str,
-        fun_name: &str,
+        file_name: String,
+        fun_name: String,
     ) -> Result<Self::Script, ScriptError>;
 
     fn compile_aspects(
         &self,
         script: &str,
-        file_name: &str,
+        file_name: String,
     ) -> Result<HashMap<String, HashMap<String, Self::Script>>, ScriptError>;
 }

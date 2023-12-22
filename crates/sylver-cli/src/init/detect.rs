@@ -92,12 +92,21 @@ pub struct DetectableRuleset<E: ScriptEngine> {
 
 impl<E: ScriptEngine> DetectableRuleset<E> {
     fn from_archive_file(engine: &E, file: &ArchiveFile) -> anyhow::Result<DetectableRuleset<E>> {
-        let Some(StemLocation::Registry { author, name, version: Some(v) }) = stem_location_from_str(&file.name) else {
-           bail!("Invalid registry identifier: {}", file.name);
+        let Some(StemLocation::Registry {
+            author,
+            name,
+            version: Some(v),
+        }) = stem_location_from_str(&file.name)
+        else {
+            bail!("Invalid registry identifier: {}", file.name);
         };
 
         let script = engine
-            .compile_function(&file.content, "ruleset_script", RULESET_CONFIG_FUN)
+            .compile_function(
+                &file.content,
+                "ruleset_script".to_string(),
+                RULESET_CONFIG_FUN.to_string(),
+            )
             .context("Failed to compile ruleset configuration function")?;
 
         Ok(DetectableRuleset {
@@ -237,7 +246,10 @@ impl<E: ScriptEngine> ProjectDetector<E> {
         language: &DetectableLanguage<E::Script>,
     ) -> Vec<DetectableRuleset<E>> {
         let Ok(archive) = self.fetch_ruleset_archive(language) else {
-            self.logger.error(&format!("Failed to fetch ruleset archive for language: {}", language.name()));
+            self.logger.error(&format!(
+                "Failed to fetch ruleset archive for language: {}",
+                language.name()
+            ));
             return vec![];
         };
 
@@ -292,7 +304,11 @@ fn builtin_detectable_lang<E: ScriptEngine>(engine: &E) -> Vec<DetectableLanguag
         .into_iter()
         .map(|lang| {
             let script = engine
-                .compile_function(get_detection_script(lang), "builtin", PROJECT_DETECTION_FUN)
+                .compile_function(
+                    get_detection_script(lang),
+                    "builtin".to_string(),
+                    PROJECT_DETECTION_FUN.to_string(),
+                )
                 .unwrap();
             DetectableLanguage::Builtin(lang, script)
         })

@@ -144,7 +144,7 @@ fn raw_aspect_from_file(
                 .with_context(|| format!("Could not read aspects file: {}", f.display()))?;
 
             engine
-                .compile_aspects(&aspects_script, &f.display().to_string())
+                .compile_aspects(&aspects_script, f.display().to_string())
                 .with_context(|| format!("Could not compile aspects file: {}", f.display()))
         })
         .transpose()?
