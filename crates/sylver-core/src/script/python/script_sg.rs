@@ -1,11 +1,15 @@
 use std::cell::RefCell;
 
+use rustpython_vm::builtins::PyList;
 use rustpython_vm::{
     builtins::PyStr, convert::ToPyObject, function::FuncArgs, pyclass, PyObjectRef, PyPayload,
     PyResult, VirtualMachine,
 };
 
-use crate::semantic::names::{SGraph, ScopeId};
+use crate::{
+    script::ScriptEvalCtx,
+    semantic::names::{SGraph, ScopeId},
+};
 
 use super::script_node::ScriptNode;
 
@@ -14,11 +18,16 @@ use super::script_node::ScriptNode;
 pub struct ScriptSG {
     scope_graph: RefCell<SGraph>,
     scope: ScopeId,
+    ctx: RefCell<ScriptEvalCtx>,
 }
 
 impl ScriptSG {
-    pub fn new(scope_graph: RefCell<SGraph>, scope: ScopeId) -> Self {
-        Self { scope_graph, scope }
+    pub fn new(ctx: RefCell<ScriptEvalCtx>, scope_graph: RefCell<SGraph>, scope: ScopeId) -> Self {
+        Self {
+            ctx,
+            scope_graph,
+            scope,
+        }
     }
 }
 
@@ -44,7 +53,28 @@ impl ScriptSG {
     fn add_scope(&self, _args: FuncArgs, vm: &VirtualMachine) -> PyResult<PyObjectRef> {
         let mut scope_graph = self.scope_graph.borrow_mut();
         let scope = scope_graph.add_scope(self.scope);
-        Ok(ScriptSG::new(self.scope_graph.clone(), scope).to_pyobject(vm))
+        Ok(ScriptSG::new(self.ctx.clone(), self.scope_graph.clone(), scope).to_pyobject(vm))
+    }
+
+    #[pymethod]
+    fn lookup(&self, args: FuncArgs, vm: &VirtualMachine) -> PyResult<PyObjectRef> {
+        let name = get_arg(&args, 0, vm)?
+            .payload::<PyStr>()
+            .ok_or_else(|| vm.new_value_error("expected name to be a string".to_owned()))?;
+
+        let nodes = self
+            .scope_graph
+            .borrow()
+            .lookup(self.scope, name.to_string().as_str())
+            .into_iter()
+            .map(|n| ScriptNode::new(self.ctx.clone(), n));
+
+        let list = PyList::default();
+        for node in nodes {
+            list.borrow_vec_mut().push(node.to_pyobject(vm));
+        }
+
+        Ok(list.to_pyobject(vm))
     }
 }
 

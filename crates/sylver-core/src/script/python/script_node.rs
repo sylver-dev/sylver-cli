@@ -1,7 +1,4 @@
-use crate::query::{
-    expr::{EvalCtx, Value},
-    RawTreeInfoBuilder, SylvaNode,
-};
+use std::cell::RefCell;
 
 use rustpython_vm::{
     builtins::{PyList, PyStrRef},
@@ -9,22 +6,21 @@ use rustpython_vm::{
     pyclass, PyObject, PyObjectRef, PyPayload, PyResult, VirtualMachine,
 };
 
+use crate::{
+    query::{expr::Value, SylvaNode},
+    script::ScriptEvalCtx,
+};
+
 #[pyclass(name = "ScriptNode", module = "sylver")]
 #[derive(Debug, PyPayload)]
 pub struct ScriptNode {
-    // This will, in general, not be a reference to an actual 'static value.
-    // A transmutation is done to hide the lifetime from the Python interpreter.
-    // As a result, `ScriptNode` values should always be short-lived.
-    ctx: *mut EvalCtx<'static, RawTreeInfoBuilder<'static>>,
+    ctx: RefCell<ScriptEvalCtx>,
     pub node: SylvaNode,
 }
 
 impl ScriptNode {
-    pub fn new<'c>(ctx: &mut EvalCtx<'c, RawTreeInfoBuilder<'c>>, node: SylvaNode) -> Self {
-        Self {
-            ctx: unsafe { std::mem::transmute(ctx) },
-            node,
-        }
+    pub fn new(ctx: RefCell<ScriptEvalCtx>, node: SylvaNode) -> Self {
+        Self { ctx, node }
     }
 }
 
@@ -46,17 +42,19 @@ impl ScriptNode {
     }
 
     fn text(&self, vm: &VirtualMachine) -> PyObjectRef {
-        let ctx = unsafe { &mut *self.ctx };
-        ctx.node_text(self.node).to_pyobject(vm)
+        self.ctx
+            .borrow_mut()
+            .ctx_mut()
+            .node_text(self.node)
+            .to_pyobject(vm)
     }
 
     fn node_children(&self, vm: &VirtualMachine) -> PyResult<PyObjectRef> {
-        let ctx = unsafe { &mut *self.ctx };
         let list = PyList::default();
 
-        for c in ctx.childs(self.node) {
+        for c in self.ctx.borrow().ctx().childs(self.node) {
             let child = ScriptNode {
-                ctx: self.ctx,
+                ctx: self.ctx.clone(),
                 node: c,
             };
             list.borrow_vec_mut().push(child.to_pyobject(vm));
@@ -66,12 +64,11 @@ impl ScriptNode {
     }
 
     fn node_field(&self, field_name: &str, vm: &VirtualMachine) -> PyResult<PyObjectRef> {
-        let ctx = unsafe { &mut *self.ctx };
-        match ctx.node_field(self.node, field_name) {
+        match self.ctx.borrow().ctx().node_field(self.node, field_name) {
             Ok(Value::Null) => Ok(vm.ctx.none()),
             Ok(Value::Node(n)) => Ok(ScriptNode {
                 node: n,
-                ctx: self.ctx,
+                ctx: self.ctx.clone(),
             }
             .to_pyobject(vm)),
             _ => Err(vm.new_exception_msg(

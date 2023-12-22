@@ -1,4 +1,7 @@
-use std::collections::{BTreeMap, HashMap};
+use std::{
+    cell::RefCell,
+    collections::{BTreeMap, HashMap},
+};
 
 use derivative::Derivative;
 use derive_more::From;
@@ -27,6 +30,30 @@ pub enum ScriptError {
     InvalidMessageType(String),
 }
 
+/// ScriptError values should never be used concurrently, so it is
+/// safe to implement Sync.
+unsafe impl Sync for ScriptError {}
+
+#[derive(Debug, Copy, Clone)]
+pub struct ScriptEvalCtx {
+    // This will, in general, not be a reference to an actual 'static value.
+    // A transmutation is done to hide the lifetime from the Python interpreter.
+    // As a result, `PythonEvalCtx` values should always be short-lived.
+    ctx: *mut EvalCtx<'static, RawTreeInfoBuilder<'static>>,
+}
+
+impl ScriptEvalCtx {
+    fn ctx_mut(&mut self) -> &mut EvalCtx<'static, RawTreeInfoBuilder<'static>> {
+        unsafe { &mut *self.ctx }
+    }
+
+    fn ctx(&self) -> &EvalCtx<'static, RawTreeInfoBuilder<'static>> {
+        unsafe { &*self.ctx }
+    }
+}
+
+unsafe impl Send for ScriptEvalCtx {}
+
 #[derive(Debug, Clone, From, Derivative)]
 #[derivative(Eq, PartialEq, Hash)]
 pub enum ScriptValue {
@@ -38,6 +65,7 @@ pub enum ScriptValue {
     Scope(
         ScopeId,
         #[derivative(PartialEq = "ignore", Hash = "ignore")] SGraph,
+        #[derivative(PartialEq = "ignore", Hash = "ignore")] RefCell<ScriptEvalCtx>,
     ),
 }
 

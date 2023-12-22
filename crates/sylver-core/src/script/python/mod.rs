@@ -16,7 +16,7 @@ use rustpython_vm::{
 
 use crate::query::{expr::EvalCtx, RawTreeInfoBuilder};
 
-use super::{ScriptEngine, ScriptError, ScriptQueryValue, ScriptValue};
+use super::{ScriptEngine, ScriptError, ScriptEvalCtx, ScriptQueryValue, ScriptValue};
 
 use script_node::ScriptNode;
 use script_sg::ScriptSG;
@@ -400,11 +400,17 @@ impl ScriptEngine for PythonScriptEngine {
         args: Vec<ScriptQueryValue>,
         ctx: &mut EvalCtx<'c, RawTreeInfoBuilder<'c>>,
     ) -> Result<ScriptQueryValue, ScriptError> {
+        let ctx = RefCell::new(ScriptEvalCtx {
+            ctx: unsafe { std::mem::transmute(ctx) },
+        });
+
         let mut script_args: Vec<PythonScriptQueryArg> = vec![];
         for a in args {
             let b = match a {
                 ScriptQueryValue::Simple(v) => PythonScriptQueryArg::Value(v),
-                ScriptQueryValue::Node(n) => PythonScriptQueryArg::Node(ScriptNode::new(ctx, n)),
+                ScriptQueryValue::Node(n) => {
+                    PythonScriptQueryArg::Node(ScriptNode::new(ctx.clone(), n))
+                }
             };
             script_args.push(b);
         }
@@ -463,8 +469,8 @@ impl ToPyObject for ScriptValue {
                 }
                 dict.to_pyobject(vm)
             }
-            ScriptValue::Scope(scope_id, scope_graph) => {
-                ScriptSG::new(RefCell::new(scope_graph), scope_id).to_pyobject(vm)
+            ScriptValue::Scope(scope_id, scope_graph, ctx) => {
+                ScriptSG::new(ctx, RefCell::new(scope_graph), scope_id).to_pyobject(vm)
             }
         }
     }
