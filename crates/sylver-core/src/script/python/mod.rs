@@ -263,7 +263,7 @@ pub fn compile_aspects(
 ) -> Result<HashMap<String, HashMap<String, PythonScript>>, ScriptError> {
     let mut invokables: HashMap<String, HashMap<String, PythonScript>> = HashMap::new();
 
-    let mut ast = parse_module(&code, &path)?;
+    let mut ast = parse_module(code, &path)?;
 
     let aspect_function_ids = collect_aspect_function_ids(&path, &mut ast)?;
 

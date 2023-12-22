@@ -12,7 +12,7 @@ macro_rules! id_type {
 
         impl PartialOrd for $x {
             fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-                self.index().partial_cmp(&other.index())
+                Some(self.index().cmp(&other.index()))
             }
         }
 

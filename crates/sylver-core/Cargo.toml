@@ -14,7 +14,7 @@ maplit = "1.0.2"
 petgraph = "0.6.*"
 derive_more = "0.99.*"
 non-empty-vec = "0.2.0"
-itertools = "0.10.3"
+itertools = "0.12.0"
 rustc-hash = "1.1.0"
 smallvec = { version = "1.8.0", features = ["const_generics"] }
 codespan-reporting = "0.11.1"
@@ -24,7 +24,7 @@ rayon = "1.5.3"
 glob = "0.3.0"
 log = { path = "../log" }
 url = "2.3.1"
-fancy-regex = "0.10.0"
+fancy-regex = "0.13.0"
 once_cell = "1.16.0"
 tree-sitter = "0.20.9"
 sylver-langs = { path = "../sylver-langs" }

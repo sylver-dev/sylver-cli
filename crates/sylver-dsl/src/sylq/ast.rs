@@ -20,7 +20,7 @@ pub enum SylqParserError {
     #[error(transparent)]
     Walk(#[from] WalkError<Rule>),
     #[error(transparent)]
-    RegexErr(#[from] fancy_regex::Error),
+    RegexErr(#[from] Box<fancy_regex::Error>),
 }
 
 impl From<pest::error::Error<Rule>> for SylqParserError {
@@ -336,7 +336,7 @@ fn regex_literal(mut pairs: Pairs<Rule>) -> SylqParserRes<Expr> {
 
     fancy_regex::Regex::new(&regex_txt)
         .map(|r| Expr::RegexLit(ExprRegex(r)))
-        .map_err(SylqParserError::RegexErr)
+        .map_err(|err| SylqParserError::RegexErr(Box::new(err)))
 }
 
 fn not_expr(mut pairs: Pairs<Rule>) -> SylqParserRes<Expr> {

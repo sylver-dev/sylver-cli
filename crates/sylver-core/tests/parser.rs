@@ -3,8 +3,6 @@ use std::{
     path::{Path, PathBuf},
 };
 
-use thiserror::__private::PathAsDisplay;
-
 use sylver_core::script::python::PythonScriptEngine;
 use sylver_core::{
     core::{source::Source, spec::spec_from_files},
@@ -57,7 +55,7 @@ fn spec_output_files(spec_file: &Path) -> impl Iterator<Item = PathBuf> {
 
     glob::glob(&format!(
         "{}/parser_tests/single_positive/*.output",
-        spec_dir.as_display()
+        spec_dir.display()
     ))
     .expect("Failed to read output glob")
     .map(|r| r.unwrap())

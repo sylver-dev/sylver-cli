@@ -29,7 +29,7 @@ pub enum MetaParserErr {
     #[error(transparent)]
     IO(#[from] io::Error),
     #[error(transparent)]
-    RegexParsing(#[from] fancy_regex::Error),
+    RegexParsing(#[from] Box<fancy_regex::Error>),
     #[error("Unknown term type: {0}")]
     UnknownTermType(String),
     #[error("Missing argument: {0}")]
@@ -39,6 +39,12 @@ pub enum MetaParserErr {
 impl From<pest::error::Error<Rule>> for MetaParserErr {
     fn from(e: pest::error::Error<Rule>) -> Self {
         MetaParserErr::PestErr(Box::new(e))
+    }
+}
+
+impl From<fancy_regex::Error> for MetaParserErr {
+    fn from(e: fancy_regex::Error) -> Self {
+        MetaParserErr::RegexParsing(Box::new(e))
     }
 }
 
