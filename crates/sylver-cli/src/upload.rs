@@ -71,7 +71,9 @@ impl<'s> ReportUploader<'s> {
             .map(|r| self.build_diagnostic(report, &r))
             .collect();
 
-        let Some(token) = &self.cmd.token else { bail!("Missing Sylver token") };
+        let Some(token) = &self.cmd.token else {
+            bail!("Missing Sylver token")
+        };
 
         self.client
             .post(format!(
@@ -122,7 +124,9 @@ impl<'s> ReportUploader<'s> {
     pub fn upload_report(&self, lang: LandSpecId) -> anyhow::Result<ReportDTO> {
         let report_data = self.build_report(lang)?;
 
-        let Some(token) = &self.cmd.token else { bail!("Missing Sylver token") };
+        let Some(token) = &self.cmd.token else {
+            bail!("Missing Sylver token")
+        };
 
         let report_str = self
             .client
