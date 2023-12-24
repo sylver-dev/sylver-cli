@@ -31,6 +31,8 @@ pub trait TreeInfo<'t>: Sized {
     fn field_name(&self, kind: KindId, field: FieldPos) -> Option<&str>;
 
     fn field_value(&self, node: NodeId, field: FieldPos) -> Option<NodeId>;
+    
+    fn field_value_from_name(&self, node: NodeId, field_name: &str) -> Option<NodeId>;
 
     fn kind_name(&self, kind: KindId) -> &str;
 

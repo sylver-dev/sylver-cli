@@ -6,21 +6,18 @@ use rustpython_vm::{
     pyclass, PyObject, PyObjectRef, PyPayload, PyResult, VirtualMachine,
 };
 
-use crate::{
-    query::{expr::Value, SylvaNode},
-    script::ScriptEvalCtx,
-};
+use crate::{query::SylvaNode, script::ScriptTreeInfo, tree::info::TreeInfo};
 
 #[pyclass(name = "ScriptNode", module = "sylver")]
 #[derive(Debug, PyPayload)]
 pub struct ScriptNode {
-    ctx: RefCell<ScriptEvalCtx>,
+    info: RefCell<ScriptTreeInfo>,
     pub node: SylvaNode,
 }
 
 impl ScriptNode {
-    pub fn new(ctx: RefCell<ScriptEvalCtx>, node: SylvaNode) -> Self {
-        Self { ctx, node }
+    pub fn new(info: RefCell<ScriptTreeInfo>, node: SylvaNode) -> Self {
+        Self { info, node }
     }
 }
 
@@ -42,20 +39,26 @@ impl ScriptNode {
     }
 
     fn text(&self, vm: &VirtualMachine) -> PyObjectRef {
-        self.ctx
+        self.info
             .borrow_mut()
-            .ctx_mut()
-            .node_text(self.node)
+            .info_mut()
+            .node_text(self.node.node)
             .to_pyobject(vm)
     }
 
     fn node_children(&self, vm: &VirtualMachine) -> PyResult<PyObjectRef> {
         let list = PyList::default();
 
-        for c in self.ctx.borrow().ctx().childs(self.node) {
+        for c in self
+            .info
+            .borrow()
+            .info()
+            .proxy(self.node.node)
+            .direct_children()
+        {
             let child = ScriptNode {
-                ctx: self.ctx.clone(),
-                node: c,
+                info: self.info.clone(),
+                node: self.node.with_node_id(c.id),
             };
             list.borrow_vec_mut().push(child.to_pyobject(vm));
         }
@@ -64,14 +67,18 @@ impl ScriptNode {
     }
 
     fn node_field(&self, field_name: &str, vm: &VirtualMachine) -> PyResult<PyObjectRef> {
-        match self.ctx.borrow().ctx().node_field(self.node, field_name) {
-            Ok(Value::Null) => Ok(vm.ctx.none()),
-            Ok(Value::Node(n)) => Ok(ScriptNode {
-                node: n,
-                ctx: self.ctx.clone(),
+        match self
+            .info
+            .borrow()
+            .info()
+            .field_value_from_name(self.node.node, field_name)
+        {
+            Some(n) => Ok(ScriptNode {
+                node: self.node.with_node_id(n),
+                info: self.info.clone(),
             }
             .to_pyobject(vm)),
-            _ => Err(vm.new_exception_msg(
+            None => Err(vm.new_exception_msg(
                 vm.ctx.exceptions.key_error.to_owned(),
                 format!("Missing attribute: {field_name}"),
             )),

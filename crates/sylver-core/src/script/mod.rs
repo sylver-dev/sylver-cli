@@ -1,3 +1,4 @@
+use std::sync::{Arc, RwLock};
 use std::{
     cell::RefCell,
     collections::{BTreeMap, HashMap},
@@ -8,8 +9,9 @@ use derive_more::From;
 use thiserror::Error;
 
 use crate::{
-    query::{expr::EvalCtx, RawTreeInfoBuilder, SylvaNode},
+    query::SylvaNode,
     semantic::names::{SGraph, ScopeId},
+    tree::info::raw::RawTreeInfo,
 };
 
 pub mod python;
@@ -35,24 +37,32 @@ pub enum ScriptError {
 unsafe impl Sync for ScriptError {}
 
 #[derive(Debug, Copy, Clone)]
-pub struct ScriptEvalCtx {
+pub struct ScriptTreeInfo {
     // This will, in general, not be a reference to an actual 'static value.
     // A transmutation is done to hide the lifetime from the Python interpreter.
     // As a result, `PythonEvalCtx` values should always be short-lived.
-    ctx: *mut EvalCtx<'static, RawTreeInfoBuilder<'static>>,
+    ctx: *mut RawTreeInfo<'static>,
 }
 
-impl ScriptEvalCtx {
-    fn ctx_mut(&mut self) -> &mut EvalCtx<'static, RawTreeInfoBuilder<'static>> {
+impl ScriptTreeInfo {
+    pub fn new(info: &mut RawTreeInfo) -> Self {
+        Self {
+            ctx: unsafe { std::mem::transmute(info) },
+        }
+    }
+}
+
+impl ScriptTreeInfo {
+    fn info_mut(&mut self) -> &mut RawTreeInfo<'static> {
         unsafe { &mut *self.ctx }
     }
 
-    fn ctx(&self) -> &EvalCtx<'static, RawTreeInfoBuilder<'static>> {
+    fn info(&self) -> &RawTreeInfo<'static> {
         unsafe { &*self.ctx }
     }
 }
 
-unsafe impl Send for ScriptEvalCtx {}
+unsafe impl Send for ScriptTreeInfo {}
 
 #[derive(Debug, Clone, From, Derivative)]
 #[derivative(Eq, PartialEq, Hash)]
@@ -64,8 +74,8 @@ pub enum ScriptValue {
     List(Vec<ScriptValue>),
     Scope(
         ScopeId,
-        #[derivative(PartialEq = "ignore", Hash = "ignore")] SGraph,
-        #[derivative(PartialEq = "ignore", Hash = "ignore")] RefCell<ScriptEvalCtx>,
+        #[derivative(PartialEq = "ignore", Hash = "ignore")] Arc<RwLock<SGraph>>,
+        #[derivative(PartialEq = "ignore", Hash = "ignore")] RefCell<ScriptTreeInfo>,
     ),
 }
 
@@ -139,11 +149,11 @@ pub trait ScriptEngine {
         args: Vec<ScriptValue>,
     ) -> Result<ScriptValue, ScriptError>;
 
-    fn eval_in_query<'c>(
+    fn eval_in_query(
         &self,
         script: &Self::Script,
         args: Vec<ScriptQueryValue>,
-        ctx: &mut EvalCtx<'c, RawTreeInfoBuilder<'c>>,
+        ctx: RefCell<ScriptTreeInfo>,
     ) -> Result<ScriptQueryValue, ScriptError>;
 
     fn compile_function(

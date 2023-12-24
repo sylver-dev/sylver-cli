@@ -60,6 +60,12 @@ impl<'t> TreeInfo<'t> for RawTreeInfo<'t> {
         node.named_childs[Into::<usize>::into(field)].map(|child_pos| node.childs[child_pos])
     }
 
+    fn field_value_from_name(&self, node_id: NodeId, field_name: &str) -> Option<NodeId> {
+        let node = self.node(node_id);
+        let field_pos = self.syntax.field_position(node.kind, field_name)?;
+        node.named_childs[Into::<usize>::into(field_pos)].map(|child_pos| node.childs[child_pos])
+    }
+
     fn kind_name(&self, kind: KindId) -> &str {
         self.syntax.kind_name(kind)
     }

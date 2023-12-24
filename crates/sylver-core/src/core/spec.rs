@@ -153,7 +153,7 @@ fn raw_aspect_from_file(
 
 #[derive(Debug, Clone, Default, PartialEq)]
 pub struct Aspects {
-    scripts: HashMap<(String, KindId), PythonScript>,
+    scripts: HashMap<String, HashMap<KindId, PythonScript>>,
 }
 
 impl Aspects {
@@ -161,20 +161,28 @@ impl Aspects {
         syntax: &Syntax,
         invokables: HashMap<String, HashMap<String, PythonScript>>,
     ) -> anyhow::Result<Self> {
-        let mut aspect_scripts = HashMap::new();
+        let mut aspect_scripts: HashMap<String, HashMap<KindId, PythonScript>> = HashMap::new();
 
         for (aspect_name, scripts) in invokables {
             for (kind_name, script) in scripts {
                 let kind = syntax.kind_id(&kind_name).with_context(|| {
                     format!("can't add aspect {aspect_name} to non_existing kind {kind_name}")
                 })?;
-                aspect_scripts.insert((aspect_name.clone(), kind), script);
+                aspect_scripts
+                    .entry(aspect_name.clone())
+                    .or_default()
+                    .insert(kind, script);
             }
         }
 
         Ok(Aspects {
             scripts: aspect_scripts,
         })
+    }
+    
+    pub fn get(&self, aspect_name: &str) -> Option<&HashMap<KindId, PythonScript>> {
+        self.scripts
+            .get(aspect_name)
     }
 }
 

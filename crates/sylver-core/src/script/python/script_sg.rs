@@ -1,4 +1,5 @@
 use std::cell::RefCell;
+use std::sync::{Arc, RwLock};
 
 use rustpython_vm::builtins::PyList;
 use rustpython_vm::{
@@ -7,7 +8,7 @@ use rustpython_vm::{
 };
 
 use crate::{
-    script::ScriptEvalCtx,
+    script::ScriptTreeInfo,
     semantic::names::{SGraph, ScopeId},
 };
 
@@ -16,13 +17,17 @@ use super::script_node::ScriptNode;
 #[pyclass(name = "ScriptSG", module = "sylver")]
 #[derive(Debug, PyPayload)]
 pub struct ScriptSG {
-    scope_graph: RefCell<SGraph>,
+    scope_graph: Arc<RwLock<SGraph>>,
     scope: ScopeId,
-    ctx: RefCell<ScriptEvalCtx>,
+    ctx: RefCell<ScriptTreeInfo>,
 }
 
 impl ScriptSG {
-    pub fn new(ctx: RefCell<ScriptEvalCtx>, scope_graph: RefCell<SGraph>, scope: ScopeId) -> Self {
+    pub fn new(
+        ctx: RefCell<ScriptTreeInfo>,
+        scope_graph: Arc<RwLock<SGraph>>,
+        scope: ScopeId,
+    ) -> Self {
         Self {
             ctx,
             scope_graph,
@@ -43,7 +48,7 @@ impl ScriptSG {
             .payload::<ScriptNode>()
             .ok_or_else(|| vm.new_value_error("expected node to be a ScriptNode".to_owned()))?;
 
-        let mut scope_graph = self.scope_graph.borrow_mut();
+        let mut scope_graph = self.scope_graph.write().expect("poisoned scope graph lock");
         scope_graph.add_decl(self.scope, name.to_string(), node.node);
 
         Ok(())
@@ -51,7 +56,7 @@ impl ScriptSG {
 
     #[pymethod]
     fn add_scope(&self, _args: FuncArgs, vm: &VirtualMachine) -> PyResult<PyObjectRef> {
-        let mut scope_graph = self.scope_graph.borrow_mut();
+        let mut scope_graph = self.scope_graph.write().expect("poisoned scope graph lock");
         let scope = scope_graph.add_scope(self.scope);
         Ok(ScriptSG::new(self.ctx.clone(), self.scope_graph.clone(), scope).to_pyobject(vm))
     }
@@ -64,7 +69,8 @@ impl ScriptSG {
 
         let nodes = self
             .scope_graph
-            .borrow()
+            .read()
+            .expect("poisoned scope graph lock")
             .lookup(self.scope, name.to_string().as_str())
             .into_iter()
             .map(|n| ScriptNode::new(self.ctx.clone(), n));

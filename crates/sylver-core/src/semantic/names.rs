@@ -1,7 +1,66 @@
 use derive_more::From;
-use std::collections::HashMap;
+use std::cell::RefCell;
+use std::{
+    collections::HashMap,
+    sync::{Arc, RwLock},
+};
 
-use crate::query::SylvaNode;
+use crate::script::ScriptEngine;
+use crate::{
+    core::spec::Aspects,
+    land::{sylva::SylvaId, Land},
+    query::SylvaNode,
+    script::{python::PythonScriptEngine, ScriptQueryValue, ScriptTreeInfo, ScriptValue},
+    tree::info::raw::RawTreeInfo,
+};
+
+static SG_GEN_ASPECT: &str = "sg_gen";
+
+pub fn compute_sgraph(
+    land: &Land,
+    sylva_id: SylvaId,
+    aspects: &Aspects,
+    mut tree_infos: RawTreeInfo,
+    engine: PythonScriptEngine,
+) -> Arc<RwLock<SGraph>> {
+    let sylva = land.sylva(sylva_id);
+
+    let sgraph = Arc::new(RwLock::new(SGraph::new()));
+
+    let Some(aspect) = aspects.get(SG_GEN_ASPECT) else {
+        return sgraph;
+    };
+
+    for (tree_id, tree) in sylva.iter() {
+        let tree_scope = {
+            let mut guard = sgraph.write().expect("poisoned scope graph lock");
+            let root = guard.root();
+            guard.add_scope(root)
+        };
+
+        for node in tree.nodes() {
+            if let Some(script) = aspect.get(&tree.tree[node].kind) {
+                let node_arg = ScriptQueryValue::Node(SylvaNode {
+                    sylva: sylva_id,
+                    tree: tree_id,
+                    node,
+                });
+
+                let tree_infos = RefCell::new(ScriptTreeInfo::new(&mut tree_infos));
+
+                let scope_arg = ScriptQueryValue::Simple(ScriptValue::Scope(
+                    tree_scope,
+                    sgraph.clone(),
+                    tree_infos.clone(),
+                ));
+
+                engine.eval_in_query(script, vec![node_arg, scope_arg], tree_infos);
+            }
+        }
+    }
+
+    sgraph
+}
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, From)]
 pub struct ScopeId(petgraph::graph::NodeIndex);
