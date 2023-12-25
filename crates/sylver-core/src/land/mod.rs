@@ -79,6 +79,6 @@ impl Land {
 
     pub fn sylva_node_tree(&self, sylva_node: SylvaNode) -> &SourceTree {
         let sylva = self.sylva(sylva_node.sylva);
-        sylva.tree(sylva_node.tree).unwrap()
+        sylva.source_tree(sylva_node.tree).unwrap()
     }
 }

@@ -53,7 +53,7 @@ impl<'s> TreeInfoBuilder<'s> for RawTreeInfoBuilder<'s> {
     fn info_for_node(&self, node: SylvaNode) -> RawTreeInfo<'s> {
         let tree = self
             .sylva
-            .tree(node.tree)
+            .source_tree(node.tree)
             .unwrap_or_else(|| panic!("Invalid tree id: {}", node.tree));
 
         RawTreeInfo::new(tree, &self.spec.syntax)

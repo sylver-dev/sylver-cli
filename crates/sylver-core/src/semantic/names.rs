@@ -1,48 +1,86 @@
-use derive_more::From;
-use std::cell::RefCell;
 use std::{
-    collections::HashMap,
+    cell::RefCell,
+    collections::{HashMap, HashSet},
     sync::{Arc, RwLock},
 };
 
-use crate::script::ScriptEngine;
+use derive_more::From;
+use thiserror::Error;
+
 use crate::{
     core::spec::Aspects,
-    land::{sylva::SylvaId, Land},
+    land::{sylva::SylvaTreeId, Land},
     query::SylvaNode,
-    script::{python::PythonScriptEngine, ScriptQueryValue, ScriptTreeInfo, ScriptValue},
+    script::{
+        python::PythonScriptEngine, ScriptEngine, ScriptError, ScriptQueryValue, ScriptTreeInfo,
+        ScriptValue,
+    },
     tree::info::raw::RawTreeInfo,
 };
 
 static SG_GEN_ASPECT: &str = "sg_gen";
 
-pub fn compute_sgraph(
-    land: &Land,
-    sylva_id: SylvaId,
-    aspects: &Aspects,
-    mut tree_infos: RawTreeInfo,
-    engine: PythonScriptEngine,
-) -> Arc<RwLock<SGraph>> {
-    let sylva = land.sylva(sylva_id);
+#[derive(Debug, Clone, Error)]
+pub enum NamesError {
+    #[error("unexpected return valued type when executing a name resolution function")]
+    UnexpectedEvalType,
+    #[error("script error: {0}")]
+    Script(#[from] ScriptError),
+}
 
-    let sgraph = Arc::new(RwLock::new(SGraph::new()));
+pub struct SylvaSGraph {
+    sgraph: SGraph,
+    computed_trees: HashSet<SylvaTreeId>,
+}
 
-    let Some(aspect) = aspects.get(SG_GEN_ASPECT) else {
-        return sgraph;
-    };
+impl SylvaSGraph {
+    pub fn new() -> SylvaSGraph {
+        SylvaSGraph {
+            sgraph: SGraph::new(),
+            computed_trees: HashSet::new(),
+        }
+    }
 
-    for (tree_id, tree) in sylva.iter() {
-        let tree_scope = {
-            let mut guard = sgraph.write().expect("poisoned scope graph lock");
-            let root = guard.root();
-            guard.add_scope(root)
+    pub fn referenced_decls(
+        &mut self,
+        sylva_node: SylvaNode,
+        land: &Land,
+        aspects: &Aspects,
+        tree_infos: RawTreeInfo,
+        engine: PythonScriptEngine,
+    ) -> Result<Option<&[SylvaNode]>, NamesError> {
+        if self.computed_trees.contains(&sylva_node.tree) {
+            return Ok(self.sgraph.referenced_decls(sylva_node));
+        }
+
+        self.compute_tree_graph(sylva_node, land, aspects, tree_infos, engine)
+    }
+
+    pub fn compute_tree_graph(
+        &mut self,
+        sylva_node: SylvaNode,
+        land: &Land,
+        aspects: &Aspects,
+        mut tree_infos: RawTreeInfo,
+        engine: PythonScriptEngine,
+    ) -> Result<Option<&[SylvaNode]>, NamesError> {
+        self.computed_trees.insert(sylva_node.tree);
+
+        let sylva = land.sylva(sylva_node.sylva);
+        let Some(gen_aspect) = aspects.get(SG_GEN_ASPECT) else {
+            return Ok(None);
         };
+        let Some(tree) = sylva.tree(sylva_node.tree) else {
+            return Ok(None);
+        };
+        let tree_scope = self.sgraph.add_scope(self.sgraph.root());
+        let mut sgraph = Arc::new(RwLock::new(std::mem::take(&mut self.sgraph)));
 
         for node in tree.nodes() {
-            if let Some(script) = aspect.get(&tree.tree[node].kind) {
+            if let Some(script) = gen_aspect.get(&tree.tree[node].kind) {
                 let node_arg = ScriptQueryValue::Node(SylvaNode {
-                    sylva: sylva_id,
-                    tree: tree_id,
+                    sylva: sylva_node.sylva,
+                    tree: sylva_node.tree,
                     node,
                 });
 
@@ -54,12 +92,30 @@ pub fn compute_sgraph(
                     tree_infos.clone(),
                 ));
 
-                engine.eval_in_query(script, vec![node_arg, scope_arg], tree_infos);
+                sgraph =
+                    match engine.eval_in_query(script, vec![node_arg, scope_arg], tree_infos)? {
+                        ScriptQueryValue::Simple(ScriptValue::Scope(_, sgraph, _)) => sgraph,
+                        _ => return Err(NamesError::UnexpectedEvalType),
+                    };
             }
         }
-    }
 
-    sgraph
+        let mut sgraph = Arc::into_inner(sgraph)
+            .expect("scope graph reference was kept in the script engine")
+            .into_inner()
+            .expect("poisoned scope graph lock");
+
+        sgraph.solve();
+
+        self.sgraph = sgraph;
+        Ok(self.sgraph.referenced_decls(sylva_node))
+    }
+}
+
+impl Default for SylvaSGraph {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, From)]
@@ -96,7 +152,8 @@ impl SGraphNode {
 pub struct SGraph {
     graph: petgraph::Graph<SGraphNode, ()>,
     decl_to_refs: HashMap<SylvaNode, Vec<SylvaNode>>,
-    ref_to_decl: HashMap<SylvaNode, SylvaNode>,
+    ref_to_decl: HashMap<SylvaNode, Vec<SylvaNode>>,
+    dirty_indices: HashSet<ScopeId>,
 }
 
 impl SGraph {
@@ -107,6 +164,7 @@ impl SGraph {
             graph,
             decl_to_refs: HashMap::default(),
             ref_to_decl: HashMap::default(),
+            dirty_indices: HashSet::default(),
         }
     }
 
@@ -128,9 +186,12 @@ impl SGraph {
     }
 
     pub fn add_scope(&mut self, scope: ScopeId) -> ScopeId {
-        let new_scope = self.graph.add_node(SGraphNode::default());
-        self.graph.add_edge(new_scope, scope.0, ());
-        new_scope.into()
+        let new_scope: ScopeId = self.graph.add_node(SGraphNode::default()).into();
+
+        self.graph.add_edge(new_scope.0, scope.0, ());
+        self.dirty_indices.insert(new_scope);
+
+        new_scope
     }
 
     pub fn connect_scope(&mut self, origin: ScopeId, target: ScopeId) {
@@ -160,24 +221,23 @@ impl SGraph {
     }
 
     pub fn solve(&mut self) {
-        for scope_id in self.graph.node_indices() {
-            let scope = &self.graph[scope_id];
+        for scope_id in std::mem::take(&mut self.dirty_indices) {
+            let scope = &self.graph[scope_id.0];
 
             for (ref_node, name) in scope.refs() {
-                if let Some(&referenced_decl) = self.lookup(scope_id.into(), name).first() {
-                    self.ref_to_decl.insert(ref_node, referenced_decl);
+                let referenced_decls = self.lookup(scope_id, name);
 
-                    self.decl_to_refs
-                        .entry(referenced_decl)
-                        .or_default()
-                        .push(ref_node);
+                for decl in &referenced_decls {
+                    self.decl_to_refs.entry(*decl).or_default().push(ref_node);
                 }
+
+                self.ref_to_decl.insert(ref_node, referenced_decls);
             }
         }
     }
 
-    pub fn referenced_decls(&self, node: SylvaNode) -> Option<&SylvaNode> {
-        self.ref_to_decl.get(&node)
+    pub fn referenced_decls(&self, node: SylvaNode) -> Option<&[SylvaNode]> {
+        self.ref_to_decl.get(&node).map(AsRef::as_ref)
     }
 
     pub fn node_refs(&self, node: SylvaNode) -> Option<&[SylvaNode]> {
@@ -308,7 +368,7 @@ mod test {
 
         graph.solve();
 
-        assert_eq!(Some(&node1), graph.referenced_decls(node2));
+        assert_eq!(Some([node1].as_slice()), graph.referenced_decls(node2));
         assert_eq!(Some([node2].as_slice()), graph.node_refs(node1));
     }
 }

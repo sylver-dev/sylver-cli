@@ -93,8 +93,12 @@ impl Sylva {
         })
     }
 
-    pub fn tree(&self, id: SylvaTreeId) -> Option<&SourceTree> {
-        self.trees.get(id.0).map(|t| &t.tree)
+    pub fn tree(&self, id: SylvaTreeId) -> Option<&SylvaTree> {
+        self.trees.get(id.0)
+    }
+
+    pub fn source_tree(&self, id: SylvaTreeId) -> Option<&SourceTree> {
+        self.tree(id).map(|t| &t.tree)
     }
 
     pub fn tree_from_path(&self, path: impl AsRef<Path>) -> Option<&SourceTree> {
@@ -237,7 +241,7 @@ mod test {
 
         let file1_id = sylva.tree_paths.get(Path::new("file1")).unwrap();
 
-        assert_eq!(sylva.tree(*file1_id).unwrap(), &TEST_TREE_1.clone())
+        assert_eq!(sylva.source_tree(*file1_id).unwrap(), &TEST_TREE_1.clone())
     }
 
     #[test]
@@ -246,7 +250,7 @@ mod test {
 
         let non_existing_id = 999.into();
 
-        assert_eq!(sylva.tree(non_existing_id), None);
+        assert_eq!(sylva.source_tree(non_existing_id), None);
     }
 
     #[test]

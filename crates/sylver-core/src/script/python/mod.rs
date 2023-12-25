@@ -560,7 +560,7 @@ mod test {
             spec::{Spec, Syntax},
         },
         land::sylva::Sylva,
-        query::SylvaNode,
+        query::{RawTreeInfoBuilder, SylvaNode, TreeInfoBuilder},
     };
 
     use super::*;
@@ -778,7 +778,13 @@ def value(doc):
 
         let spec = Spec::new(Default::default(), syntax);
 
-        let mut eval_ctx = EvalCtx::new(&spec, RawTreeInfoBuilder::new(&spec, &sylva));
+        let node = SylvaNode {
+            node: 5.into(),
+            tree: 0.into(),
+            sylva: 0.into(),
+        };
+
+        let mut tree_info = RawTreeInfoBuilder::new(&spec, &sylva).info_for_node(node);
 
         let engine = PythonScriptEngine::default();
         let script = compile_function(
@@ -791,12 +797,8 @@ def value(doc):
         let script_result = engine
             .eval_in_query(
                 &script,
-                vec![ScriptQueryValue::Node(SylvaNode {
-                    node: 5.into(),
-                    tree: 0.into(),
-                    sylva: 0.into(),
-                })],
-                &mut eval_ctx,
+                vec![ScriptQueryValue::Node(node)],
+                RefCell::new(ScriptTreeInfo::new(&mut tree_info)),
             )
             .unwrap();
 

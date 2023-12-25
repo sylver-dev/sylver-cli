@@ -31,7 +31,7 @@ pub trait TreeInfo<'t>: Sized {
     fn field_name(&self, kind: KindId, field: FieldPos) -> Option<&str>;
 
     fn field_value(&self, node: NodeId, field: FieldPos) -> Option<NodeId>;
-    
+
     fn field_value_from_name(&self, node: NodeId, field_name: &str) -> Option<NodeId>;
 
     fn kind_name(&self, kind: KindId) -> &str;
@@ -334,6 +334,10 @@ pub mod tests {
             let node = self.node(node_id);
             node.named_childs[Into::<usize>::into(field)]
                 .map(|child_index| node.childs[child_index])
+        }
+
+        fn field_value_from_name(&self, node: NodeId, field_name: &str) -> Option<NodeId> {
+            unimplemented!()
         }
 
         fn kind_name(&self, _kind: KindId) -> &str {

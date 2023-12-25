@@ -179,10 +179,9 @@ impl Aspects {
             scripts: aspect_scripts,
         })
     }
-    
+
     pub fn get(&self, aspect_name: &str) -> Option<&HashMap<KindId, PythonScript>> {
-        self.scripts
-            .get(aspect_name)
+        self.scripts.get(aspect_name)
     }
 }
 

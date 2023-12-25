@@ -1,7 +1,7 @@
-use std::sync::{Arc, RwLock};
 use std::{
     cell::RefCell,
     collections::{BTreeMap, HashMap},
+    sync::{Arc, RwLock},
 };
 
 use derivative::Derivative;
@@ -130,6 +130,17 @@ impl TryInto<Vec<ScriptValue>> for ScriptValue {
         match self {
             ScriptValue::List(list) => Ok(list),
             _ => Err(ScriptError::InvalidType("list".to_string(), self)),
+        }
+    }
+}
+
+impl TryInto<Arc<RwLock<SGraph>>> for ScriptValue {
+    type Error = ScriptError;
+
+    fn try_into(self) -> Result<Arc<RwLock<SGraph>>, Self::Error> {
+        match self {
+            ScriptValue::Scope(_, graph, _) => Ok(graph),
+            _ => Err(ScriptError::InvalidType("scope".to_string(), self)),
         }
     }
 }

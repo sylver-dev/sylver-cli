@@ -27,7 +27,10 @@ impl RuleResult {
 
         let kind = ReportKind::Category(rule.category);
 
-        let tree = land.sylva(self.node.sylva).tree(self.node.tree).unwrap();
+        let tree = land
+            .sylva(self.node.sylva)
+            .source_tree(self.node.tree)
+            .unwrap();
 
         let info = RawTreeInfo::new(tree, &spec.syntax);
 
@@ -43,7 +46,7 @@ impl RuleResult {
 
     pub fn source<'l>(&self, land: &'l Land) -> &'l Source {
         let sylva = land.sylva(self.node.sylva);
-        let tree = sylva.tree(self.node.tree);
+        let tree = sylva.source_tree(self.node.tree);
         &tree.unwrap().source
     }
 
