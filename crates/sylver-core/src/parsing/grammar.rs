@@ -678,7 +678,7 @@ fn rule_starts_with_call_to(syntax: &Syntax, targets: &NonEmpty<RuleId>, rule_id
             RuleExpr::Node(n) => {
                 let is_target_call = n
                     .comps
-                    .get(0)
+                    .first()
                     .map(|c| c.references_nonterm_in(&target_names))
                     .unwrap_or(false);
 

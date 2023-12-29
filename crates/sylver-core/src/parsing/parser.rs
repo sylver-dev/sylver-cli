@@ -98,7 +98,7 @@ impl GLRStack {
     }
 
     fn smallest_top_pos(&self) -> Option<usize> {
-        self.tops.get(0).map(|es| self[es[0]].pos.txt_pos)
+        self.tops.front().map(|es| self[es[0]].pos.txt_pos)
     }
 
     fn take_tops(&mut self) -> Vec<StackPos> {

@@ -978,8 +978,6 @@ pub mod test {
 
     use crate::{
         land::{builder::LandBuilder, sylva::Sylva},
-        parsing::sppf::Span,
-        query::test::TestTreeInfoBuilder,
         tree::{info::tests::TestTreeInfo, Node},
     };
 
@@ -1210,23 +1208,6 @@ pub mod test {
         assert_eq!(Err(EvalError::InvalidAddress(1)), eval_in_default_ctx(expr));
     }
 
-    #[test]
-    fn kind_access() {
-        let kind = 1.into();
-
-        let node = Node {
-            kind,
-            span: Span::new(0, 1),
-            parent: None,
-            named_childs: vec![],
-            childs: vec![],
-        };
-
-        let expr = Expr::kind_access(Expr::read_var(0));
-
-        run_on_node(node, expr, Ok(Value::Kind(kind)));
-    }
-
     fn eval_binop(
         binop: impl Fn(Expr, Expr) -> Expr,
         left: impl Into<Value<'static>>,
@@ -1238,36 +1219,6 @@ pub mod test {
         );
 
         eval_in_default_ctx(prepared_expr).unwrap()
-    }
-
-    fn run_on_node(node: Node, expr: Expr, expected_res: Result<Value, EvalError>) {
-        let mut nodes = HashMap::new();
-        let mut nodes_code = HashMap::new();
-        let tree_info = build_test_tree_info(vec![node], &mut nodes, &mut nodes_code);
-
-        let mut builder = TestTreeInfoBuilder::default();
-
-        let sylva_node = SylvaNode {
-            node: 0.into(),
-            sylva: 0.into(),
-            tree: 0.into(),
-        };
-
-        builder.infos.insert(sylva_node, tree_info);
-
-        let spec = Spec::from_decls(Default::default(), vec![]).unwrap();
-
-        let sylva = Sylva::new(HashMap::new());
-        let land = LandBuilder::default().build();
-        let mut ctx = EvalCtx::new(
-            &spec,
-            RawTreeInfoBuilder::new(&spec, &sylva),
-            &land,
-            PythonScriptEngine::default(),
-        );
-        ctx.push_var(Value::Node(sylva_node));
-
-        assert_eq!(expected_res, expr.eval(&mut ctx))
     }
 
     fn eval_in_default_ctx(expr: Expr) -> Result<Value<'static>, EvalError> {

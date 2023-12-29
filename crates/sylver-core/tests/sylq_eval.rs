@@ -17,6 +17,7 @@ use sylver_core::{
     parsing::parser_runner::ParserRunner,
     pretty_print::tree::render_node,
     query::{expr::EvalError, language::compile::compile, SylvaNode},
+    script::python::PythonScriptEngine,
 };
 use sylver_dsl::sylq::parse_query;
 
@@ -50,7 +51,7 @@ fn test_sylq_eval(expr_input: &str) {
 
     let compiled = compile(land.spec(LandSpecId::CustomLangId(spec_id)), &expr).unwrap();
 
-    let res = filter_sylva(&land, sylva_id, &compiled);
+    let res = filter_sylva(&land, PythonScriptEngine::default(), sylva_id, &compiled);
 
     let expected_output = std::fs::read_to_string(expr_relative.with_extension("output")).unwrap();
     let output_str = res_to_string(&land, sylva_id, res);
