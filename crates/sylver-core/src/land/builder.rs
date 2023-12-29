@@ -64,6 +64,7 @@ impl Default for LandBuilder {
                 specs: IdVec::new(),
                 sylva_spec: HashMap::new(),
                 sylva_rules: HashMap::new(),
+                sylva_scopes: HashMap::new(),
             },
         }
     }

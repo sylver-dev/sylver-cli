@@ -8,7 +8,10 @@ use thiserror::Error;
 
 use crate::{
     core::spec::{KindId, Spec},
-    query::{expr::EvalError::InvalidKind, SylvaNode, TreeInfoBuilder},
+    land::Land,
+    query::{expr::EvalError::InvalidKind, RawTreeInfoBuilder, SylvaNode, TreeInfoBuilder},
+    script::python::PythonScriptEngine,
+    semantic::names::NamesError,
     tree::{info::TreeInfo, Node, NodeId},
 };
 
@@ -16,7 +19,28 @@ use crate::{
 pub struct EvalCtx<'v, B: TreeInfoBuilder<'v>> {
     memory: Vec<Value<'v>>,
     spec: &'v Spec,
-    info_builder: B,
+    info_builder: B, // TODO: get rid of the builder/info abstraction
+    land: &'v Land,
+    script_engine: PythonScriptEngine,
+}
+
+impl<'b> EvalCtx<'b, RawTreeInfoBuilder<'b>> {
+    pub fn referenced_decls(
+        &mut self,
+        node: SylvaNode,
+    ) -> Result<Option<Vec<SylvaNode>>, EvalError> {
+        let mut scopes = self.land.sylva_scopes_mut(node.sylva);
+        scopes
+            .referenced_decls(
+                node,
+                self.land,
+                &self.spec.aspects,
+                self.info_builder.info_for_node(node),
+                self.script_engine,
+            )
+            .map(|decls| decls.map(|decls| decls.to_vec()))
+            .map_err(EvalError::NameRes)
+    }
 }
 
 impl<'b, B: 'b + TreeInfoBuilder<'b>> EvalCtx<'b, B> {
@@ -85,11 +109,18 @@ impl<'b, B: 'b + TreeInfoBuilder<'b>> EvalCtx<'b, B> {
 }
 
 impl<'b, B: TreeInfoBuilder<'b>> EvalCtx<'b, B> {
-    pub fn new(spec: &'b Spec, info_builder: B) -> Self {
+    pub fn new(
+        spec: &'b Spec,
+        info_builder: B,
+        land: &'b Land,
+        script_engine: PythonScriptEngine,
+    ) -> Self {
         EvalCtx {
             spec,
             memory: vec![],
             info_builder,
+            land,
+            script_engine,
         }
     }
 
@@ -281,17 +312,16 @@ impl<'t> Value<'t> {
         }
     }
 
-    fn try_get_children<'c, 'b, B: 'b + TreeInfoBuilder<'b>>(
+    fn try_get_children<'c, 'b>(
         self,
-        ctx: &'c EvalCtx<'b, B>,
-    ) -> Result<Box<dyn 'b + EvalIterator<'b, B, Item = Value<'b>>>, EvalError>
+        ctx: &'c EvalCtx<'b, RawTreeInfoBuilder<'b>>,
+    ) -> Result<Box<dyn 'b + EvalIterator<'b, RawTreeInfoBuilder<'b>, Item = Value<'b>>>, EvalError>
     where
         't: 'b,
     {
         let res = match self {
-            Value::List(vs) => {
-                Box::new(vs.into_iter()) as Box<dyn EvalIterator<'b, B, Item = Value<'b>>>
-            }
+            Value::List(vs) => Box::new(vs.into_iter())
+                as Box<dyn EvalIterator<'b, RawTreeInfoBuilder<'b>, Item = Value<'b>>>,
             Value::Node(n) => Box::new(node_childs_if_list(ctx, n)?.into_iter().map(Into::into)),
             Value::Generator(g) => Box::new(g.iter()),
             _ => return Err(EvalError::InvalidKind(vec![ValueKind::List], self.kind())),
@@ -402,6 +432,8 @@ pub enum EvalError {
     IndexError(i64),
     #[error("{0} is not a valid integer")]
     NotAnInt(String),
+    #[error("name resolution error: {0}")]
+    NameRes(NamesError),
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Hash)]
@@ -414,6 +446,7 @@ pub enum Expr {
     NodeChildren(Box<Expr>),
     NodePrevSibling(Box<Expr>),
     NodeNextSibling(Box<Expr>),
+    ReferencedDecl(Box<Expr>),
     // TODO: useless with `Not` Expr ?
     NonNullCheck(Box<Expr>),
     Length(Box<Expr>),
@@ -473,6 +506,10 @@ impl Expr {
 
     pub fn node_next_sibling(operand: Expr) -> Expr {
         Expr::unary(Expr::NodeNextSibling, operand)
+    }
+
+    pub fn referenced_decl(operand: Expr) -> Expr {
+        Expr::unary(Expr::ReferencedDecl, operand)
     }
 
     pub fn non_null_check(operand: Expr) -> Expr {
@@ -575,9 +612,9 @@ impl Expr {
         Expr::BuildGen(Box::new(operand), depths, gen_fn)
     }
 
-    pub fn eval<'b, B: 'b + TreeInfoBuilder<'b>>(
+    pub fn eval<'b>(
         &self,
-        ctx: &mut EvalCtx<'b, B>,
+        ctx: &mut EvalCtx<'b, RawTreeInfoBuilder<'b>>,
     ) -> Result<Value<'b>, EvalError> {
         match self {
             Expr::IntConv(e) => eval_int_conv(ctx, e),
@@ -588,6 +625,7 @@ impl Expr {
             Expr::NodeChildren(n) => eval_node_children(ctx, n),
             Expr::NodePrevSibling(n) => eval_node_prev_sibling(ctx, n),
             Expr::NodeNextSibling(n) => eval_node_next_sibling(ctx, n),
+            Expr::ReferencedDecl(n) => eval_referenced_decl(ctx, n),
             Expr::Length(o) => eval_length(ctx, o),
             Expr::InContext(ctx_values, e) => eval_in_context(ctx, ctx_values, e),
             Expr::ReadVar(addr) => eval_read_var(ctx, *addr),
@@ -634,8 +672,8 @@ impl Expr {
     }
 }
 
-fn eval_build_gen<'b, B: 'b + TreeInfoBuilder<'b>>(
-    ctx: &mut EvalCtx<'b, B>,
+fn eval_build_gen<'b>(
+    ctx: &mut EvalCtx<'b, RawTreeInfoBuilder<'b>>,
     operand: &Expr,
     (min_depth, matx_depth): &(Option<usize>, Option<usize>),
     gen_fn: &DepthNodeGeneratorFn,
@@ -651,8 +689,8 @@ fn eval_build_gen<'b, B: 'b + TreeInfoBuilder<'b>>(
     }))
 }
 
-fn eval_neq<'b, B: 'b + TreeInfoBuilder<'b>>(
-    ctx: &mut EvalCtx<'b, B>,
+fn eval_neq<'b>(
+    ctx: &mut EvalCtx<'b, RawTreeInfoBuilder<'b>>,
     left: &Expr,
     right: &Expr,
 ) -> Result<Value<'b>, EvalError> {
@@ -668,8 +706,8 @@ fn eval_neq<'b, B: 'b + TreeInfoBuilder<'b>>(
     Ok(not_equals.into())
 }
 
-fn eval_eq_eq<'b, B: 'b + TreeInfoBuilder<'b>>(
-    ctx: &mut EvalCtx<'b, B>,
+fn eval_eq_eq<'b>(
+    ctx: &mut EvalCtx<'b, RawTreeInfoBuilder<'b>>,
     left: &Expr,
     right: &Expr,
 ) -> Result<Value<'b>, EvalError> {
@@ -689,8 +727,8 @@ fn eval_eq_eq<'b, B: 'b + TreeInfoBuilder<'b>>(
     Ok(equals.into())
 }
 
-fn eval_int_conv<'b, B: 'b + TreeInfoBuilder<'b>>(
-    ctx: &mut EvalCtx<'b, B>,
+fn eval_int_conv<'b>(
+    ctx: &mut EvalCtx<'b, RawTreeInfoBuilder<'b>>,
     expr: &Expr,
 ) -> Result<Value<'b>, EvalError> {
     let value = expr.eval(ctx)?;
@@ -711,8 +749,8 @@ fn eval_int_conv<'b, B: 'b + TreeInfoBuilder<'b>>(
     Ok(Value::Int(integer))
 }
 
-fn eval_kind_access<'b, B: 'b + TreeInfoBuilder<'b>>(
-    ctx: &mut EvalCtx<'b, B>,
+fn eval_kind_access<'b>(
+    ctx: &mut EvalCtx<'b, RawTreeInfoBuilder<'b>>,
     op: &Expr,
 ) -> Result<Value<'b>, EvalError> {
     let sylva_node: SylvaNode = op.eval(ctx)?.try_into()?;
@@ -724,16 +762,16 @@ fn eval_kind_access<'b, B: 'b + TreeInfoBuilder<'b>>(
     Ok(Value::Kind(kind))
 }
 
-fn eval_node_text<'b, B: 'b + TreeInfoBuilder<'b>>(
-    ctx: &mut EvalCtx<'b, B>,
+fn eval_node_text<'b>(
+    ctx: &mut EvalCtx<'b, RawTreeInfoBuilder<'b>>,
     op: &Expr,
 ) -> Result<Value<'b>, EvalError> {
     let node_val = op.eval(ctx)?;
     node_value_text(ctx, node_val)
 }
 
-fn node_value_text<'b, B: 'b + TreeInfoBuilder<'b>>(
-    ctx: &mut EvalCtx<'b, B>,
+fn node_value_text<'b>(
+    ctx: &mut EvalCtx<'b, RawTreeInfoBuilder<'b>>,
     value: Value<'b>,
 ) -> Result<Value<'b>, EvalError> {
     let sylva_node: SylvaNode = value.try_into()?;
@@ -741,8 +779,8 @@ fn node_value_text<'b, B: 'b + TreeInfoBuilder<'b>>(
     Ok(Value::String(Cow::Borrowed(text)))
 }
 
-fn eval_node_parent<'b, B: 'b + TreeInfoBuilder<'b>>(
-    ctx: &mut EvalCtx<'b, B>,
+fn eval_node_parent<'b>(
+    ctx: &mut EvalCtx<'b, RawTreeInfoBuilder<'b>>,
     op: &Expr,
 ) -> Result<Value<'b>, EvalError> {
     let sylva_node: SylvaNode = op.eval(ctx)?.try_into()?;
@@ -750,8 +788,8 @@ fn eval_node_parent<'b, B: 'b + TreeInfoBuilder<'b>>(
     Ok(parent.into())
 }
 
-fn eval_node_children<'b, B: 'b + TreeInfoBuilder<'b>>(
-    ctx: &mut EvalCtx<'b, B>,
+fn eval_node_children<'b>(
+    ctx: &mut EvalCtx<'b, RawTreeInfoBuilder<'b>>,
     op: &Expr,
 ) -> Result<Value<'b>, EvalError> {
     let sylva_node: SylvaNode = op.eval(ctx)?.try_into()?;
@@ -759,24 +797,39 @@ fn eval_node_children<'b, B: 'b + TreeInfoBuilder<'b>>(
     Ok(Value::List(childs))
 }
 
-fn eval_node_prev_sibling<'b, B: 'b + TreeInfoBuilder<'b>>(
-    ctx: &mut EvalCtx<'b, B>,
+fn eval_node_prev_sibling<'b>(
+    ctx: &mut EvalCtx<'b, RawTreeInfoBuilder<'b>>,
     op: &Expr,
 ) -> Result<Value<'b>, EvalError> {
     let sylva_node = op.eval(ctx)?.try_into()?;
     Ok(ctx.previous_sibling(sylva_node).into())
 }
 
-fn eval_node_next_sibling<'b, B: 'b + TreeInfoBuilder<'b>>(
-    ctx: &mut EvalCtx<'b, B>,
+fn eval_node_next_sibling<'b>(
+    ctx: &mut EvalCtx<'b, RawTreeInfoBuilder<'b>>,
     op: &Expr,
 ) -> Result<Value<'b>, EvalError> {
     let sylva_node = op.eval(ctx)?.try_into()?;
     Ok(ctx.next_sibling(sylva_node).into())
 }
 
-fn eval_length<'b, B: 'b + TreeInfoBuilder<'b>>(
-    ctx: &mut EvalCtx<'b, B>,
+fn eval_referenced_decl<'b>(
+    ctx: &mut EvalCtx<'b, RawTreeInfoBuilder<'b>>,
+    op: &Expr,
+) -> Result<Value<'b>, EvalError> {
+    let sylva_node: SylvaNode = op.eval(ctx)?.try_into()?;
+
+    let decls = ctx.referenced_decls(sylva_node);
+
+    decls.map(|decls| {
+        decls
+            .map(|decls| Value::List(decls.into_iter().map(Into::into).collect()))
+            .unwrap_or(Value::Null)
+    })
+}
+
+fn eval_length<'b>(
+    ctx: &mut EvalCtx<'b, RawTreeInfoBuilder<'b>>,
     op: &Expr,
 ) -> Result<Value<'b>, EvalError> {
     let value_len = match op.eval(ctx)? {
@@ -795,8 +848,8 @@ fn eval_length<'b, B: 'b + TreeInfoBuilder<'b>>(
     Ok(Value::Int(value_len as i64))
 }
 
-fn eval_in_context<'b, B: 'b + TreeInfoBuilder<'b>>(
-    ctx: &mut EvalCtx<'b, B>,
+fn eval_in_context<'b>(
+    ctx: &mut EvalCtx<'b, RawTreeInfoBuilder<'b>>,
     ctx_exprs: &[Expr],
     expr: &Expr,
 ) -> Result<Value<'b>, EvalError> {
@@ -814,8 +867,8 @@ fn eval_in_context<'b, B: 'b + TreeInfoBuilder<'b>>(
     Ok(result_value)
 }
 
-fn eval_read_var<'b, B: TreeInfoBuilder<'b>>(
-    ctx: &mut EvalCtx<'b, B>,
+fn eval_read_var<'b>(
+    ctx: &mut EvalCtx<'b, RawTreeInfoBuilder<'b>>,
     addr: usize,
 ) -> Result<Value<'b>, EvalError> {
     ctx.memory
@@ -824,8 +877,8 @@ fn eval_read_var<'b, B: TreeInfoBuilder<'b>>(
         .ok_or(EvalError::InvalidAddress(addr))
 }
 
-fn eval_prop_access<'b, B: 'b + TreeInfoBuilder<'b>>(
-    ctx: &mut EvalCtx<'b, B>,
+fn eval_prop_access<'b>(
+    ctx: &mut EvalCtx<'b, RawTreeInfoBuilder<'b>>,
     operand: &Expr,
     prop: &str,
 ) -> Result<Value<'b>, EvalError> {
@@ -833,8 +886,8 @@ fn eval_prop_access<'b, B: 'b + TreeInfoBuilder<'b>>(
     ctx.node_field(sylva_node, prop)
 }
 
-fn eval_array_index<'b, B: 'b + TreeInfoBuilder<'b>>(
-    ctx: &mut EvalCtx<'b, B>,
+fn eval_array_index<'b>(
+    ctx: &mut EvalCtx<'b, RawTreeInfoBuilder<'b>>,
     array: &Expr,
     index: &Expr,
 ) -> Result<Value<'b>, EvalError> {
@@ -853,8 +906,8 @@ fn eval_array_index<'b, B: 'b + TreeInfoBuilder<'b>>(
     val_at_index.ok_or(EvalError::IndexError(index))
 }
 
-fn eval_count_check<'b, B: 'b + TreeInfoBuilder<'b>>(
-    ctx: &mut EvalCtx<'b, B>,
+fn eval_count_check<'b>(
+    ctx: &mut EvalCtx<'b, RawTreeInfoBuilder<'b>>,
     continue_condition: impl Fn(i64, i64) -> bool,
     target_count: &Expr,
     source: &Expr,
@@ -882,8 +935,8 @@ fn eval_count_check<'b, B: 'b + TreeInfoBuilder<'b>>(
     Ok((current_count == target_count).into())
 }
 
-fn eval_regex_match<'b, B: 'b + TreeInfoBuilder<'b>>(
-    ctx: &mut EvalCtx<'b, B>,
+fn eval_regex_match<'b>(
+    ctx: &mut EvalCtx<'b, RawTreeInfoBuilder<'b>>,
     expr: &Expr,
     regex: &ExprRegex,
 ) -> Result<Value<'b>, EvalError> {
@@ -891,8 +944,8 @@ fn eval_regex_match<'b, B: 'b + TreeInfoBuilder<'b>>(
     Ok(regex.is_match(expr_result.as_ref()).into())
 }
 
-fn eval_ternary<'b, B: 'b + TreeInfoBuilder<'b>>(
-    ctx: &mut EvalCtx<'b, B>,
+fn eval_ternary<'b>(
+    ctx: &mut EvalCtx<'b, RawTreeInfoBuilder<'b>>,
     condition: &Expr,
     consequence: &Expr,
     alternative: &Expr,
@@ -923,13 +976,10 @@ fn node_childs_if_list<'b, B: 'b + TreeInfoBuilder<'b>>(
 pub mod test {
     use std::collections::HashMap;
 
-    use indoc::indoc;
-    use maplit::hashmap;
-
     use crate::{
-        core::spec::test::parse_spec,
+        land::{builder::LandBuilder, sylva::Sylva},
         parsing::sppf::Span,
-        query::{language::compile::DEFAULT_INPUT_ADDR, test::TestTreeInfoBuilder},
+        query::test::TestTreeInfoBuilder,
         tree::{info::tests::TestTreeInfo, Node},
     };
 
@@ -1161,132 +1211,6 @@ pub mod test {
     }
 
     #[test]
-    fn access_parent_ok() {
-        let parent_id: NodeId = 0.into();
-        let child_id: NodeId = 1.into();
-
-        let parent = Node {
-            kind: 0.into(),
-            span: Span::new(0, 1),
-            parent: None,
-            named_childs: vec![],
-            childs: vec![child_id],
-        };
-
-        let child = Node {
-            kind: 1.into(),
-            span: Span::new(1, 1),
-            parent: Some(parent_id),
-            named_childs: vec![],
-            childs: vec![],
-        };
-
-        let mut nodes = HashMap::new();
-        let mut nodes_code = HashMap::new();
-
-        let tree_info = build_test_tree_info(vec![parent, child], &mut nodes, &mut nodes_code);
-
-        let sylva_node = SylvaNode {
-            sylva: 0.into(),
-            tree: 0.into(),
-            node: child_id.index().into(),
-        };
-
-        let mut builder = TestTreeInfoBuilder::default();
-        builder.infos.insert(sylva_node, tree_info);
-
-        let expr = Expr::node_parent(Expr::Const(sylva_node.into()));
-
-        assert_eq!(
-            Ok(SylvaNode {
-                node: parent_id.index().into(),
-                ..sylva_node
-            }
-            .into()),
-            expr.eval(&mut EvalCtx::new(
-                &Spec::from_decls(Default::default(), vec![]).unwrap(),
-                builder,
-            ),)
-        );
-    }
-
-    #[test]
-    fn access_null_parent() {
-        let node = Node {
-            kind: 0.into(),
-            span: Span::new(0, 1),
-            parent: None,
-            named_childs: vec![],
-            childs: vec![],
-        };
-
-        let mut nodes = HashMap::new();
-        let mut nodes_code = HashMap::new();
-
-        let tree_info = build_test_tree_info(vec![node], &mut nodes, &mut nodes_code);
-
-        let sylva_node = SylvaNode {
-            sylva: 0.into(),
-            tree: 0.into(),
-            node: 0.into(),
-        };
-
-        let mut builder = TestTreeInfoBuilder::default();
-        builder.infos.insert(sylva_node, tree_info);
-
-        let expr = Expr::node_parent(Expr::Const(sylva_node.into()));
-
-        assert_eq!(
-            Ok(Value::Null),
-            expr.eval(&mut EvalCtx::new(
-                &Spec::from_decls(Default::default(), vec![]).unwrap(),
-                builder,
-            ),)
-        );
-    }
-
-    #[test]
-    fn access_text() {
-        let node_code = "testNode";
-        let node_id: NodeId = 0.into();
-        let node = Node {
-            kind: 0.into(),
-            span: Span::new(0, 1),
-            parent: None,
-            named_childs: vec![],
-            childs: vec![],
-        };
-
-        let mut nodes = hashmap! {
-            node_id => node.clone(),
-        };
-        let mut nodes_code = hashmap! {
-            node_id => node_code.to_string()
-        };
-
-        let tree_info = build_test_tree_info(vec![node], &mut nodes, &mut nodes_code);
-
-        let sylva_node = SylvaNode {
-            sylva: 0.into(),
-            tree: 0.into(),
-            node: node_id,
-        };
-
-        let mut builder = TestTreeInfoBuilder::default();
-        builder.infos.insert(sylva_node, tree_info);
-
-        let expr = Expr::node_text(Expr::Const(Value::Node(sylva_node)));
-
-        let spec = Spec::from_decls(Default::default(), vec![]).unwrap();
-        let mut ctx = EvalCtx::new(&spec, builder);
-
-        assert_eq!(
-            Ok(Value::String(Cow::Borrowed(node_code))),
-            expr.eval(&mut ctx)
-        )
-    }
-
-    #[test]
     fn kind_access() {
         let kind = 1.into();
 
@@ -1301,57 +1225,6 @@ pub mod test {
         let expr = Expr::kind_access(Expr::read_var(0));
 
         run_on_node(node, expr, Ok(Value::Kind(kind)));
-    }
-
-    #[test]
-    fn field_access() {
-        let spec = parse_spec(indoc!(
-            "
-            node A { field: B }
-            node B { }
-        "
-        ));
-
-        let b_node_id: NodeId = 0.into();
-        let b_node = Node {
-            kind: spec.syntax.kind_id("B").unwrap(),
-            span: Span::new(0, 1),
-            parent: None,
-            named_childs: vec![],
-            childs: vec![],
-        };
-
-        let a_node_id: NodeId = 1.into();
-        let a_node = Node {
-            kind: spec.syntax.kind_id("A").unwrap(),
-            span: Span::new(0, 1),
-            parent: Some(b_node_id),
-            named_childs: vec![Some(0)],
-            childs: vec![b_node_id],
-        };
-
-        let mut nodes = hashmap! { b_node_id => b_node, a_node_id => a_node };
-        let mut nodes_code = HashMap::new();
-
-        let infos = TestTreeInfo::new(&mut nodes, &mut nodes_code, a_node_id);
-
-        let sylva_node = SylvaNode {
-            sylva: 0.into(),
-            tree: 0.into(),
-            node: 1.into(),
-        };
-
-        let mut builder = TestTreeInfoBuilder::default();
-        builder.infos.insert(sylva_node, infos);
-
-        let expr = Expr::prop_access(Expr::read_var(DEFAULT_INPUT_ADDR), "field".to_string());
-
-        let mut ctx = EvalCtx::new(&spec, builder);
-        ctx.memory.push(sylva_node.into());
-
-        let result = expr.eval(&mut ctx);
-
-        assert_eq!(result, Ok(Value::Node(sylva_node.with_node_id(b_node_id))))
     }
 
     fn eval_binop(
@@ -1384,7 +1257,14 @@ pub mod test {
 
         let spec = Spec::from_decls(Default::default(), vec![]).unwrap();
 
-        let mut ctx = EvalCtx::new(&spec, builder);
+        let sylva = Sylva::new(HashMap::new());
+        let land = LandBuilder::default().build();
+        let mut ctx = EvalCtx::new(
+            &spec,
+            RawTreeInfoBuilder::new(&spec, &sylva),
+            &land,
+            PythonScriptEngine::default(),
+        );
         ctx.push_var(Value::Node(sylva_node));
 
         assert_eq!(expected_res, expr.eval(&mut ctx))
@@ -1392,7 +1272,14 @@ pub mod test {
 
     fn eval_in_default_ctx(expr: Expr) -> Result<Value<'static>, EvalError> {
         let spec = Spec::from_decls(Default::default(), vec![]).unwrap();
-        let mut ctx = EvalCtx::new(&spec, TestTreeInfoBuilder::default());
+        let sylva = Sylva::new(HashMap::new());
+        let land = LandBuilder::default().build();
+        let mut ctx = EvalCtx::new(
+            &spec,
+            RawTreeInfoBuilder::new(&spec, &sylva),
+            &land,
+            PythonScriptEngine::default(),
+        );
 
         expr.eval(&mut ctx).map(|val| val.to_static())
     }

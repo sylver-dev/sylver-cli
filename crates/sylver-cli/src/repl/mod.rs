@@ -6,11 +6,11 @@ use rustyline::{
 };
 use rustyline_derive::{Completer, Helper, Highlighter, Hinter};
 
-use sylver_core::land::cmds::filter_sylva;
 use sylver_core::{
-    land::{sylva::SylvaId, Land},
+    land::{cmds::filter_sylva, sylva::SylvaId, Land},
     pretty_print::tree::{render_node, TreePPrint},
     query::{language::compile::compile, SylvaNode},
+    script::python::PythonScriptEngine,
     tree::info::{raw::RawTreeInfo, TreeInfo},
 };
 
@@ -108,7 +108,12 @@ fn do_run_query(ctx: &mut ReplCtx, query_code: &str) -> anyhow::Result<()> {
 
     ctx.nodes_cache.start_generation();
 
-    for sylva_node in filter_sylva(ctx.land, ctx.sylva, &query_predicate)? {
+    for sylva_node in filter_sylva(
+        ctx.land,
+        PythonScriptEngine::default(),
+        ctx.sylva,
+        &query_predicate,
+    )? {
         let cache_id = ctx.nodes_cache.push(sylva_node);
         let tree = ctx.land.sylva_node_tree(sylva_node);
         println!("${cache_id} {}", render_node(spec, tree, sylva_node.node))

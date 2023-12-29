@@ -13,6 +13,7 @@ use crate::{
     report::Report,
 };
 
+use crate::script::python::PythonScriptEngine;
 pub use rules::*;
 
 pub fn parsing_errors(land: &Land) -> HashMap<&Source, &[Report]> {
@@ -21,13 +22,19 @@ pub fn parsing_errors(land: &Land) -> HashMap<&Source, &[Report]> {
 
 pub fn filter_sylva(
     land: &Land,
+    script_engine: PythonScriptEngine,
     sylva_id: SylvaId,
     predicate: &Expr,
 ) -> Result<Vec<SylvaNode>, EvalError> {
     let sylva = land.sylva(sylva_id);
     let spec = land.sylva_spec(sylva_id);
 
-    let mut ctx = EvalCtx::new(spec, RawTreeInfoBuilder::new(spec, sylva));
+    let mut ctx = EvalCtx::new(
+        spec,
+        RawTreeInfoBuilder::new(spec, sylva),
+        land,
+        script_engine,
+    );
 
     let mut filtered_nodes = vec![];
 

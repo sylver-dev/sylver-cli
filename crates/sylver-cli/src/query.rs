@@ -3,6 +3,7 @@ use std::sync::Arc;
 use anyhow::Context;
 
 use sylver_core::land::cmds::filter_sylva;
+use sylver_core::script::python::PythonScriptEngine;
 use sylver_core::{
     core::files_spec::FileSpec,
     land::{builder::LandBuilder, Land},
@@ -30,7 +31,12 @@ pub fn query(state: Arc<SylverState>, loader: &SylverLoader, cmd: &QueryCmd) -> 
         let query = parse_query(query_str).context("Failed to parse query")?;
         let query_predicate = compile(spec, &query).context("Failed to compile query")?;
 
-        for sylva_node in filter_sylva(&land, sylva, &query_predicate)? {
+        for sylva_node in filter_sylva(
+            &land,
+            PythonScriptEngine::default(),
+            sylva,
+            &query_predicate,
+        )? {
             let tree = land.sylva_node_tree(sylva_node);
             println!("{}", render_node(spec, tree, sylva_node.node));
         }

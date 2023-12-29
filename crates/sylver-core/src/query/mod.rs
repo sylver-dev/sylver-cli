@@ -60,8 +60,8 @@ impl<'s> TreeInfoBuilder<'s> for RawTreeInfoBuilder<'s> {
     }
 }
 
-pub fn eval_predicate<'b, B: 'b + TreeInfoBuilder<'b>>(
-    ctx: &mut EvalCtx<'b, B>,
+pub fn eval_predicate<'b>(
+    ctx: &mut EvalCtx<'b, RawTreeInfoBuilder<'b>>,
     node: SylvaNode,
     predicate: &Expr,
 ) -> Result<bool, EvalError> {

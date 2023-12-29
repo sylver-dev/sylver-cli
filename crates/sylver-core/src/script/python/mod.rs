@@ -378,7 +378,7 @@ fn to_script_error(vm: &VirtualMachine, err: PyBaseExceptionRef) -> ScriptError 
     ScriptError::RuntimeError(msg)
 }
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct PythonScriptEngine {}
 
 impl ScriptEngine for PythonScriptEngine {

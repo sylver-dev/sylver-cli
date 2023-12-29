@@ -17,8 +17,9 @@ use crate::{
         eval_predicate,
         expr::{EvalCtx, EvalError, Expr},
         language::compile::compile,
-        sylva_nodes, SylvaNode, TreeInfoBuilder,
+        sylva_nodes, RawTreeInfoBuilder, SylvaNode,
     },
+    script::python::PythonScriptEngine,
     specs::stem::ruleset::{RuleSetStem, RuleStem},
 };
 
@@ -65,43 +66,21 @@ impl RuleSet {
         RuleSet { rules }
     }
 
-    pub fn verify<'b, B: 'b + Clone + TreeInfoBuilder<'b> + Sync>(
+    pub fn verify<'b>(
         &self,
-        builder: B,
+        builder: RawTreeInfoBuilder<'b>,
         land: &'b Land,
         sylva_id: SylvaId,
     ) -> anyhow::Result<HashMap<String, HashSet<SylvaNode>>> {
         let mut rule_matches: HashMap<String, HashSet<SylvaNode>> = HashMap::new();
-
-        /*let evaluation_results: Vec<Result<Vec<(String, SylvaNode)>, EvalError>> =
-        sylva_nodes(land, sylva_id)
-            .collect::<Vec<_>>()
-            .par_chunks(70000)
-            .map(|nodes| {
-                let spec = land.sylva_spec(sylva_id);
-                let mut ctx = EvalCtx::new(spec, builder.clone());
-                let mut results = Vec::new();
-
-                for &sylva_node in nodes {
-                    for (rule_name, rule) in &self.rules {
-                        let is_match = eval_predicate(&mut ctx, sylva_node, &rule.predicate)?;
-
-                        if is_match {
-                            results.push((rule_name.clone(), sylva_node));
-                        }
-                    }
-                }
-
-                Ok(results)
-            })
-            .collect::<Vec<_>>();*/
 
         let evaluation_results: Vec<Result<Vec<(String, SylvaNode)>, EvalError>> = self
             .rules
             .par_iter()
             .map(|(name, rule)| {
                 let spec = land.sylva_spec(sylva_id);
-                let mut ctx = EvalCtx::new(spec, builder.clone());
+                let mut ctx =
+                    EvalCtx::new(spec, builder.clone(), land, PythonScriptEngine::default());
                 let mut results = Vec::new();
 
                 for sylva_node in sylva_nodes(land, sylva_id) {

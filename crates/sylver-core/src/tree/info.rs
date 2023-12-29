@@ -336,7 +336,7 @@ pub mod tests {
                 .map(|child_index| node.childs[child_index])
         }
 
-        fn field_value_from_name(&self, node: NodeId, field_name: &str) -> Option<NodeId> {
+        fn field_value_from_name(&self, _node: NodeId, _field_name: &str) -> Option<NodeId> {
             unimplemented!()
         }
 

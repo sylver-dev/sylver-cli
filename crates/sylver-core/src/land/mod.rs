@@ -1,7 +1,10 @@
 use std::collections::{HashMap, HashSet};
+use std::ops::DerefMut;
+use std::sync::RwLock;
 
 use id_vec::IdVec;
 
+use crate::semantic::names::SylvaScopes;
 use crate::{
     core::{
         source::SourceTree,
@@ -41,11 +44,20 @@ pub struct Land {
     specs: IdVec<Spec>,
     sylva_spec: HashMap<SylvaId, LandSpecId>,
     sylva_rules: HashMap<SylvaId, HashSet<RuleSetId>>,
+    sylva_scopes: HashMap<SylvaId, RwLock<SylvaScopes>>,
 }
 
 impl Land {
     pub fn sylva(&self, id: SylvaId) -> &Sylva {
         &self.sylvae[id.into()]
+    }
+
+    pub fn sylva_scopes_mut(&'_ self, id: SylvaId) -> impl DerefMut<Target = SylvaScopes> + '_ {
+        self.sylva_scopes
+            .get(&id)
+            .unwrap()
+            .write()
+            .expect("poisoned sylva scopes lock")
     }
 
     pub fn spec(&self, id: LandSpecId) -> &Spec {

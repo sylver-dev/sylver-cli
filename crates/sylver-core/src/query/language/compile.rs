@@ -213,6 +213,7 @@ impl<'s> Compiler<'s> {
             "siblings" => make_build_gen(DepthNodeGeneratorFn::siblings())?,
             "previous_siblings" => make_build_gen(DepthNodeGeneratorFn::PreviousSiblings)?,
             "next_siblings" => make_build_gen(DepthNodeGeneratorFn::NextSiblings)?,
+            "referenced_decl" => Expr::referenced_decl(operand.clone()),
             "matches" => {
                 if args.len() != 1 {
                     return Err(CompilationErr::UnexpectedArity(
@@ -1212,6 +1213,24 @@ mod tests {
                     ),),
                     Expr::const_expr(Value::Int(2)),
                 ),
+            ),
+        )
+    }
+
+    #[test]
+    fn compile_referenced_decls() {
+        let spec = parse_spec("node NodeKind { }");
+        let query = parse_query("match n@_ when n.referenced_decl() == null").unwrap();
+        let compiled = compile(&spec, &query).unwrap();
+
+        assert_eq!(
+            compiled,
+            Expr::and(
+                Expr::const_expr(true.into()),
+                Expr::eq_eq(
+                    Expr::referenced_decl(Expr::read_var(DEFAULT_INPUT_ADDR)),
+                    Expr::const_expr(Value::Null),
+                )
             ),
         )
     }

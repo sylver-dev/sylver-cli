@@ -20,7 +20,7 @@ use crate::{
 
 static SG_GEN_ASPECT: &str = "sg_gen";
 
-#[derive(Debug, Clone, Error)]
+#[derive(Debug, Clone, Eq, PartialEq, Hash, Error)]
 pub enum NamesError {
     #[error("unexpected return valued type when executing a name resolution function")]
     UnexpectedEvalType,
@@ -28,14 +28,15 @@ pub enum NamesError {
     Script(#[from] ScriptError),
 }
 
-pub struct SylvaSGraph {
+#[derive(Debug, Clone)]
+pub struct SylvaScopes {
     sgraph: SGraph,
     computed_trees: HashSet<SylvaTreeId>,
 }
 
-impl SylvaSGraph {
-    pub fn new() -> SylvaSGraph {
-        SylvaSGraph {
+impl SylvaScopes {
+    pub fn new() -> SylvaScopes {
+        SylvaScopes {
             sgraph: SGraph::new(),
             computed_trees: HashSet::new(),
         }
@@ -112,7 +113,7 @@ impl SylvaSGraph {
     }
 }
 
-impl Default for SylvaSGraph {
+impl Default for SylvaScopes {
     fn default() -> Self {
         Self::new()
     }

@@ -16,7 +16,7 @@ use crate::{
 
 pub mod python;
 
-#[derive(Debug, Clone, Error)]
+#[derive(Debug, Clone, Eq, PartialEq, Hash, Error)]
 pub enum ScriptError {
     #[error("Runtime error: {0}")]
     RuntimeError(String),
