@@ -1,5 +1,40 @@
 ---
 types:
+  - name: StringStart
+    ts_name: string_start
+    is_list: false
+    is_terminal: false
+    fields: [ ]
+  - name: StringContent
+    ts_name: string_content
+    is_list: false
+    is_terminal: false
+    fields: [ ]
+  - name: StringEnd
+    ts_name: string_end
+    is_list: false
+    is_terminal: false
+    fields: [ ]
+  - name: LineContinuation
+    ts_name: line_continuation
+    is_list: false
+    is_terminal: false
+    fields: [ ]
+  - name: GenericType
+    ts_name: generic_type
+    is_list: false
+    is_terminal: false
+    fields: [ ]
+  - name: TypeParameter
+    ts_name: type_parameter
+    is_list: false
+    is_terminal: false
+    fields: [ ]
+  - name: UnionType
+    ts_name: union_type
+    is_list: false
+    is_terminal: false
+    fields: [ ]
   - name: CompoundStatement
     ts_name: _compound_statement
     is_list: false
