@@ -95,7 +95,10 @@ impl TryInto<ScriptValue> for PythonResp {
     fn try_into(self) -> Result<ScriptValue, ScriptError> {
         match self {
             PythonResp::Value(value) => Ok(value),
-            _ => Err(ScriptError::RuntimeError("script value".to_string())),
+            val => Err(ScriptError::RuntimeError(format!(
+                "expected script value, but got: {:?}",
+                val
+            ))),
         }
     }
 }
@@ -439,6 +442,7 @@ fn interpreter_with_stdlib() -> Interpreter {
         vm.add_native_module("path".to_string(), Box::new(stdlib::path::make_module));
         vm.add_native_module("re".to_string(), Box::new(stdlib::re::make_module));
         ScriptNode::make_class(&vm.ctx);
+        ScriptSG::make_class(&vm.ctx);
     })
 }
 
@@ -496,6 +500,12 @@ impl TryInto<ScriptValue> for PyObjectRef {
             pydict_to_value(pydict)?
         } else if let Some(pylist) = self.payload::<PyList>() {
             pylist_to_value(pylist)?
+        } else if let Some(script_sg) = self.payload::<ScriptSG>() {
+            ScriptValue::Scope(
+                script_sg.scope_id,
+                script_sg.scope_graph.clone(),
+                script_sg.ctx.clone(),
+            )
         } else {
             return Err(ScriptError::UnsupportedType(
                 self.class().name().to_string(),
@@ -762,11 +772,11 @@ def value(doc):
             "
         };
 
-        let (lang_mappings, lang) = get_builtin_lang(BuiltinLang::Javascript);
+        let (lang_mappings, lang, _) = get_builtin_lang(BuiltinLang::Javascript);
 
         let syntax: Syntax = lang_mappings.types.as_slice().into();
 
-        let runner = BuiltinParserRunner::new(lang, &syntax, &lang_mappings);
+        let runner = BuiltinParserRunner::new(lang, &syntax, lang_mappings);
 
         let source = Source::inline(
             "console.log(hello).to_string()".to_string(),

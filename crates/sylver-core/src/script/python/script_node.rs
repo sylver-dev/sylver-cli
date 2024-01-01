@@ -30,6 +30,7 @@ impl ScriptNode {
         if let Some(script_node) = obj.payload::<ScriptNode>() {
             match name.as_str() {
                 "children" => ScriptNode::node_children(script_node, vm),
+                "kind" => Ok(ScriptNode::kind(script_node, vm)),
                 "text" => Ok(script_node.text(vm)),
                 field_name => ScriptNode::node_field(script_node, field_name, vm),
             }
@@ -43,6 +44,15 @@ impl ScriptNode {
             .borrow_mut()
             .info_mut()
             .node_text(self.node.node)
+            .to_pyobject(vm)
+    }
+
+    fn kind(&self, vm: &VirtualMachine) -> PyObjectRef {
+        self.info
+            .borrow()
+            .info()
+            .proxy(self.node.node)
+            .kind_name()
             .to_pyobject(vm)
     }
 

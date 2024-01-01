@@ -17,6 +17,8 @@ pub mod parser;
 static PYTHON_MAPPING: Lazy<MappingConfig> =
     Lazy::new(|| serde_yaml::from_str(include_str!("../../res/ts_mappings/python.yaml")).unwrap());
 
+static PYTHON_ASPECTS: Option<&'static str> = Some(include_str!("../../res/aspects/python.py"));
+
 static JAVASCRIPT_MAPPING: Lazy<MappingConfig> = Lazy::new(|| {
     serde_yaml::from_str(include_str!("../../res/ts_mappings/javascript.yaml")).unwrap()
 });
@@ -73,14 +75,25 @@ pub fn get_builtin_langs() -> Vec<BuiltinLang> {
     ]
 }
 
-pub fn get_builtin_lang(lang: BuiltinLang) -> (&'static MappingConfig, tree_sitter::Language) {
+pub fn get_builtin_lang(
+    lang: BuiltinLang,
+) -> (
+    &'static MappingConfig,
+    tree_sitter::Language,
+    Option<&'static str>,
+) {
     match lang {
-        BuiltinLang::Python => (PYTHON_MAPPING.deref(), sylver_langs::python_language()),
+        BuiltinLang::Python => (
+            PYTHON_MAPPING.deref(),
+            sylver_langs::python_language(),
+            PYTHON_ASPECTS,
+        ),
         BuiltinLang::Javascript => (
             JAVASCRIPT_MAPPING.deref(),
             sylver_langs::javascript_language(),
+            None,
         ),
-        BuiltinLang::Yaml => (YAML_MAPPING.deref(), sylver_langs::yaml_language()),
+        BuiltinLang::Yaml => (YAML_MAPPING.deref(), sylver_langs::yaml_language(), None),
     }
 }
 

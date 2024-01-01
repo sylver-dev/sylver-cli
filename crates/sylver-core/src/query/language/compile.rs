@@ -213,7 +213,7 @@ impl<'s> Compiler<'s> {
             "siblings" => make_build_gen(DepthNodeGeneratorFn::siblings())?,
             "previous_siblings" => make_build_gen(DepthNodeGeneratorFn::PreviousSiblings)?,
             "next_siblings" => make_build_gen(DepthNodeGeneratorFn::NextSiblings)?,
-            "referenced_decl" => Expr::referenced_decl(operand.clone()),
+            "referenced_decls" => Expr::referenced_decl(operand.clone()),
             "matches" => {
                 if args.len() != 1 {
                     return Err(CompilationErr::UnexpectedArity(
@@ -1220,7 +1220,7 @@ mod tests {
     #[test]
     fn compile_referenced_decls() {
         let spec = parse_spec("node NodeKind { }");
-        let query = parse_query("match n@_ when n.referenced_decl() == null").unwrap();
+        let query = parse_query("match n@_ when n.referenced_decls() == null").unwrap();
         let compiled = compile(&spec, &query).unwrap();
 
         assert_eq!(

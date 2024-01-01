@@ -2,7 +2,7 @@ use sylver_core::{
     builtin_langs::{get_builtin_lang, parser::BuiltinParserRunner},
     core::{
         source::Source,
-        spec::{Spec, DEFAULT_START_RULE},
+        spec::{Aspects, Spec, DEFAULT_START_RULE},
     },
     land::{
         builder::LandBuilder,
@@ -12,6 +12,7 @@ use sylver_core::{
     },
     parsing::parser_runner::ParserRunner,
     pretty_print::render_report,
+    script::python::compile_aspects,
     specs::{loader::SylverLoader, stem::project::ProjectLang},
 };
 
@@ -72,11 +73,19 @@ pub fn build_sylva(
             builder.add_sylva(sylva, spec_id)
         }
         ProjectLang::Builtin(b) => {
-            let (mappings, lang) = get_builtin_lang(*b);
+            let (mappings, lang, aspects) = get_builtin_lang(*b);
             let syntax = mappings.types.as_slice().into();
+            let aspects = if let Some(aspect_code) = aspects {
+                Aspects::build(
+                    &syntax,
+                    compile_aspects(aspect_code, "builtin".to_string())?,
+                )?
+            } else {
+                Aspects::default()
+            };
             let parser = BuiltinParserRunner::new(lang, &syntax, mappings);
             let sylva = Sylva::build_concurrently(SylvaParser::Builtin(parser), sources)?;
-            let spec = Spec::new(Default::default(), syntax);
+            let spec = Spec::new(aspects, syntax);
             let spec_id = LandSpecId::BuiltinLangId(builder.add_spec(spec));
             builder.add_sylva(sylva, spec_id)
         }

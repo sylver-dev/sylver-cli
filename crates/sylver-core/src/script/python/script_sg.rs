@@ -17,21 +17,21 @@ use super::script_node::ScriptNode;
 #[pyclass(name = "ScriptSG", module = "sylver")]
 #[derive(Debug, PyPayload)]
 pub struct ScriptSG {
-    scope_graph: Arc<RwLock<SGraph>>,
-    scope: ScopeId,
-    ctx: RefCell<ScriptTreeInfo>,
+    pub scope_graph: Arc<RwLock<SGraph>>,
+    pub scope_id: ScopeId,
+    pub ctx: RefCell<ScriptTreeInfo>,
 }
 
 impl ScriptSG {
     pub fn new(
         ctx: RefCell<ScriptTreeInfo>,
         scope_graph: Arc<RwLock<SGraph>>,
-        scope: ScopeId,
+        scope_id: ScopeId,
     ) -> Self {
         Self {
             ctx,
             scope_graph,
-            scope,
+            scope_id,
         }
     }
 }
@@ -49,7 +49,23 @@ impl ScriptSG {
             .ok_or_else(|| vm.new_value_error("expected node to be a ScriptNode".to_owned()))?;
 
         let mut scope_graph = self.scope_graph.write().expect("poisoned scope graph lock");
-        scope_graph.add_decl(self.scope, name.to_string(), node.node);
+        scope_graph.add_decl(self.scope_id, name.to_string(), node.node);
+
+        Ok(())
+    }
+
+    #[pymethod]
+    fn add_ref(&self, args: FuncArgs, vm: &VirtualMachine) -> PyResult<()> {
+        let name = get_arg(&args, 0, vm)?
+            .payload::<PyStr>()
+            .ok_or_else(|| vm.new_value_error("expected name to be a string".to_owned()))?;
+
+        let node = get_arg(&args, 1, vm)?
+            .payload::<ScriptNode>()
+            .ok_or_else(|| vm.new_value_error("expected node to be a ScriptNode".to_owned()))?;
+
+        let mut scope_graph = self.scope_graph.write().expect("poisoned scope graph lock");
+        scope_graph.add_ref(self.scope_id, name.to_string(), node.node);
 
         Ok(())
     }
@@ -57,7 +73,7 @@ impl ScriptSG {
     #[pymethod]
     fn add_scope(&self, _args: FuncArgs, vm: &VirtualMachine) -> PyResult<PyObjectRef> {
         let mut scope_graph = self.scope_graph.write().expect("poisoned scope graph lock");
-        let scope = scope_graph.add_scope(self.scope);
+        let scope = scope_graph.add_scope(self.scope_id);
         Ok(ScriptSG::new(self.ctx.clone(), self.scope_graph.clone(), scope).to_pyobject(vm))
     }
 
@@ -71,7 +87,7 @@ impl ScriptSG {
             .scope_graph
             .read()
             .expect("poisoned scope graph lock")
-            .lookup(self.scope, name.to_string().as_str())
+            .lookup(self.scope_id, name.to_string().as_str())
             .into_iter()
             .map(|n| ScriptNode::new(self.ctx.clone(), n));
 

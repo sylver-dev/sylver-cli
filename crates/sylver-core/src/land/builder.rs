@@ -31,6 +31,7 @@ impl LandBuilder {
     pub fn add_sylva(&mut self, sylva: Sylva, spec_id: LandSpecId) -> anyhow::Result<SylvaId> {
         let sylva_id = self.land.sylvae.insert(sylva).into();
         self.land.sylva_spec.insert(sylva_id, spec_id);
+        self.land.sylva_scopes.insert(sylva_id, Default::default());
         Ok(sylva_id)
     }
 
