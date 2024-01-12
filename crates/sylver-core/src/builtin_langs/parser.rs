@@ -51,7 +51,11 @@ impl<'t> TsTreeConverter<'t> {
         let kind_id = if node.kind() == TS_ERROR_KIND {
             ERROR_KIND.into()
         } else {
-            *self.mappings.kinds.get(&node.kind_id()).unwrap()
+            self.mappings
+                .kinds
+                .get(&node.kind_id())
+                .copied()
+                .unwrap_or_else(|| ERROR_KIND.into())
         };
 
         let (node_childs, mut node_tokens) = self.convert_childs(kind_id, node)?;
