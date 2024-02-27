@@ -169,7 +169,7 @@ fish)
 ;;
 
 zsh)
-  command="export PATH=$tilde_install_dir:PATH"
+  command="export PATH=$tilde_install_dir:\$PATH"
 
   zsh_config=$HOME/.zshrc
   tilde_zsh_config=$(tildify "$zsh_config")
