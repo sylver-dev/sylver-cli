@@ -33,9 +33,9 @@ semver = "1.0.16"
 zip = "0.6.3"
 reqwest = { version = "0.11.13", default-features = false, features = ["blocking", "rustls-tls"] }
 derivative = "2.2.0"
-rustpython-vm = { git = "https://github.com/RustPython/RustPython", rev = "5ec6235" }
-rustpython-codegen = { git = "https://github.com/RustPython/RustPython", rev = "5ec6235" }
-rustpython-parser = { git = "https://github.com/RustPython/RustPython", rev = "5ec6235" }
+rustpython-vm = "0.3"
+rustpython-codegen = "0.3"
+rustpython-parser = "0.3"
 
 [dev-dependencies]
 criterion = "0.4.0"

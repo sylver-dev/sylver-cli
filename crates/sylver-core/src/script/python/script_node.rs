@@ -1,9 +1,9 @@
 use std::cell::RefCell;
 
 use rustpython_vm::{
-    builtins::{PyList, PyStrRef},
+    builtins::{PyList, PyStr},
     convert::ToPyObject,
-    pyclass, PyObject, PyObjectRef, PyPayload, PyResult, VirtualMachine,
+    pyclass, Py, PyObject, PyObjectRef, PyPayload, PyResult, VirtualMachine,
 };
 
 use crate::{query::SylvaNode, script::ScriptTreeInfo, tree::info::TreeInfo};
@@ -26,7 +26,7 @@ unsafe impl Send for ScriptNode {}
 #[pyclass]
 impl ScriptNode {
     #[pyslot]
-    fn getattro(obj: &PyObject, name: PyStrRef, vm: &VirtualMachine) -> PyResult {
+    fn getattro(obj: &PyObject, name: &Py<PyStr>, vm: &VirtualMachine) -> PyResult {
         if let Some(script_node) = obj.payload::<ScriptNode>() {
             match name.as_str() {
                 "children" => ScriptNode::node_children(script_node, vm),

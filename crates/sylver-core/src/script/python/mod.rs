@@ -1,17 +1,24 @@
 use std::{
     cell::RefCell,
     collections::{BTreeMap, HashMap},
+    ops::Deref,
     sync::{mpsc::Sender, Mutex, OnceLock},
 };
 
 use id_vec::{Id, IdVec};
 use itertools::Itertools;
 use rustpython_codegen::CompileOpts;
-use rustpython_parser::ast::{self, ExprKind};
+use rustpython_parser::ast::{
+    self,
+    located::{Expr, ExprAttribute, ExprName, Mod, Stmt},
+    ExprCall, Fold, ModInteractive,
+    Stmt::FunctionDef,
+    StmtFunctionDef,
+};
 use rustpython_vm::{
     builtins::{PyBaseExceptionRef, PyDict, PyInt, PyList, PyStr},
     class::PyClassImpl,
-    compiler,
+    compiler::{self, LinearLocator},
     convert::ToPyObject,
     AsObject, Interpreter, PyObjectRef, PyRef, VirtualMachine,
 };
@@ -33,7 +40,7 @@ struct PythonMsg {
 }
 
 enum PythonMsgData {
-    Functions(ast::Mod, String, Vec<String>),
+    Functions(Mod, String, Vec<String>),
     Script(PythonScript, Vec<ScriptValue>),
     ScriptInQuery(PythonScript, Vec<PythonScriptQueryArg>),
 }
@@ -122,7 +129,7 @@ pub struct PythonVM {
 impl PythonVM {
     fn functions(
         &mut self,
-        ast: ast::Mod,
+        ast: Mod,
         path: String,
         functions: Vec<String>,
     ) -> Result<HashMap<String, PythonScript>, ScriptError> {
@@ -175,7 +182,9 @@ impl PythonVM {
             let invokable = self.scripts.get(Id::from_index(script.invokable)).ok_or(
                 ScriptError::RuntimeError(format!("invalid script id: {}", script.invokable)),
             )?;
-            vm.invoke(invokable, script_args)
+
+            invokable
+                .call(script_args, vm)
                 .map_err(|e| to_script_error(vm, e))
         })?;
 
@@ -201,7 +210,8 @@ impl PythonVM {
                 ScriptError::RuntimeError(format!("invalid script id: {}", script.invokable)),
             )?;
 
-            vm.invoke(invokable, script_args)
+            invokable
+                .call(script_args, vm)
                 .map_err(|e| to_script_error(vm, e))
         })?;
 
@@ -306,9 +316,9 @@ pub fn compile_function(
 
 fn collect_aspect_function_ids(
     path: &str,
-    ast: &mut ast::Mod,
+    ast: &mut Mod,
 ) -> Result<HashMap<String, Vec<(String, String)>>, ScriptError> {
-    let ast::Mod::Interactive { ref mut body, .. } = ast else {
+    let ast::Mod::Interactive(ModInteractive { ref mut body, .. }) = ast else {
         return Err(ScriptError::Compilation(
             path.to_string(),
             "Not a module".to_string(),
@@ -329,25 +339,31 @@ fn collect_aspect_function_ids(
     Ok(aspect_fns)
 }
 
-fn parse_module(code: &str, path: &str) -> Result<ast::Mod, ScriptError> {
-    rustpython_parser::parser::parse(code, rustpython_parser::parser::Mode::Interactive, path)
+fn parse_module(code: &str, path: &str) -> Result<Mod, ScriptError> {
+    let ast = rustpython_parser::parse(code, rustpython_parser::Mode::Interactive, path)
+        .map_err(|e| ScriptError::Compilation(path.to_string(), e.to_string()))?;
+
+    let mut locator = LinearLocator::new(code);
+
+    locator
+        .fold_mod(ast)
         .map_err(|e| ScriptError::Compilation(path.to_string(), e.to_string()))
 }
 
 /// If the given statement is an aspect function definition, return a tuple
 /// of the form (aspect_name, kind_name, function_name).
 fn extract_aspect_fn_ids(
-    statement: &mut ast::Stmt,
+    statement: &mut Stmt,
 ) -> Result<Option<(String, String, String)>, ScriptError> {
-    if let ast::StmtKind::FunctionDef {
+    if let FunctionDef(StmtFunctionDef {
         name: function_name,
-        ref mut decorator_list,
+        decorator_list,
         ..
-    } = &mut statement.node
+    }) = statement
     {
         if let Some((aspect_name, kind_name)) = find_aspect_target_kind_name(decorator_list)? {
             decorator_list.clear();
-            return Ok(Some((aspect_name, kind_name, function_name.clone())));
+            return Ok(Some((aspect_name, kind_name, function_name.to_string())));
         }
     }
 
@@ -357,16 +373,16 @@ fn extract_aspect_fn_ids(
 /// If the given decorator list is a valid aspect declaration,
 /// return a tuple of the form (aspect_name, kind_name).
 fn find_aspect_target_kind_name(
-    decorator_list: &[ast::Expr],
+    decorator_list: &[Expr],
 ) -> Result<Option<(String, String)>, ScriptError> {
     match decorator_list {
         [] => Ok(None),
         [_, _, ..] => Err(ScriptError::InvalidAspectDeclaration),
         [decorator] => {
-            if let ExprKind::Call { func, .. } = &decorator.node {
-                if let ExprKind::Attribute { value, attr, .. } = &func.node {
-                    if let ExprKind::Name { id: kind_name, .. } = &value.node {
-                        return Ok(Some((attr.clone(), kind_name.clone())));
+            if let Expr::Call(ExprCall { func, .. }) = &decorator {
+                if let Expr::Attribute(ExprAttribute { value, attr, .. }) = func.deref() {
+                    if let Expr::Name(ExprName { id: kind_name, .. }) = value.deref() {
+                        return Ok(Some((attr.to_string(), kind_name.to_string())));
                     }
                 }
             }
