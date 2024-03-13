@@ -27,13 +27,10 @@ jobs:
   test_with_coverage:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
 
       # Install Rust toolchain
-      - uses: actions-rs/toolchain@v1
-        with:
-          toolchain: nightly
-          override: true
+      - uses: dtolnay/rust-toolchain@stable
 
       # Run the tests
       - run: cargo test --all-features --no-fail-fast
