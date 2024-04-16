@@ -10,7 +10,7 @@ use sylver_dsl::sylq::{
 
 use crate::{
     core::spec::{strip_list_kind, KindId, Spec},
-    query::expr::{DepthNodeGeneratorFn, Expr, Value},
+    query::expr::{DepthNodeGeneratorFn, Expr, ExtensionExpr, Value},
 };
 
 pub const DEFAULT_INPUT_ADDR: usize = 0;
@@ -137,6 +137,9 @@ impl<'s> Compiler<'s> {
                 .get(i)
                 .map(|&addr| Ok(Expr::read_var(addr)))
                 .unwrap_or_else(|| Err(CompilationErr::UnknownIdentifier(i.clone()))),
+            SyntaxExpr::SpecialIdentifier(s) => Ok(Expr::ExtensionExpr(
+                ExtensionExpr::SpecialIdentifier(s.as_str().into()),
+            )),
             SyntaxExpr::Integer(i) => Ok(Expr::Const(Value::Int(*i))),
             SyntaxExpr::Null => Ok(Expr::const_expr(Value::Null)),
             SyntaxExpr::StringLit(s) => {
@@ -450,6 +453,18 @@ mod tests {
             compiled,
             Expr::int_conv(Expr::const_expr(Value::String(Cow::Borrowed("42"))))
         )
+    }
+
+    #[test]
+    fn compile_special_identifier() {
+        let compiled = Compiler::for_spec(&parse_spec("node NodeKind {}"))
+            .expr(&parse_expr("$ident"))
+            .unwrap();
+
+        assert_eq!(
+            compiled,
+            Expr::ExtensionExpr(ExtensionExpr::SpecialIdentifier("$ident".into()))
+        );
     }
 
     #[test]

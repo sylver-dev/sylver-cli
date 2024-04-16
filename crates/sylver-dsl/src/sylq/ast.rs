@@ -80,6 +80,7 @@ pub enum NodePatternFieldValue {
 #[derive(Debug, Clone, Eq, PartialEq, Hash)]
 pub enum Expr {
     Identifier(String),
+    SpecialIdentifier(String),
     Integer(i64),
     Null,
     StringLit(String),
@@ -281,6 +282,7 @@ fn expr(mut pairs: Pairs<Rule>) -> SylqParserRes<Expr> {
     let child = pairs.next().unwrap();
 
     match child.as_rule() {
+        Rule::special_identifier => Ok(Expr::SpecialIdentifier(pair_text(child))),
         Rule::identifier => Ok(Expr::Identifier(pair_text(child))),
         Rule::integer => integer(child),
         Rule::null => Ok(Expr::Null),
@@ -453,6 +455,15 @@ pub mod test {
     use crate::test::test_parser;
 
     use super::*;
+
+    #[test]
+    fn special_identifier() {
+        test_parser(
+            SylqParser::parse(Rule::expr, "$125"),
+            expr,
+            Expr::SpecialIdentifier("$125".to_string()),
+        );
+    }
 
     #[test]
     fn null() {

@@ -2,6 +2,7 @@ keyword = @{ "match" | "when" | "is" | "null" | "any" | "all" | "no" }
 integer = @{ "-"? ~ ASCII_DIGIT+ }
 placeholder = @{ "_" }
 identifier = @{ !(keyword ~ !(LETTER)) ~ (LOWERCASE_LETTER | UPPERCASE_LETTER) ~ (LOWERCASE_LETTER | UPPERCASE_LETTER | "_" | ASCII_DIGIT)* }
+special_identifier = @{ "$" ~ (LOWERCASE_LETTER | UPPERCASE_LETTER | "_" | ASCII_DIGIT)* }
 list_kind = { "List" ~ "<" ~ identifier ~ ">" }
 
 query = { "match" ~ query_pattern ~ EOI }
@@ -45,6 +46,7 @@ expr = { bin_log_op | cmp_expr }
     atomic_expr = {
         not_expr
       | array_quant_expr
+      | special_identifier
       | identifier
       | integer
       | null

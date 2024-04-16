@@ -1,4 +1,7 @@
-use std::{borrow::Cow, cmp::Ordering, collections::VecDeque};
+use std::{
+    any::TypeId, borrow::Cow, cmp::Ordering, collections::HashMap, collections::VecDeque,
+    fmt::Debug, sync::Arc,
+};
 
 use derivative::Derivative;
 use derive_more::From;
@@ -15,13 +18,17 @@ use crate::{
     tree::{info::TreeInfo, Node, NodeId},
 };
 
-#[derive(Debug, Clone)]
+trait Extension<'v, B: TreeInfoBuilder<'v>> {
+    fn eval(&self, ctx: &mut EvalCtx<'v, B>, expr: &ExtensionExpr) -> Result<Value<'v>, EvalError>;
+}
+
 pub struct EvalCtx<'v, B: TreeInfoBuilder<'v>> {
     memory: Vec<Value<'v>>,
     spec: &'v Spec,
     info_builder: B, // TODO: get rid of the builder/info abstraction
     land: &'v Land,
     script_engine: PythonScriptEngine,
+    extensions: HashMap<TypeId, Arc<dyn Extension<'v, B>>>,
 }
 
 impl<'b> EvalCtx<'b, RawTreeInfoBuilder<'b>> {
@@ -44,6 +51,17 @@ impl<'b> EvalCtx<'b, RawTreeInfoBuilder<'b>> {
 }
 
 impl<'b, B: 'b + TreeInfoBuilder<'b>> EvalCtx<'b, B> {
+    pub fn extension<T: 'static>(
+        &self,
+        _val: &T,
+        display_name: &str,
+    ) -> Result<Arc<dyn Extension<'b, B>>, EvalError> {
+        self.extensions
+            .get(&TypeId::of::<T>())
+            .cloned()
+            .ok_or_else(|| EvalError::MissingExtension(display_name.to_owned()))
+    }
+
     pub fn childs(&'_ self, node: SylvaNode) -> Vec<SylvaNode> {
         self.info_builder
             .info_for_node(node)
@@ -121,6 +139,7 @@ impl<'b, B: TreeInfoBuilder<'b>> EvalCtx<'b, B> {
             info_builder,
             land,
             script_engine,
+            extensions: HashMap::new(),
         }
     }
 
@@ -434,6 +453,8 @@ pub enum EvalError {
     NotAnInt(String),
     #[error("name resolution error: {0}")]
     NameRes(NamesError),
+    #[error("missing extension for node type: {0}")]
+    MissingExtension(String),
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Hash)]
@@ -473,6 +494,27 @@ pub enum Expr {
         (Option<usize>, Option<usize>),
         DepthNodeGeneratorFn,
     ),
+    ExtensionExpr(ExtensionExpr),
+}
+
+#[derive(Debug, Clone, Eq, PartialEq, Hash)]
+pub enum ExtensionExpr {
+    SpecialIdentifier(SpecialIdentifier),
+}
+
+#[derive(Debug, Clone, Eq, PartialEq, Hash)]
+pub struct SpecialIdentifier(String);
+
+impl From<&str> for SpecialIdentifier {
+    fn from(s: &str) -> Self {
+        SpecialIdentifier(s.to_owned())
+    }
+}
+
+impl From<String> for SpecialIdentifier {
+    fn from(s: String) -> Self {
+        SpecialIdentifier(s)
+    }
 }
 
 impl Expr {
@@ -617,6 +659,7 @@ impl Expr {
         ctx: &mut EvalCtx<'b, RawTreeInfoBuilder<'b>>,
     ) -> Result<Value<'b>, EvalError> {
         match self {
+            Expr::ExtensionExpr(e) => eval_extension_expr(ctx, e),
             Expr::IntConv(e) => eval_int_conv(ctx, e),
             Expr::KindAccess(op) => eval_kind_access(ctx, op),
             Expr::Const(v) => Ok(v.clone()),
@@ -670,6 +713,17 @@ impl Expr {
             Expr::BuildGen(operand, depts, gen_fn) => eval_build_gen(ctx, operand, depts, gen_fn),
         }
     }
+}
+
+fn eval_extension_expr<'b>(
+    ctx: &mut EvalCtx<'b, RawTreeInfoBuilder<'b>>,
+    operand: &ExtensionExpr,
+) -> Result<Value<'b>, EvalError> {
+    let extension = match operand {
+        ExtensionExpr::SpecialIdentifier(s) => ctx.extension(s, "special identifier"),
+    }?;
+
+    extension.eval(ctx, operand)
 }
 
 fn eval_build_gen<'b>(
