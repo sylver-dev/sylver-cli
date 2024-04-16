@@ -116,7 +116,13 @@ impl TryInto<HashMap<String, PythonScript>> for PythonResp {
     fn try_into(self) -> Result<HashMap<String, PythonScript>, ScriptError> {
         match self {
             PythonResp::Scripts(scripts) => Ok(scripts),
-            _ => Err(ScriptError::RuntimeError("scripts".to_string())),
+            PythonResp::Error(err) => Err(ScriptError::RuntimeError(format!(
+                "failed to build script collection: {}",
+                err
+            ))),
+            _ => Err(ScriptError::RuntimeError(
+                "expected script collection, but got: {:?}".to_string(),
+            )),
         }
     }
 }
