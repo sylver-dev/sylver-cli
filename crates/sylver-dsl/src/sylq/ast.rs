@@ -156,7 +156,7 @@ pub fn parse_query(query_code: impl AsRef<str>) -> SylqParserRes<QueryPattern> {
     )
 }
 
-pub fn parse_expr(expr_code: impl AsRef<str>) -> Expr {
+pub fn parse_expr(expr_code: impl AsRef<str>) -> SylqParserRes<Expr> {
     expr(
         SylqParser::parse(Rule::expr, expr_code.as_ref())
             .unwrap()
@@ -164,7 +164,6 @@ pub fn parse_expr(expr_code: impl AsRef<str>) -> Expr {
             .unwrap()
             .into_inner(),
     )
-    .unwrap()
 }
 
 fn query(mut pairs: Pairs<Rule>) -> SylqParserRes<QueryPattern> {

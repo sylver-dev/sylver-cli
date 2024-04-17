@@ -417,6 +417,10 @@ pub fn compile(spec: &Spec, query: &QueryPattern) -> Result<Expr, CompilationErr
     Compiler::for_spec(spec).compile(query)
 }
 
+pub fn compile_expr(spec: &Spec, expr: &SyntaxExpr) -> Result<Expr, CompilationErr> {
+    Compiler::for_spec(spec).expr(expr)
+}
+
 fn make_kind_check(operand: Expr, kind: KindId) -> Expr {
     Expr::eq_eq(Expr::kind_access(operand), Expr::const_expr(kind.into()))
 }
@@ -446,7 +450,7 @@ mod tests {
     #[test]
     fn compile_regex_conv() {
         let compiled = Compiler::for_spec(&parse_spec("node NodeKind {}"))
-            .expr(&parse_expr("'42'.to_int()"))
+            .expr(&parse_expr("'42'.to_int()").unwrap())
             .unwrap();
 
         assert_eq!(
@@ -458,7 +462,7 @@ mod tests {
     #[test]
     fn compile_special_identifier() {
         let compiled = Compiler::for_spec(&parse_spec("node NodeKind {}"))
-            .expr(&parse_expr("$ident"))
+            .expr(&parse_expr("$ident").unwrap())
             .unwrap();
 
         assert_eq!(
@@ -470,7 +474,7 @@ mod tests {
     #[test]
     fn compile_regex_match() {
         let compiled = Compiler::for_spec(&parse_spec("node NodeKind {}"))
-            .expr(&parse_expr("'hello'.matches(`[a-z]+`)"))
+            .expr(&parse_expr("'hello'.matches(`[a-z]+`)").unwrap())
             .unwrap();
 
         assert_eq!(
@@ -485,7 +489,7 @@ mod tests {
     #[test]
     fn compile_safe_regex_match() {
         let compiled = Compiler::for_spec(&parse_spec("node NodeKind {}"))
-            .expr(&parse_expr("'hello'?.matches(`[a-z]+`)"))
+            .expr(&parse_expr("'hello'?.matches(`[a-z]+`)").unwrap())
             .unwrap();
 
         assert_eq!(
@@ -507,7 +511,7 @@ mod tests {
     #[test]
     fn compile_int_cmp() {
         let compiled = Compiler::for_spec(&parse_spec("node NodeKind {}"))
-            .expr(&parse_expr("10 < 35"))
+            .expr(&parse_expr("10 < 35").unwrap())
             .unwrap();
 
         assert_eq!(
@@ -519,7 +523,7 @@ mod tests {
     #[test]
     fn compile_string_lit() {
         let compiled = Compiler::for_spec(&parse_spec("node NodeKind { }"))
-            .expr(&parse_expr("\"hello\""))
+            .expr(&parse_expr("\"hello\"").unwrap())
             .unwrap();
 
         assert_eq!(
@@ -531,7 +535,7 @@ mod tests {
     #[test]
     fn compile_neq() {
         let compiled = Compiler::for_spec(&parse_spec("node NodeKind { }"))
-            .expr(&parse_expr("1 != 0"))
+            .expr(&parse_expr("1 != 0").unwrap())
             .unwrap();
 
         assert_eq!(
@@ -543,7 +547,7 @@ mod tests {
     #[test]
     fn compile_null() {
         let compiled = Compiler::for_spec(&parse_spec("node NodeKind { }"))
-            .expr(&parse_expr("null"))
+            .expr(&parse_expr("null").unwrap())
             .unwrap();
 
         assert_eq!(compiled, Expr::const_expr(Value::Null))

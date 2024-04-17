@@ -1,6 +1,6 @@
 use std::{
     any::TypeId, borrow::Cow, cmp::Ordering, collections::HashMap, collections::VecDeque,
-    fmt::Debug, sync::Arc,
+    fmt::Debug,
 };
 
 use derivative::Derivative;
@@ -18,7 +18,7 @@ use crate::{
     tree::{info::TreeInfo, Node, NodeId},
 };
 
-trait Extension<'v, B: TreeInfoBuilder<'v>> {
+pub trait Extension<'v, B: TreeInfoBuilder<'v>> {
     fn eval(&self, ctx: &mut EvalCtx<'v, B>, expr: &ExtensionExpr) -> Result<Value<'v>, EvalError>;
 }
 
@@ -28,7 +28,7 @@ pub struct EvalCtx<'v, B: TreeInfoBuilder<'v>> {
     info_builder: B, // TODO: get rid of the builder/info abstraction
     land: &'v Land,
     script_engine: PythonScriptEngine,
-    extensions: HashMap<TypeId, Arc<dyn Extension<'v, B>>>,
+    extensions: HashMap<TypeId, &'v dyn Extension<'v, B>>,
 }
 
 impl<'b> EvalCtx<'b, RawTreeInfoBuilder<'b>> {
@@ -51,11 +51,15 @@ impl<'b> EvalCtx<'b, RawTreeInfoBuilder<'b>> {
 }
 
 impl<'b, B: 'b + TreeInfoBuilder<'b>> EvalCtx<'b, B> {
+    pub fn add_extension(&mut self, type_id: TypeId, extension: &'b dyn Extension<'b, B>) {
+        self.extensions.insert(type_id, extension);
+    }
+
     pub fn extension<T: 'static>(
         &self,
         _val: &T,
         display_name: &str,
-    ) -> Result<Arc<dyn Extension<'b, B>>, EvalError> {
+    ) -> Result<&'b dyn Extension<'b, B>, EvalError> {
         self.extensions
             .get(&TypeId::of::<T>())
             .cloned()
@@ -236,16 +240,16 @@ pub struct DepthNodeGenerator {
 }
 
 impl DepthNodeGenerator {
-    fn iter(&self) -> DepthNodeGeneratorIter {
+    pub fn iter(&self) -> DepthNodeGeneratorIter {
         DepthNodeGeneratorIter { gen: self.clone() }
     }
 }
 
-struct DepthNodeGeneratorIter {
+pub struct DepthNodeGeneratorIter {
     gen: DepthNodeGenerator,
 }
 
-trait EvalIterator<'b, B: 'b + TreeInfoBuilder<'b>> {
+pub trait EvalIterator<'b, B: 'b + TreeInfoBuilder<'b>> {
     type Item;
 
     fn next_value(&mut self, ctx: &EvalCtx<'b, B>) -> Option<Self::Item>;
@@ -443,6 +447,8 @@ pub enum ValueKind {
 pub enum EvalError {
     #[error("Invalid kind: {1:?}, expected: {0:?}")]
     InvalidKind(Vec<ValueKind>, ValueKind),
+    #[error("Invalid identifier: {0}")]
+    InvalidIdentifier(String),
     #[error("Invalid memory address: {0}")]
     InvalidAddress(usize),
     #[error("No field: {0} on nodes of kind {1}")]
@@ -504,6 +510,12 @@ pub enum ExtensionExpr {
 
 #[derive(Debug, Clone, Eq, PartialEq, Hash)]
 pub struct SpecialIdentifier(String);
+
+impl SpecialIdentifier {
+    pub fn identifier(&self) -> &str {
+        &self.0[1..]
+    }
+}
 
 impl From<&str> for SpecialIdentifier {
     fn from(s: &str) -> Self {
