@@ -15,16 +15,11 @@ pub fn find_upward_path(mut current_dir: PathBuf, name: &OsStr) -> anyhow::Resul
 }
 
 fn dir_entry_with_name(dir: &Path, name: &OsStr) -> anyhow::Result<Option<PathBuf>> {
-    for entry in dir.read_dir()? {
-        let dir = entry?;
-        let path = dir.path();
-
-        if path.is_dir() && path.file_name() == Some(name) {
-            return Ok(Some(path));
-        }
+    let candidate = dir.join(name);
+    match std::fs::metadata(&candidate) {
+        Ok(meta) if meta.is_dir() => Ok(Some(candidate)),
+        _ => Ok(None),
     }
-
-    Ok(None)
 }
 
 pub fn path_to_string(path: &Path) -> String {
