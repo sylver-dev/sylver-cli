@@ -57,7 +57,8 @@ rule_decl = { "rule" ~ identifier ~ "=" ~ rule_exprs }
         rule_expr_ref = { identifier }
 
 
-main = { (node_decl | terminal | ignore_terminal | comment_terminal | rule_decl)+ ~ EOI }
+main = { SOI ~ (node_decl | terminal | ignore_terminal | comment_terminal | rule_decl)+ ~ EOI }
 
 WHITESPACE = _{ " " | "\t" | "\r" | "\n" | NEWLINE }
+COMMENT    = _{ "#" ~ (!NEWLINE ~ ANY)* }
 

@@ -1292,4 +1292,50 @@ pub mod test {
             },
         )
     }
+
+    #[test]
+    fn hash_comment_ignored_between_decls() {
+        test_parser(
+            MetaParser::parse(
+                Rule::main,
+                "# this is a comment\nterm INT = `[0-9]+`\n# another comment\nterm PLUS = '+'",
+            ),
+            main,
+            vec![
+                Decl::Terminal(TermDecl {
+                    name: "INT".into(),
+                    reg: parse_term_content("`[0-9]+`"),
+                    data: None,
+                }),
+                Decl::Terminal(TermDecl {
+                    name: "PLUS".into(),
+                    reg: parse_term_content("'+'"),
+                    data: None,
+                }),
+            ],
+        )
+    }
+
+    #[test]
+    fn hash_comment_inline_after_decl() {
+        test_parser(
+            MetaParser::parse(
+                Rule::main,
+                "term INT = `[0-9]+` # inline comment\nterm PLUS = '+'",
+            ),
+            main,
+            vec![
+                Decl::Terminal(TermDecl {
+                    name: "INT".into(),
+                    reg: parse_term_content("`[0-9]+`"),
+                    data: None,
+                }),
+                Decl::Terminal(TermDecl {
+                    name: "PLUS".into(),
+                    reg: parse_term_content("'+'"),
+                    data: None,
+                }),
+            ],
+        )
+    }
 }
