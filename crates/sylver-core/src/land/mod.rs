@@ -1,21 +1,22 @@
-use std::collections::{HashMap, HashSet};
-use std::ops::DerefMut;
-use std::sync::RwLock;
+use std::{
+    collections::{HashMap, HashSet},
+    ops::DerefMut,
+    sync::RwLock,
+};
 
 use id_vec::IdVec;
 
-use crate::semantic::names::SylvaScopes;
+use self::{
+    ruleset::{RuleSet, RuleSetId},
+    sylva::{Sylva, SylvaId},
+};
 use crate::{
     core::{
         source::SourceTree,
         spec::{Spec, SpecId},
     },
     query::SylvaNode,
-};
-
-use self::{
-    ruleset::{RuleSet, RuleSetId},
-    sylva::{Sylva, SylvaId},
+    semantic::names::SylvaScopes,
 };
 
 pub mod builder;
@@ -66,15 +67,6 @@ impl Land {
 
     pub fn ruleset(&self, id: RuleSetId) -> &RuleSet {
         &self.rulesets[id.into()]
-    }
-
-    pub fn sylva_rulesets(&self, id: SylvaId) -> HashSet<&RuleSet> {
-        self.sylva_rules
-            .get(&id)
-            .unwrap()
-            .iter()
-            .map(|&ruleset_id| self.ruleset(ruleset_id))
-            .collect()
     }
 
     pub fn sylva_spec(&self, id: SylvaId) -> &Spec {

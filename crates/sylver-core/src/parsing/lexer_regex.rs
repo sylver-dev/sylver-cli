@@ -40,10 +40,7 @@ impl LexerRegex {
     }
 
     pub fn find<'t>(&self, txt: &'t str) -> Option<Match<'t>> {
-        match self.regex.find(txt) {
-            Err(_) => None,
-            Ok(m) => m,
-        }
+        self.regex.find(txt).unwrap_or_default()
     }
 
     pub fn regex(&self) -> &Regex {

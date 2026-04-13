@@ -1,4 +1,4 @@
-use std::iter::repeat;
+use std::iter::repeat_n;
 
 use itertools::Itertools;
 
@@ -142,7 +142,7 @@ impl<'t, T: TreeInfo<'t> + Clone> TreePPrint<'t, T> {
     }
 
     fn indentation_str(&self, level: usize) -> String {
-        repeat(&self.conf.indentation).take(level).join("")
+        repeat_n(&self.conf.indentation, level).join("")
     }
 }
 
@@ -150,14 +150,13 @@ impl<'t, T: TreeInfo<'t> + Clone> TreePPrint<'t, T> {
 mod tests {
     use indoc::indoc;
 
+    use super::*;
     use crate::{
         core::{source::Source, spec::Spec},
         parsing::parser_runner::ParserRunner,
         pretty_print::render_report,
         tree::info::raw::RawTreeInfo,
     };
-
-    use super::*;
 
     #[test]
     fn trivial_with_name() {

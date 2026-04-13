@@ -139,11 +139,11 @@ impl TypeLit {
     }
 }
 
-impl ToString for TypeLit {
-    fn to_string(&self) -> String {
+impl std::fmt::Display for TypeLit {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            TypeLit::Simple(s) => s.to_string(),
-            TypeLit::Or(o) => o.to_string(),
+            TypeLit::Simple(s) => write!(f, "{}", s),
+            TypeLit::Or(o) => write!(f, "{}", o),
         }
     }
 }
@@ -171,8 +171,8 @@ impl SimpleTypeLit {
     }
 }
 
-impl ToString for SimpleTypeLit {
-    fn to_string(&self) -> String {
+impl std::fmt::Display for SimpleTypeLit {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let params_str = if self.parameters.is_empty() {
             String::new()
         } else {
@@ -182,7 +182,9 @@ impl ToString for SimpleTypeLit {
             )
         };
 
-        format!("{}{}", self.name, params_str)
+        let s = format!("{}{}", self.name, params_str);
+
+        write!(f, "{}", s)
     }
 }
 
@@ -191,9 +193,10 @@ pub struct OrTypeLit {
     pub alts: NonEmpty<SimpleTypeLit>,
 }
 
-impl ToString for OrTypeLit {
-    fn to_string(&self) -> String {
-        self.alts.iter().map(|a| a.to_string()).join(" | ")
+impl std::fmt::Display for OrTypeLit {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let s = self.alts.iter().map(|a| a.to_string()).join(" | ");
+        write!(f, "{}", s)
     }
 }
 
@@ -778,9 +781,8 @@ pub mod test {
     use indoc::indoc;
     use maplit::*;
 
-    use crate::test::{parse_term_content, test_parser};
-
     use super::*;
+    use crate::test::{parse_term_content, test_parser};
 
     #[test]
     fn term_content_literal() {

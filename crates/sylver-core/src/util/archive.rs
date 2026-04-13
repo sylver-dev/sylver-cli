@@ -1,4 +1,4 @@
-use std::io::{Cursor, Read, Seek, Write};
+use std::io::{BufReader, Cursor, Read, Seek, Write};
 
 use anyhow::Context;
 
@@ -44,7 +44,7 @@ pub fn read_archive(bytes: &[u8]) -> anyhow::Result<Vec<ArchiveFile>> {
 
         let name = f.name().to_string();
 
-        let file_content = f
+        let file_content = BufReader::new(f)
             .bytes()
             .collect::<Result<Vec<u8>, _>>()
             .with_context(|| "failed to read archive file".to_string())?;

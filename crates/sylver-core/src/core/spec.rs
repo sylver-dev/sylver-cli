@@ -1,6 +1,10 @@
 use std::{
-    cmp::Ordering, collections::HashMap, fs::read_to_string, hash::Hash, ops::Index, path::Path,
-    path::PathBuf,
+    cmp::Ordering,
+    collections::HashMap,
+    fs::read_to_string,
+    hash::Hash,
+    ops::Index,
+    path::{Path, PathBuf},
 };
 
 use anyhow::Context;
@@ -8,9 +12,8 @@ use derive_more::{From, Into};
 use id_vec::Id;
 use itertools::Itertools;
 use smallvec::SmallVec;
-use thiserror::Error;
-
 use sylver_dsl::meta::*;
+use thiserror::Error;
 
 use crate::{
     id_type,
@@ -920,7 +923,6 @@ pub mod test {
 
     use indoc::indoc;
     use maplit::hashset;
-
     use sylver_dsl::meta::parse;
 
     use super::*;
@@ -1261,8 +1263,8 @@ pub mod test {
         );
 
         let syntax = get_syntax(spec_str);
-        assert!(matches!(syntax.terminal("ab*"), Some(_)));
-        assert!(matches!(syntax.terminal(","), Some(_)));
+        assert!(syntax.terminal("ab*").is_some());
+        assert!(syntax.terminal(",").is_some());
     }
 
     #[test]

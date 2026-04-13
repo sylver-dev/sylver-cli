@@ -1,11 +1,11 @@
 use std::collections::HashMap;
 
 use anyhow::{bail, Context};
-
-use sylver_core::dashboard::api::ReportDTO;
 use sylver_core::{
     core::source::SourceTree,
-    dashboard::api::{NewDiagnosticDTO, NewReportDTO, ReportCustomLanguage, ReportLanguage},
+    dashboard::api::{
+        NewDiagnosticDTO, NewReportDTO, ReportCustomLanguage, ReportDTO, ReportLanguage,
+    },
     land::{cmds::RuleResult, ruleset::Rule, LandSpecId},
     query::SylvaNode,
     specs::{
@@ -102,7 +102,7 @@ impl<'s> ReportUploader<'s> {
         }
     }
 
-    fn get_tree_info(&self, n: SylvaNode) -> RawTreeInfo {
+    fn get_tree_info(&'_ self, n: SylvaNode) -> RawTreeInfo<'_> {
         RawTreeInfo::new(
             self.get_tree(n),
             &self.check_data.land.sylva_spec(n.sylva).syntax,

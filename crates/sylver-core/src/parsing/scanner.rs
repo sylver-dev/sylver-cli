@@ -1,7 +1,6 @@
 use fancy_regex::{Match, Regex};
 use rustc_hash::FxHashMap;
 use smallvec::SmallVec;
-
 use sylver_dsl::meta::*;
 
 use crate::{
@@ -224,7 +223,6 @@ fn compute_end_and_current_pos(m: &str, start_pos: Pos) -> (Pos, Pos) {
 #[cfg(test)]
 pub mod test {
     use id_vec::Id;
-
     use sylver_dsl::test::parse_term_content;
 
     use super::*;
@@ -331,7 +329,7 @@ pub mod test {
     }
 
     fn test_lexer_ok(rules: Vec<(TagId, TermContent)>, input: &str, expected: Vec<(&str, TagId)>) {
-        let scanner = Scanner::new(rules.into_iter()).unwrap();
+        let scanner = Scanner::new(rules).unwrap();
 
         let mut pos = Pos::default();
         let mut result = vec![];

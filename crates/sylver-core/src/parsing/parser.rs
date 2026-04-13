@@ -647,12 +647,11 @@ impl<'t> Parser<'t> {
 pub mod tests {
     use indoc::indoc;
 
+    use super::*;
     use crate::{
         core::spec::Spec,
         parsing::{sppf::tests::pretty_print_sppf, table::build_table},
     };
-
-    use super::*;
 
     #[test]
     fn trivial() {
@@ -672,7 +671,7 @@ pub mod tests {
             . . . a"
         );
 
-        test_parser_ok(&spec_str, input, expected);
+        test_parser_ok(spec_str, input, expected);
     }
 
     #[test]
@@ -704,7 +703,7 @@ pub mod tests {
             . . . . . . . b"
         );
 
-        test_parser_ok(&spec_str, input, expected);
+        test_parser_ok(spec_str, input, expected);
     }
 
     #[test]
@@ -733,7 +732,7 @@ pub mod tests {
             . . . . . . . a"
         );
 
-        test_parser_ok(&spec_str, input, expected);
+        test_parser_ok(spec_str, input, expected);
     }
 
     #[test]
@@ -798,7 +797,7 @@ pub mod tests {
             . . . a"
         );
 
-        test_parser_ok(&spec_str, input, expected);
+        test_parser_ok(spec_str, input, expected);
     }
 
     #[test]
@@ -1768,7 +1767,7 @@ pub mod tests {
     }
 
     fn test_parser_ok(spec_code: &str, input: &str, expected: &str) {
-        let spec_ast = sylver_dsl::meta::parse(spec_code.as_ref()).expect("Invalid spec str");
+        let spec_ast = sylver_dsl::meta::parse(spec_code).expect("Invalid spec str");
         let spec = Spec::from_decls(Default::default(), spec_ast).expect("Invalid spec");
 
         let rules = spec

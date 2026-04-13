@@ -6,11 +6,13 @@ use std::{
 use id_vec::{Id, IdVec};
 use rustc_hash::{FxHashMap, FxHashSet};
 
-use crate::core::pos::InclPosRange;
-use crate::parsing::scanner::Token;
 use crate::{
-    core::spec::{FieldPos, KindId, RuleId, BUILTIN_LIST_KIND, COMMENT_NODE_KIND},
+    core::{
+        pos::InclPosRange,
+        spec::{FieldPos, KindId, RuleId, BUILTIN_LIST_KIND, COMMENT_NODE_KIND},
+    },
     id_type,
+    parsing::scanner::Token,
 };
 
 pub type TokenPos = usize;
@@ -400,8 +402,9 @@ fn non_terminal_mut_childs(node: &mut TreeNode) -> &mut FxHashSet<TreeNodeId> {
 
 #[cfg(test)]
 pub mod tests {
-    use std::{fmt::Write, iter::repeat};
+    use std::{fmt::Write, iter::repeat_n};
 
+    use super::*;
     use crate::{
         core::{
             pos::{InclPosRange, Pos},
@@ -410,8 +413,6 @@ pub mod tests {
         parsing::scanner::Token,
         util::once::OnceQueue,
     };
-
-    use super::*;
 
     fn code_in_span(span: Span, input: &str) -> &str {
         if span.end().is_some() {
@@ -485,7 +486,7 @@ pub mod tests {
                 left_repr
             }
             TreeNodeData::Named(pos, child) => {
-                let field_repr = indent(&format!("{pos:?}"), indent_level);
+                let field_repr = indent(format!("{pos:?}"), indent_level);
                 let child_repr = tree_node_repr(*child, indent_level + 1, tree, input, decl_ids);
 
                 return format!("{field_repr}\n{child_repr}");
@@ -562,10 +563,7 @@ pub mod tests {
     }
 
     fn indent(text: impl AsRef<str>, indentation: usize) -> String {
-        let indent_str = repeat(". ")
-            .take(indentation)
-            .collect::<Vec<&str>>()
-            .join("");
+        let indent_str = repeat_n(". ", indentation).collect::<Vec<&str>>().join("");
         format!("{}{}", indent_str, text.as_ref())
     }
 
@@ -749,7 +747,7 @@ pub mod tests {
 
         let childs = forest.childs(non_term);
         assert!(matches!(
-            forest[*childs.iter().next().unwrap()],
+            forest[*childs.first().unwrap()],
             TreeNode {
                 data: TreeNodeData::Leaf(t),
                 span

@@ -67,9 +67,8 @@ impl<'s> ParserRunner<'s> {
 mod tests {
     use sylver_dsl::meta::parse;
 
-    use crate::core::spec::Spec;
-
     use super::*;
+    use crate::core::spec::Spec;
 
     #[test]
     fn run_parser_ok() {
@@ -91,8 +90,6 @@ mod tests {
         let declarations =
             parse(include_str!("../../test_res/specs/binop.syl")).expect("Invalid spec");
 
-        let spec = Spec::from_decls(Default::default(), declarations).expect("Invalid spec");
-
-        spec
+        Spec::from_decls(Default::default(), declarations).expect("Invalid spec")
     }
 }

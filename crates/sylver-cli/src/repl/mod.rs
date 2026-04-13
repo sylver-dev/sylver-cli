@@ -8,7 +8,6 @@ use rustyline::{
     Editor,
 };
 use rustyline_derive::{Completer, Helper, Highlighter, Hinter};
-
 use sylver_core::{
     land::{cmds::filter_sylva, sylva::SylvaId, Land},
     pretty_print::tree::{render_node, TreePPrint},
@@ -23,7 +22,6 @@ use sylver_core::{
     script::python::PythonScriptEngine,
     tree::info::{raw::RawTreeInfo, TreeInfo},
 };
-
 use sylver_dsl::sylq::{parse_expr, parse_query};
 
 mod cache;
@@ -162,7 +160,7 @@ fn eval_expr(ctx: &ReplCtx, expr_code: &str) -> anyhow::Result<Value<'static>> {
         .context("failed to evaluate expression")
 }
 
-fn build_eval_ctx<'a>(ctx: &'a ReplCtx<'a>) -> EvalCtx<'_, RawTreeInfoBuilder<'_>> {
+fn build_eval_ctx<'a>(ctx: &'a ReplCtx<'a>) -> EvalCtx<'a, RawTreeInfoBuilder<'a>> {
     let spec = ctx.land.sylva_spec(ctx.sylva);
 
     EvalCtx::new(

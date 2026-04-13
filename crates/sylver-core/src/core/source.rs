@@ -173,12 +173,11 @@ impl Index<TokenPos> for SourceTree {
 
 #[cfg(test)]
 pub mod test {
+    use super::*;
     use crate::{
         core::{pos::InclPosRange, spec::test::test_syntax},
         tree::TreeBuilder,
     };
-
-    use super::*;
 
     pub fn create_test_source_tree(code: &str) -> SourceTree {
         let lines = code.lines().count();
@@ -198,7 +197,7 @@ pub mod test {
             0.into(),
         ));
 
-        editor.add_node(1.into(), &vec![], &[0]);
+        editor.add_node(1.into(), &[], &[0]);
 
         let (tree, tokens) = editor.build();
 

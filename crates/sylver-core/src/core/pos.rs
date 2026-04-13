@@ -93,7 +93,7 @@ impl Ord for Pos {
 
 impl PartialOrd for Pos {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        Some(self.txt_pos.cmp(&other.txt_pos))
+        Some(self.cmp(other))
     }
 }
 
